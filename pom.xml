@@ -27,7 +27,7 @@
 
     <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.smtotp</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon Extension - SMS OTP Pom</name>
     <url>http://wso2.org</url>
