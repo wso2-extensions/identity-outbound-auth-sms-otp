@@ -19,13 +19,13 @@
 
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>
-        <artifactId>org.wso2.carbon.extension.identity.authenticator.smtotp</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>    
     <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.feature</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon - identity SMS OTP Feature</name>
     <url>http://wso2.org</url>
