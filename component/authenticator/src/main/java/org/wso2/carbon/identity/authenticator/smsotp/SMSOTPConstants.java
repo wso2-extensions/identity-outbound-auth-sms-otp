@@ -31,15 +31,21 @@ public class SMSOTPConstants {
     public static final int SECRET_KEY_LENGTH = 5;
     public static final int NUMBER_BASE = 2;
     public static final int NUMBER_DIGIT = 6;
-    public static final String HTTP_METHOD = "GET";
     public static final String CODE = "code";
+    public static final String PASSCODE = "1234";
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
+    public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
 
-    public static final String API_KEY = "api_key";
-    public static final String API_SECRET = "api_secret";
     public static final String SMS_URL = "sms_url";
+    public static final String HTTP_METHOD = "http_method";
+    public static final String HEADERS = "headers";
+    public static final String PAYLOAD = "payload";
+    public static final String HTTP_RESPONSE = "http_response";
+    public static final String SMS_MESSAGE = "Verification Code: ";
 
-    public static final String PROPERTIES_FILE = "smsprovider.properties";
+    public static final String GET_METHOD = "GET";
+    public static final String POST_METHOD = "POST";
+
     public static final String LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=login.fail.message";
 }
