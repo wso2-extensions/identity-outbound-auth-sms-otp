@@ -164,7 +164,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
 
             savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
-
             String username = getUsername(context);
             if (username != null) {
                 UserRealm userRealm = getUserRealm(username);
@@ -194,7 +193,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(username);
             int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
-
             RealmService realmService = IdentityTenantUtil.getRealmService();
             userRealm = (UserRealm) realmService.getTenantUserRealm(tenantId);
         } catch (Exception e) {
