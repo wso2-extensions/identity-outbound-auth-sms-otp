@@ -15,14 +15,10 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   --%>
-<%@page import="java.util.ArrayList" %>
-<%@page import="java.util.Arrays" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
+<%@page import="java.util.Map" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
 
 <fmt:bundle basename="org.wso2.carbon.identity.application.authentication.endpoint.i18n.Resources">
 
@@ -43,7 +39,7 @@
             if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
                 errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+                if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
                     errorMessage = "Authentication Failed! Please Retry";
                 }
             }
@@ -63,7 +59,7 @@
 
         <script src="js/scripts.js"></script>
         <script src="assets/js/jquery-1.7.1.min.js"></script>
-	<script src="https://mepin.com/javascripts/mepinlogin.js"></script>
+        <script src="https://mepin.com/javascripts/mepinlogin.js"></script>
         <!--[if lt IE 9]>
         <script src="js/html5shiv.min.js"></script>
         <script src="js/respond.min.js"></script>
@@ -102,46 +98,49 @@
                     <div class="boarder-all ">
                         <div class="clearfix"></div>
                         <div class="padding-double login-form">
-<div id="errorDiv"></div>
-  <%
-        if ("true".equals(authenticationFailed)) {
-        %>
-            <div class="alert alert-danger" id="failed-msg">
-                <%=errorMessage%>
-            </div>
-        <% } %>
-   <form id="pin_form" name="pin_form" action="../../commonauth"  method="POST">
-            <div id="loginTable1" class="identity-box">
+                            <div id="errorDiv"></div>
+                            <%
+                                if ("true".equals(authenticationFailed)) {
+                            %>
+                            <div class="alert alert-danger" id="failed-msg">
+                                <%=errorMessage%>
+                            </div>
+                            <% } %>
+                            <form id="pin_form" name="pin_form" action="../../commonauth" method="POST">
+                                <div id="loginTable1" class="identity-box">
 
 
-        <%
-                String loginFailed = request.getParameter("authFailure");
-                if (loginFailed != null && "true".equals(loginFailed)) {
-            String authFailureMsg = request.getParameter("authFailureMsg");
-            if (authFailureMsg != null && "login.fail.message".equals(authFailureMsg)) {
-            %>
+                                    <%
+                                        String loginFailed = request.getParameter("authFailure");
+                                        if (loginFailed != null && "true".equals(loginFailed)) {
+                                            String authFailureMsg = request.getParameter("authFailureMsg");
+                                            if (authFailureMsg != null && "login.fail.message".equals(authFailureMsg)) {
+                                    %>
 
-        <div class="alert alert-error">
-            Authentication Failed! Please Retry
-            </div>
+                                    <div class="alert alert-error">
+                                        Authentication Failed! Please Retry
+                                    </div>
 
-       <% } }  %>
+                                    <% }
+                                    } %>
 
-               <div class="row">
-                  <div class="span6">
-                     <!-- Token Pin -->
-                     <div class="control-group">
-                        <label class="control-label" for="password">Code:</label>
-                        <input type="password" id='code' name="code" class="input-xlarge" size='30'/>
-                     </div>
-                     <input type="hidden" name="sessionDataKey"
-                        value='<%=request.getParameter("sessionDataKey")%>'/>
-                     <div> <input type="submit" value="Authenticate" class="btn btn-primary"></div>
-                  </div>
-               </div>
-            </div>
-         </form>
-                           <div class="clearfix"></div>
+                                    <div class="row">
+                                        <div class="span6">
+                                            <!-- Token Pin -->
+                                            <div class="control-group">
+                                                <label class="control-label" for="password">Code:</label>
+                                                <input type="password" id='code' name="code" class="input-xlarge"
+                                                       size='30'/>
+                                            </div>
+                                            <input type="hidden" name="sessionDataKey"
+                                                   value='<%=request.getParameter("sessionDataKey")%>'/>
+                                            <div><input type="submit" value="Authenticate" class="btn btn-primary">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="clearfix"></div>
                         </div>
                     </div>
                     <!-- /content -->
