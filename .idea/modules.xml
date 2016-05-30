@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/org.wso2.carbon.extension.identity.authenticator.smsotp.iml" filepath="$PROJECT_DIR$/org.wso2.carbon.extension.identity.authenticator.smsotp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/component/authenticator/org.wso2.carbon.extension.identity.authenticator.smsotp.connector.iml" filepath="$PROJECT_DIR$/component/authenticator/org.wso2.carbon.extension.identity.authenticator.smsotp.connector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/component/authentication-endpoint/org.wso2.carbon.extension.identity.authenticator.smsotp.endpoint.iml" filepath="$PROJECT_DIR$/component/authentication-endpoint/org.wso2.carbon.extension.identity.authenticator.smsotp.endpoint.iml" />
+      <module fileurl="file://$PROJECT_DIR$/feature/org.wso2.carbon.extension.identity.authenticator.smsotp.feature.iml" filepath="$PROJECT_DIR$/feature/org.wso2.carbon.extension.identity.authenticator.smsotp.feature.iml" />
+    </modules>
+  </component>
+</project>

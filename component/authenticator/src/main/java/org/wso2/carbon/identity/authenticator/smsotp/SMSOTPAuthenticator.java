@@ -337,7 +337,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                 }
             }
-            if (!httpResponse.trim().isEmpty()) {
+            if (!httpResponse.isEmpty()) {
                 if (httpResponse.trim().equals(String.valueOf(connection.getResponseCode()))) {
                     if (log.isDebugEnabled()) {
                         log.debug("Code is successfully sent to the mobile");
