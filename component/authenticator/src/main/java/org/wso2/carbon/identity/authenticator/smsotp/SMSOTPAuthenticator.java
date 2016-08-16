@@ -37,12 +37,12 @@ import org.wso2.carbon.user.core.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import java.net.HttpURLConnection;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -331,7 +331,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
@@ -380,7 +380,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
