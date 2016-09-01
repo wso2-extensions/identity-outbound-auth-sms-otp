@@ -41,7 +41,7 @@ public class SMSOTPConstants {
     public static final String PAYLOAD = "payload";
     public static final String HTTP_RESPONSE = "http_response";
     public static final String SMS_MESSAGE = "Verification Code: ";
-    public static final String SAVED_CODE = "savedCode";
+    public static final String BACKUP_CODE = "BackupCode";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";

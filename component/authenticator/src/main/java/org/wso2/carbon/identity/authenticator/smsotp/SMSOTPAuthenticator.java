@@ -87,8 +87,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         authContext.setProperty(otpToken, myToken);
 
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
-        String propertyName = SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL;
-        String login = smsOTPParameters.get(propertyName);
+        String login = smsOTPParameters.get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
         String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
         String httpMethod = authenticatorProperties.get(SMSOTPConstants.HTTP_METHOD);
         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
@@ -158,10 +157,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (userToken.equals(contextToken)) {
             context.setSubject(AuthenticatedUser
                     .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
-        } else {
-            if (smsOTPParameters.get(SMSOTPConstants.SAVED_CODE).equals(false)) {
+        } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals(false)) {
                 throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
-            } else {
+        } else {
                 String username = getUsername(context);
                 if (username != null) {
                     UserRealm userRealm = getUserRealm(username);
@@ -180,7 +178,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                             " does not contain any values");
                 } else {
-                    if ( savedOTPString.contains(userToken)) {
+                    if (savedOTPString.contains(userToken)) {
                         context.setSubject(AuthenticatedUser
                                 .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
                         savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
@@ -200,7 +198,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
                     }
                 }
-            }
         }
     }
 
