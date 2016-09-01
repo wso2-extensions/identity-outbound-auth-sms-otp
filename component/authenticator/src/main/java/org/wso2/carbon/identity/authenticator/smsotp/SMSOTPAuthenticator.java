@@ -87,16 +87,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         authContext.setProperty(otpToken, myToken);
 
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
-        String propertyName = "SMSOTPAuthenticationEndpointURL";
+        String propertyName = SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL;
         String login = smsOTPParameters.get(propertyName);
         String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
         String httpMethod = authenticatorProperties.get(SMSOTPConstants.HTTP_METHOD);
         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
         String payload = authenticatorProperties.get(SMSOTPConstants.PAYLOAD);
         String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
-
-        String loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                .replace("authenticationendpoint/login.do", login);
+        String loginPage="";
+        if(StringUtils.isNotEmpty(login)) {
+             loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                    .replace(SMSOTPConstants.LOGIN_PAGE, login);
+        } else {
+            loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                    .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.SMS_LOGIN_PAGE);
+        }
         String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier());
         String retryParam = "";
@@ -123,7 +128,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
             }
         }
-
         if (StringUtils.isEmpty(mobile)) {
             throw new AuthenticationFailedException("Mobile Number is null");
         }
@@ -155,45 +159,47 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             context.setSubject(AuthenticatedUser
                     .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
         } else {
-            String username = getUsername(context);
-            if (username != null) {
-                UserRealm userRealm = getUserRealm(username);
-                username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
-                if (userRealm != null) {
-                    try {
-                        savedOTPString = userRealm.getUserStoreManager()
-                                .getUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST, null);
-                    } catch (UserStoreException e) {
-                        throw new AuthenticationFailedException(
-                                "Cannot find the user claim for OTP list " + e.getMessage(), e);
-                    }
-                }
-            }
-            String propertyName = "savedCode";
-            String codeBool = smsOTPParameters.get(propertyName);
-            if (savedOTPString != null && savedOTPString.contains(userToken)) {
-                context.setSubject(AuthenticatedUser
-                        .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
-                savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+            if (smsOTPParameters.get(SMSOTPConstants.SAVED_CODE).equals(false)) {
+                throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
+            } else {
+                String username = getUsername(context);
                 if (username != null) {
                     UserRealm userRealm = getUserRealm(username);
                     username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
                     if (userRealm != null) {
                         try {
-                            userRealm.getUserStoreManager().setUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST,
-                                    savedOTPString, null);
+                            savedOTPString = userRealm.getUserStoreManager()
+                                    .getUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST, null);
                         } catch (UserStoreException e) {
-                            log.error("Unable to set the user claim for OTP List for user " + username, e);
+                            throw new AuthenticationFailedException(
+                                    "Cannot find the user claim for OTP list " + e.getMessage(), e);
                         }
                     }
                 }
-            } else if (codeBool == "true") {
-                if (savedOTPString == null) {
+                if (savedOTPString.isEmpty()) {
                     throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                             " does not contain any values");
+                } else {
+                    if ( savedOTPString.contains(userToken)) {
+                        context.setSubject(AuthenticatedUser
+                                .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
+                        savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+                        if (username != null) {
+                            UserRealm userRealm = getUserRealm(username);
+                            username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
+                            if (userRealm != null) {
+                                try {
+                                    userRealm.getUserStoreManager().setUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST,
+                                            savedOTPString, null);
+                                } catch (UserStoreException e) {
+                                    log.error("Unable to set the user claim for OTP List for user " + username, e);
+                                }
+                            }
+                        }
+                    } else {
+                        throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
+                    }
                 }
-            } else {
-                throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
             }
         }
     }
