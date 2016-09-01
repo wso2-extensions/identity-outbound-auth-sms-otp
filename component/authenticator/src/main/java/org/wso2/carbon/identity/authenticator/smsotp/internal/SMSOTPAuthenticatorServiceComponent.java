@@ -46,7 +46,7 @@ public class SMSOTPAuthenticatorServiceComponent {
                 log.debug("SMSOTP authenticator is activated");
             }
         } catch (Throwable e) {
-            log.fatal("Error while activating the SMSOTP authenticator ", e);
+            log.error("Error while activating the SMSOTP authenticator ", e);
         }
     }
 

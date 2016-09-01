@@ -37,12 +37,12 @@ import org.wso2.carbon.user.core.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import java.net.HttpURLConnection;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -57,6 +57,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
     AuthenticationContext authContext = new AuthenticationContext();
+    Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
     private String otpToken;
     private String mobile;
     private String savedOTPString;
@@ -86,6 +87,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         authContext.setProperty(otpToken, myToken);
 
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
+        String propertyName = "SMSOTPAuthenticationEndpointURL";
+        String login = smsOTPParameters.get(propertyName);
         String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
         String httpMethod = authenticatorProperties.get(SMSOTPConstants.HTTP_METHOD);
         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
@@ -93,7 +96,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
 
         String loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                .replace("authenticationendpoint/login.do", SMSOTPConstants.LOGIN_PAGE);
+                .replace("authenticationendpoint/login.do", login);
         String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier());
         String retryParam = "";
@@ -166,6 +169,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                 }
             }
+            String propertyName = "savedCode";
+            String codeBool = smsOTPParameters.get(propertyName);
             if (savedOTPString != null && savedOTPString.contains(userToken)) {
                 context.setSubject(AuthenticatedUser
                         .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
@@ -182,9 +187,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                     }
                 }
-            } else if (savedOTPString == null) {
-                throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
-                        " does not contain any values");
+            } else if (codeBool == "true") {
+                if (savedOTPString == null) {
+                    throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
+                            " does not contain any values");
+                }
             } else {
                 throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
             }
@@ -331,7 +338,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
@@ -380,7 +387,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
