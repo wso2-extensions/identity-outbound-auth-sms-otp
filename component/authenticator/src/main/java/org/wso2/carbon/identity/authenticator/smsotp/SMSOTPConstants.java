@@ -25,6 +25,7 @@ public class SMSOTPConstants {
     public static final String ALGORITHM_NAME = "SHA1PRNG";
     public static final String ALGORITHM_HMAC = "HmacSHA1";
     public static final String ALGORITHM_HMAC_SHA = "HMAC-SHA-1";
+    public static final String CHAR_SET = "UTF-8";
 
     public static final int SECRET_KEY_LENGTH = 5;
     public static final int NUMBER_BASE = 2;
@@ -40,10 +41,13 @@ public class SMSOTPConstants {
     public static final String PAYLOAD = "payload";
     public static final String HTTP_RESPONSE = "http_response";
     public static final String SMS_MESSAGE = "Verification Code: ";
+    public static final String BACKUP_CODE = "BackupCode";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
 
-    public static final String LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
+    public static final String SMSOTP_AUTHENTICATION_ENDPOINT_URL = "SMSOTPAuthenticationEndpointURL";
+    public static final String LOGIN_PAGE = "authenticationendpoint/login.do";
+    public static final String SMS_LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=login.fail.message";
 }

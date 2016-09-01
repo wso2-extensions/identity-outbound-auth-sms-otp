@@ -37,12 +37,12 @@ import org.wso2.carbon.user.core.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import java.net.HttpURLConnection;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
@@ -57,6 +57,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
     AuthenticationContext authContext = new AuthenticationContext();
+    Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
     private String otpToken;
     private String mobile;
     private String savedOTPString;
@@ -86,14 +87,20 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         authContext.setProperty(otpToken, myToken);
 
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
+        String login = smsOTPParameters.get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
         String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
         String httpMethod = authenticatorProperties.get(SMSOTPConstants.HTTP_METHOD);
         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
         String payload = authenticatorProperties.get(SMSOTPConstants.PAYLOAD);
         String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
-
-        String loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                .replace("authenticationendpoint/login.do", SMSOTPConstants.LOGIN_PAGE);
+        String loginPage="";
+        if(StringUtils.isNotEmpty(login)) {
+             loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                    .replace(SMSOTPConstants.LOGIN_PAGE, login);
+        } else {
+            loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                    .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.SMS_LOGIN_PAGE);
+        }
         String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier());
         String retryParam = "";
@@ -120,7 +127,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
             }
         }
-
         if (StringUtils.isEmpty(mobile)) {
             throw new AuthenticationFailedException("Mobile Number is null");
         }
@@ -151,43 +157,47 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (userToken.equals(contextToken)) {
             context.setSubject(AuthenticatedUser
                     .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
+        } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals(false)) {
+                throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
         } else {
-            String username = getUsername(context);
-            if (username != null) {
-                UserRealm userRealm = getUserRealm(username);
-                username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
-                if (userRealm != null) {
-                    try {
-                        savedOTPString = userRealm.getUserStoreManager()
-                                .getUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST, null);
-                    } catch (UserStoreException e) {
-                        throw new AuthenticationFailedException(
-                                "Cannot find the user claim for OTP list " + e.getMessage(), e);
-                    }
-                }
-            }
-            if (savedOTPString != null && savedOTPString.contains(userToken)) {
-                context.setSubject(AuthenticatedUser
-                        .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
-                savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+                String username = getUsername(context);
                 if (username != null) {
                     UserRealm userRealm = getUserRealm(username);
                     username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
                     if (userRealm != null) {
                         try {
-                            userRealm.getUserStoreManager().setUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST,
-                                    savedOTPString, null);
+                            savedOTPString = userRealm.getUserStoreManager()
+                                    .getUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST, null);
                         } catch (UserStoreException e) {
-                            log.error("Unable to set the user claim for OTP List for user " + username, e);
+                            throw new AuthenticationFailedException(
+                                    "Cannot find the user claim for OTP list " + e.getMessage(), e);
                         }
                     }
                 }
-            } else if (savedOTPString == null) {
-                throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
-                        " does not contain any values");
-            } else {
-                throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
-            }
+                if (savedOTPString.isEmpty()) {
+                    throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
+                            " does not contain any values");
+                } else {
+                    if (savedOTPString.contains(userToken)) {
+                        context.setSubject(AuthenticatedUser
+                                .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
+                        savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+                        if (username != null) {
+                            UserRealm userRealm = getUserRealm(username);
+                            username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
+                            if (userRealm != null) {
+                                try {
+                                    userRealm.getUserStoreManager().setUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST,
+                                            savedOTPString, null);
+                                } catch (UserStoreException e) {
+                                    log.error("Unable to set the user claim for OTP List for user " + username, e);
+                                }
+                            }
+                        }
+                    } else {
+                        throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
+                    }
+                }
         }
     }
 
@@ -331,7 +341,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
@@ -380,7 +390,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), "UTF-8");
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message", e);
