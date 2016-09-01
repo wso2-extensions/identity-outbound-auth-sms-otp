@@ -45,6 +45,5 @@ public class SMSOTPConstants {
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
 
-    public static final String LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=login.fail.message";
 }
