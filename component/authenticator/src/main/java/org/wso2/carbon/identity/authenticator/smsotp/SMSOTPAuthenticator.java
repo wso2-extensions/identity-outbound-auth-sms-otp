@@ -157,7 +157,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (userToken.equals(contextToken)) {
             context.setSubject(AuthenticatedUser
                     .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
-        } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals(false)) {
+        } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals("false")) {
                 throw new AuthenticationFailedException("Verification Error due to Code Mismatch");
         } else {
                 String username = getUsername(context);
@@ -174,7 +174,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                     }
                 }
-                if (savedOTPString.isEmpty()) {
+                if (savedOTPString==null) {
                     throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                             " does not contain any values");
                 } else {
