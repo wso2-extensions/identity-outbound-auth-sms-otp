@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -15,6 +15,7 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   --%>
+
 <%@page import="java.util.ArrayList" %>
 <%@page import="java.util.Arrays" %>
 <%@ page import="java.util.List" %>
@@ -23,6 +24,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
+
+<fmt:bundle basename="org.wso2.carbon.identity.application.authentication.endpoint.i18n.Resources">
 
     <%
         request.getSession().invalidate();
@@ -51,7 +54,7 @@
     <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>WSO2 Identity Server</title>
 
         <link rel="icon" href="images/favicon.png" type="image/x-icon"/>
@@ -67,7 +70,7 @@
         <![endif]-->
     </head>
 
-    <body>
+    <body onload="getLoginDiv()">
 
     <!-- header -->
     <header class="header header-default">
@@ -83,7 +86,7 @@
         </div>
     </header>
 
-    <!-- page content -->
+ <!-- page content -->
     <div class="container-fluid body-wrapper">
 
         <div class="row">
@@ -92,8 +95,8 @@
                 <!-- content -->
                 <div class="container col-xs-10 col-sm-6 col-md-6 col-lg-4 col-centered wr-content wr-login col-centered">
                     <div>
-                        <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
-                            Authenticating with SMSOTP &nbsp;&nbsp;</h2>
+                        <h3 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
+                            Enter Your Mobile Phone Number &nbsp;&nbsp;</h3>
 
                     </div>
                     <div class="boarder-all ">
@@ -120,29 +123,21 @@
                                         <div class="span6">
                                              <!-- Token Pin -->
                                              <div class="control-group">
-                                                <label class="control-label" for="password">
-                                                Enter the code sent to your mobile phone:</label>
-                                                <input type="password" id='code' name="code" class="input-xlarge"
-                                                size='30'/>
+                                                <label class="control-label" for="password"></label>
+                                                <input type="text" id='MOBILE_NUMBER' name="MOBILE_NUMBER"
+                                                class="input-xlarge" size='30'/>
                                              </div>
                                              <input type="hidden" name="sessionDataKey"
-                                                value='<%=request.getParameter("sessionDataKey")%>'/><br/>
-                                             <div> <input type="button" name="authenticate" id="authenticate"
-                                                value="Authenticate" class="btn btn-primary"></div>
-                                             <%
-                                                 if ("true".equals(authenticationFailed)) {
-                                                 String reSendCode = request.getParameter("resendCode");
-                                                 if ("true".equals(reSendCode)) {
-                                             %>
-                                                 <div id="resendCodeLinkDiv" style="display:inline-block; float:right">
-                                                    <a id="resend">Resend Code</a>
-                                                 </div>
-                                             <% } } %>
+                                                value='<%=request.getParameter("sessionDataKey")%>'/>
+                                             <br><div>
+                                                  <input type="button" name="update" id="update" value="Update"
+                                                  class="btn btn-primary">
+                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <input type='hidden' name='resendCode' id='resendCode' value='false'/>
                             </form>
+
                            <div class="clearfix"></div>
                         </div>
                     </div>
@@ -164,24 +159,19 @@
     </footer>
     <script src="libs/jquery_1.11.3/jquery-1.11.3.js"></script>
     <script src="libs/bootstrap_3.3.5/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-    $(document).ready(function() {
-    	$('#authenticate').click(function() {
-            var code = document.getElementById("code").value;
-            if (code == "") {
-                document.getElementById('alertDiv').innerHTML
-                = '<div id="error-msg" class="alert alert-danger">Please enter the code!</div>';
-            } else {
-	            $('#pin_form').submit();
-	        }
-    	});
-    });
-    $(document).ready(function() {
-    	$('#resendCodeLinkDiv').click(function() {
-	        document.getElementById("resendCode").value = "true";
-	        $('#pin_form').submit();
-    	});
-    });
-    </script>
+     <script type="text/javascript">
+        $(document).ready(function() {
+        	$('#update').click(function() {
+                var mobileNumber = document.getElementById("MOBILE_NUMBER").value;
+                if (mobileNumber == "") {
+                    document.getElementById('alertDiv').innerHTML
+                    = '<div id="error-msg" class="alert alert-danger">Please enter the mobile number!</div>';
+                } else {
+    	            $('#pin_form').submit();
+    	        }
+        	});
+        });
+        </script>
     </body>
     </html>
+</fmt:bundle>

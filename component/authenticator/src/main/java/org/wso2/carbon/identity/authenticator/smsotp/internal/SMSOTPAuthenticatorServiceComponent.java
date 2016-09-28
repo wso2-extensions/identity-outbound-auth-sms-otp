@@ -36,6 +36,15 @@ public class SMSOTPAuthenticatorServiceComponent {
     private static Log log = LogFactory.getLog(SMSOTPAuthenticatorServiceComponent.class);
     private static RealmService realmService;
 
+    public static RealmService getRealmService() {
+        return realmService;
+    }
+
+    protected void setRealmService(RealmService realmService) {
+        log.debug("Setting the Realm Service");
+        SMSOTPAuthenticatorServiceComponent.realmService = realmService;
+    }
+
     protected void activate(ComponentContext ctxt) {
         try {
             SMSOTPAuthenticator authenticator = new SMSOTPAuthenticator();
@@ -55,18 +64,10 @@ public class SMSOTPAuthenticatorServiceComponent {
             log.debug("SMSOTP authenticator is deactivated");
         }
     }
-    protected void setRealmService(RealmService realmService) {
-        log.debug("Setting the Realm Service");
-        SMSOTPAuthenticatorServiceComponent.realmService = realmService;
-    }
 
     protected void unsetRealmService(RealmService realmService) {
         log.debug("UnSetting the Realm Service");
         SMSOTPAuthenticatorServiceComponent.realmService = null;
-    }
-
-    public static RealmService getRealmService() {
-        return realmService;
     }
 
 }
