@@ -15,7 +15,8 @@
  ~ limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -59,7 +60,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
-                        <Private-Package>org.wso2.carbon.identity.authenticator.internal</Private-Package>
+                        <Private-Package>org.wso2.carbon.identity.authenticator.smsotp.internal</Private-Package>
                         <Import-Package>org.apache.axis2.*,
                             org.apache.axiom.*,
                             org.wso2.carbon.ui.*,
@@ -71,8 +72,8 @@
                             *;resolution:=optional
                         </Import-Package>
                         <Export-Package>
-                            !org.wso2.carbon.identity.authenticator.internal,
-                            org.wso2.carbon.identity.authenticator.*
+                            !org.wso2.carbon.identity.authenticator.smsotp.internal,
+                            org.wso2.carbon.identity.authenticator.smsotp.*
                         </Export-Package>
                     </instructions>
                 </configuration>

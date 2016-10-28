@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -34,7 +34,7 @@
             idpAuthenticatorMapping = (Map<String, String>) request.getAttribute(Constants.IDP_AUTHENTICATOR_MAP);
         }
 
-        String errorMessage = "Authentication Failed! Please Retry";
+        String errorMessage = "Authentication Failed!";
         String authenticationFailed = "false";
 
         if (Boolean.parseBoolean(request.getParameter(Constants.AUTH_FAILURE))) {
@@ -44,7 +44,7 @@
                 errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
                  if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
-                    errorMessage = "Authentication Failed! Please Retry";
+                    errorMessage = "Authentication Failed!";
                 }
             }
         }
@@ -63,7 +63,8 @@
 
         <script src="js/scripts.js"></script>
         <script src="assets/js/jquery-1.7.1.min.js"></script>
-	<script src="https://mepin.com/javascripts/mepinlogin.js"></script>
+        <script src="/smsotpauthenticationendpoint/assets/js/jquery-1.7.1.min.js"></script>
+        <script src="/smsotpauthenticationendpoint/js/scripts.js"></script>
         <!--[if lt IE 9]>
         <script src="js/html5shiv.min.js"></script>
         <script src="js/respond.min.js"></script>
@@ -96,51 +97,16 @@
                 <div class="container col-xs-10 col-sm-6 col-md-6 col-lg-4 col-centered wr-content wr-login col-centered">
                     <div>
                         <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
-                            Authenticating with SMSOTP &nbsp;&nbsp;</h2>
-
+                            Authentication Failed!
+                        </h2>
                     </div>
                     <div class="boarder-all ">
                         <div class="clearfix"></div>
                         <div class="padding-double login-form">
-<div id="errorDiv"></div>
-  <%
-        if ("true".equals(authenticationFailed)) {
-        %>
-            <div class="alert alert-danger" id="failed-msg">
-                <%=errorMessage%>
-            </div>
-        <% } %>
-   <form id="pin_form" name="pin_form" action="../../commonauth"  method="POST">
-            <div id="loginTable1" class="identity-box">
-
-
-        <%
-                String loginFailed = request.getParameter("authFailure");
-                if (loginFailed != null && "true".equals(loginFailed)) {
-            String authFailureMsg = request.getParameter("authFailureMsg");
-            if (authFailureMsg != null && "login.fail.message".equals(authFailureMsg)) {
-            %>
-
-        <div class="alert alert-error">
-            Authentication Failed! Please Retry
-            </div>
-
-       <% } }  %>
-
-               <div class="row">
-                  <div class="span6">
-                     <!-- Token Pin -->
-                     <div class="control-group">
-                        <label class="control-label" for="password">Code:</label>
-                        <input type="password" id='code' name="code" class="input-xlarge" size='30'/>
-                     </div>
-                     <input type="hidden" name="sessionDataKey"
-                        value='<%=request.getParameter("sessionDataKey")%>'/>
-                     <div> <input type="submit" value="Authenticate" class="btn btn-primary"></div>
-                  </div>
-               </div>
-            </div>
-         </form>
+                             <div class="alert alert-danger" id="failed-msg">
+                                Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.
+                            </div>
+                            <div class="row">
                            <div class="clearfix"></div>
                         </div>
                     </div>
