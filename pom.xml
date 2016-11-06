@@ -152,7 +152,6 @@
             <artifactId>json</artifactId>
             <version>${wso2.json}</version>
         </dependency>
-
         <dependency>
             <groupId>commons-lang.wso2</groupId>
             <artifactId>commons-lang</artifactId>
@@ -201,7 +200,6 @@
             <artifactId>encoder</artifactId>
             <version>${encoder.wso2.version}</version>
         </dependency>
-
     </dependencies>
     <scm>
         <connection>scm:git:https://github.com/wso2-extensions/identity-outbound-auth-sms-otp.git</connection>
