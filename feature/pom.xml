@@ -19,8 +19,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>
-        <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp</artifactId>
+        <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
+        <artifactId>identity-outbound-auth-sms-otp</artifactId>
         <version>2.0.5-SNAPSHOT</version>
     </parent>
 
@@ -33,7 +33,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>
+            <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
             <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -63,7 +63,7 @@
                             </adviceFile>
                             <bundles>
                                 <bundleDef>
-                                    org.wso2.carbon.extension.identity.authenticator:org.wso2.carbon.extension.identity.authenticator.smsotp.connector
+                                    org.wso2.carbon.extension.identity.authenticator.outbound.smsotp:org.wso2.carbon.extension.identity.authenticator.smsotp.connector
                                 </bundleDef>
                             </bundles>
                         </configuration>
