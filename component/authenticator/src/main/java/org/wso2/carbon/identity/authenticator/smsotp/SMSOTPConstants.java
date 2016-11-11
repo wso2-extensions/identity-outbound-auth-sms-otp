@@ -35,7 +35,6 @@ public class SMSOTPConstants {
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
 
-
     public static final String SMS_URL = "sms_url";
     public static final String HTTP_METHOD = "http_method";
     public static final String HEADERS = "headers";
@@ -69,4 +68,7 @@ public class SMSOTPConstants {
     public static final String BASIC = "basic";
     public static final String HTTPS = "https";
     public static final String SUPER_TENANT = "carbon.super";
+    public static final String FEDERETOR = "federator";
+    public static final String USER_NAME = "username";
+    public static final String AUTHENTICATED_USER = "authenticatedUser";
 }

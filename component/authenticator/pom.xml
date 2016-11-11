@@ -31,6 +31,13 @@
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
+    <dependencies>
+        <dependency>
+            <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
+            <artifactId>org.wso2.carbon.extension.identity.helper</artifactId>
+            <version>${identity.extension.utils}</version>
+        </dependency>
+    </dependencies>
     <build>
         <pluginManagement>
             <plugins>
@@ -73,7 +80,10 @@
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.authenticator.smsotp.internal,
-                            org.wso2.carbon.identity.authenticator.smsotp.*
+                            org.wso2.carbon.identity.authenticator.smsotp.*;
+                            version="${carbon.identity.package.export.project.version}",
+                            org.wso2.carbon.extension.identity.helper.*;
+                            version="${identity.extension.utils}",
                         </Export-Package>
                     </instructions>
                 </configuration>

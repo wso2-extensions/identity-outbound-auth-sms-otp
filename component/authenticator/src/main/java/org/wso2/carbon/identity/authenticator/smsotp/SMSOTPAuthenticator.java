@@ -22,6 +22,8 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.extension.identity.helper.FederatedAuthenticator;
+import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
 import org.wso2.carbon.identity.application.authentication.framework.AbstractApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.FederatedApplicationAuthenticator;
@@ -112,10 +114,27 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     protected void initiateAuthenticationRequest(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
         try {
+            String username = null;
+            AuthenticatedUser authenticatedUser;
             Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
             Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
+            String tenantDomain = context.getTenantDomain();
+            context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
+            if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
+                IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, getName(), tenantDomain);
+            }
+
             String mobile = null;
-            String username = getUsername(context);
+            FederatedAuthenticator federatedAuthenticator = new FederatedAuthenticator();
+            federatedAuthenticator.getUsernameFromFirstStep(context);
+            username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
+            authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+            // find the authenticated user.
+            if (authenticatedUser == null) {
+                throw new AuthenticationFailedException
+                        ("Authentication failed!. Cannot proceed further without identifying the user");
+            }
+
             boolean isSMSOTPMandatory = Boolean.parseBoolean(smsOTPParameters
                     .get(SMSOTPConstants.IS_SMSOTP_MANDATORY));
             boolean isSMSOTPDisabledByUser = SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context);
@@ -138,8 +157,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
             } else if (isSMSOTPDisabledByUser) {
                 //the authentication flow happens with basic authentication.
-                updateAuthenticatedUserInStepConfig(context, null);
-                context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.BASIC);
+                StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
+                if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof LocalApplicationAuthenticator) {
+                    federatedAuthenticator.updateLocalAuthenticatedUserInStepConfig(context, authenticatedUser);
+                    context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.BASIC);
+                } else {
+                    federatedAuthenticator.updateAuthenticatedUserInStepConfig(context, authenticatedUser);
+                    context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.FEDERETOR);
+                }
 
             } else {
                 //the authentication flow happens with sms otp authentication.
@@ -251,7 +276,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String contextToken = (String) context.getProperty(SMSOTPConstants.OTP_TOKEN);
         String savedOTPString = null;
         try {
-
+            String username = context.getProperty("username").toString();
             if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE))) {
                 throw new InvalidCredentialsException("Code cannot not be null");
             }
@@ -268,7 +293,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals("false")) {
                 throw new AuthenticationFailedException("Code mismatch");
             } else {
-                String username = getUsername(context);
                 if (username != null) {
                     UserRealm userRealm = getUserRealm(username);
                     username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
@@ -321,21 +345,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new AuthenticationFailedException("Cannot find the user realm", e);
         }
         return userRealm;
-    }
-
-    /**
-     * Get the username of the logged in User
-     */
-    private String getUsername(AuthenticationContext context) {
-        String username = null;
-        for (Integer stepMap : context.getSequenceConfig().getStepMap().keySet())
-            if (context.getSequenceConfig().getStepMap().get(stepMap).getAuthenticatedUser() != null
-                    && context.getSequenceConfig().getStepMap().get(stepMap).getAuthenticatedAutenticator()
-                    .getApplicationAuthenticator() instanceof LocalApplicationAuthenticator) {
-                username = String.valueOf(context.getSequenceConfig().getStepMap().get(stepMap).getAuthenticatedUser());
-                break;
-            }
-        return username;
     }
 
     /**
@@ -561,10 +570,5 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         }
         context.setSubject(authenticatedUser);
-    }
-
-    @Override
-    protected boolean retryAuthenticationEnabled() {
-        return true;
     }
 }
