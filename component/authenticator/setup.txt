@@ -17,17 +17,20 @@ Steps to run
 4. Add the following configuration  <IS_HOME>/repository/conf/identity/application-authentication.xml file under the
  <AuthenticatorConfigs> section
 
-    <AuthenticatorConfig name="SMSOTP" enabled="true">
-        <Parameter name="SMSOTPAuthenticationEndpointURL">smsotpauthenticationendpoint/smsotp.jsp</Parameter>
-        <Parameter name="SMSOTPMandatory">true</Parameter>
-        <Parameter name="RetryEnable">true</Parameter>
-        <Parameter name="ResendEnable">true</Parameter>
-        <Parameter name="IsEnableMobileNoUpdate">false</Parameter>
-        <Parameter name="BackupCode">false</Parameter>
-        <Parameter name="EnableByUserClaim">true</Parameter>
-        <Parameter name="MobileClaim">true</Parameter>
-        <Parameter name="MobileNumberRegPage">/smsotpauthenticationendpoint/mobile.jsp</Parameter>
-    </AuthenticatorConfig>
+<AuthenticatorConfig name="SMSOTP" enabled="true">
+    <Parameter name="SMSOTPAuthenticationEndpointURL">smsotpauthenticationendpoint/smsotp.jsp</Parameter>
+    <Parameter name="SMSOTPMandatory">true</Parameter>
+    <Parameter name="RetryEnable">true</Parameter>
+    <Parameter name="ResendEnable">true</Parameter>
+    <Parameter name="IsEnableMobileNoUpdate">false</Parameter>
+    <Parameter name="BackupCode">false</Parameter>
+    <Parameter name="EnableByUserClaim">true</Parameter>
+    <Parameter name="MobileClaim">true</Parameter>
+    <Parameter name="MobileNumberRegPage">smsotpauthenticationendpoint/mobile.jsp</Parameter>
+    <Parameter name="enableSecondStep">true</Parameter>
+    <Parameter name="usecase">association</Parameter>
+    <Parameter name="secondaryUserstore">primary</Parameter>
+</AuthenticatorConfig>
 
 5.  Follow the steps in https://docs.wso2.com/pages/viewpage.action?title=SMSOTP%2BAuthenticator&spaceKey=ISCONNECTORS
 

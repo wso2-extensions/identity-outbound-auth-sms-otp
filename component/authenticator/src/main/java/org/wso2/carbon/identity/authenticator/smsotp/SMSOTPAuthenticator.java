@@ -276,7 +276,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String contextToken = (String) context.getProperty(SMSOTPConstants.OTP_TOKEN);
         String savedOTPString = null;
         try {
-            String username = context.getProperty("username").toString();
+            String username = context.getProperty(SMSOTPConstants.USER_NAME).toString();
+            AuthenticatedUser authenticatedUser = (AuthenticatedUser) context
+                    .getProperty(SMSOTPConstants.AUTHENTICATED_USER);
             if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE))) {
                 throw new InvalidCredentialsException("Code cannot not be null");
             }
@@ -288,8 +290,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
 
             if (userToken.equals(contextToken)) {
-                context.setSubject(AuthenticatedUser
-                        .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
+                context.setSubject(authenticatedUser);
             } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals("false")) {
                 throw new AuthenticationFailedException("Code mismatch");
             } else {
@@ -306,8 +307,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             " does not contain any values");
                 } else {
                     if (savedOTPString.contains(userToken)) {
-                        context.setSubject(AuthenticatedUser
-                                .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
+                        context.setSubject(authenticatedUser);
                         savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
                         if (username != null) {
                             UserRealm userRealm = getUserRealm(username);
@@ -366,6 +366,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     public String getContextIdentifier(HttpServletRequest httpServletRequest) {
         return null;
+    }
+
+    @Override
+    protected boolean retryAuthenticationEnabled() {
+        return true;
     }
 
     /**
@@ -551,24 +556,5 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         }
         return false;
-    }
-
-    /**
-     * Update the authenticated user context.
-     *
-     * @param context           the authentication context
-     * @param authenticatedUser the authenticated user's name
-     */
-    private void updateAuthenticatedUserInStepConfig(AuthenticationContext context,
-                                                     AuthenticatedUser authenticatedUser) {
-        for (int i = 1; i <= context.getSequenceConfig().getStepMap().size(); i++) {
-            StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(i);
-            if (stepConfig.getAuthenticatedUser() != null && stepConfig.getAuthenticatedAutenticator()
-                    .getApplicationAuthenticator() instanceof LocalApplicationAuthenticator) {
-                authenticatedUser = stepConfig.getAuthenticatedUser();
-                break;
-            }
-        }
-        context.setSubject(authenticatedUser);
     }
 }
