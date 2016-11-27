@@ -164,7 +164,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         throw new AuthenticationFailedException("Authentication failed! Code is Mismatch");
                     }
                 } else {
-                    if (username != null) {
+                    if (StringUtils.isNotEmpty(username)) {
                         UserRealm userRealm = getUserRealm(username);
                         username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
                         if (userRealm != null) {
@@ -269,7 +269,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 throw new AuthenticationFailedException("Code mismatch");
             } else {
                 String username = getUsername(context);
-                if (username != null) {
+                if (StringUtils.isNotEmpty(username)) {
                     UserRealm userRealm = getUserRealm(username);
                     username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
                     if (userRealm != null) {
@@ -277,7 +277,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 .getUserClaimValue(username, SMSOTPConstants.SAVED_OTP_LIST, null);
                     }
                 }
-                if (savedOTPString == null) {
+                if (StringUtils.isEmpty(savedOTPString)) {
                     throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                             " does not contain any values");
                 } else {
@@ -285,7 +285,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         context.setSubject(AuthenticatedUser
                                 .createLocalAuthenticatedUserFromSubjectIdentifier("an authorised user"));
                         savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
-                        if (username != null) {
+                        if (StringUtils.isNotEmpty(username)) {
                             UserRealm userRealm = getUserRealm(username);
                             username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
                             if (userRealm != null) {
@@ -421,8 +421,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpsURLConnection httpsConnection = null;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
         try {
-            smsUrl = smsUrl.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
-                    smsMessage.replaceAll("\\s", "+") + otpToken);
+            smsUrl = smsUrl.replaceAll(SMSOTPConstants.NUMBER, mobile).replaceAll(SMSOTPConstants.MESSAGE,
+                    smsMessage.replaceAll(SMSOTPConstants.SINGLE_WHITESPACE, SMSOTPConstants.ADD_SIGN) + otpToken);
             URL smsProviderUrl = new URL(smsUrl);
             String subUrl = smsProviderUrl.getProtocol();
             if (subUrl.equals(SMSOTPConstants.HTTPS)) {
@@ -431,11 +431,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 httpsConnection.setDoOutput(true);
                 String[] headerList;
                 if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
+                    headerString = headerString.trim().replaceAll(SMSOTPConstants.NUMBER, mobile).replaceAll(SMSOTPConstants.MESSAGE,
                             smsMessage + otpToken);
-                    headerList = headerString.split(",");
+                    headerList = headerString.split(SMSOTPConstants.COMMA);
                     for (String aHeaderList : headerList) {
-                        String[] header = aHeaderList.split(":");
+                        String[] header = aHeaderList.split(SMSOTPConstants.COLON);
                         httpsConnection.setRequestProperty(header[0], header[1]);
                     }
                 }
@@ -444,7 +444,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
                     httpsConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                     if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg", smsMessage + otpToken);
+                        payload = payload.replaceAll(SMSOTPConstants.NUMBER, mobile).replaceAll(SMSOTPConstants.MESSAGE, smsMessage + otpToken);
                     }
                     OutputStreamWriter writer = null;
                     try {
@@ -480,11 +480,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 httpConnection.setDoOutput(true);
                 String[] headerList;
                 if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
+                    headerString = headerString.trim().replaceAll(SMSOTPConstants.NUMBER, mobile).replaceAll(SMSOTPConstants.MESSAGE,
                             smsMessage + otpToken);
-                    headerList = headerString.split(",");
+                    headerList = headerString.split(SMSOTPConstants.COMMA);
                     for (String aHeaderList : headerList) {
-                        String[] header = aHeaderList.split(":");
+                        String[] header = aHeaderList.split(SMSOTPConstants.COLON);
                         httpConnection.setRequestProperty(header[0], header[1]);
                     }
                 }
@@ -493,7 +493,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
                     httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                     if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg", smsMessage + otpToken);
+                        payload = payload.replaceAll(SMSOTPConstants.NUMBER, mobile).replaceAll(SMSOTPConstants.MESSAGE, smsMessage + otpToken);
                     }
                     OutputStreamWriter writer = null;
                     try {

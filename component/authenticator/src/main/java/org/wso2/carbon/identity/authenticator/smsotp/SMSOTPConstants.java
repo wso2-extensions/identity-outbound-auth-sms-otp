@@ -69,4 +69,11 @@ public class SMSOTPConstants {
     public static final String BASIC = "basic";
     public static final String HTTPS = "https";
     public static final String SUPER_TENANT = "carbon.super";
+
+    public static final String NUMBER = "\\$ctx.num";
+    public static final String MESSAGE = "\\$ctx.msg";
+    public static final String SINGLE_WHITESPACE = "\\s";
+    public static final String ADD_SIGN = "+";
+    public static final String COMMA = ",";
+    public static final String COLON = ":";
 }
