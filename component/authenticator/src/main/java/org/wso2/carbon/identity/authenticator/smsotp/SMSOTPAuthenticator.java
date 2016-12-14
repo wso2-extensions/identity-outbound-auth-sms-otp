@@ -158,7 +158,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (isSMSOTPDisabledByUser) {
                 //the authentication flow happens with basic authentication.
                 StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
-                if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof LocalApplicationAuthenticator) {
+                if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
+                        LocalApplicationAuthenticator) {
                     federatedAuthenticator.updateLocalAuthenticatedUserInStepConfig(context, authenticatedUser);
                     context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.BASIC);
                 } else {
@@ -168,14 +169,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
             } else {
                 //the authentication flow happens with sms otp authentication.
-                String login = smsOTPParameters.get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
-                String loginPage = "";
-                if (StringUtils.isNotEmpty(login)) {
-                    loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                            .replace(SMSOTPConstants.LOGIN_PAGE, login);
-                } else {
+                String loginPage = smsOTPParameters.get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
+                if (StringUtils.isEmpty(loginPage)) {
                     loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
                             .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.SMS_LOGIN_PAGE);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Default authentication endpoint context is used");
+                    }
                 }
                 boolean isRetryEnabled = Boolean.parseBoolean(smsOTPParameters
                         .get(SMSOTPConstants.IS_ENABLED_RETRY));
@@ -199,7 +199,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                         Map<String, String> attributes = new HashMap<String, String>();
                                         attributes.put(SMSOTPConstants.MOBILE_CLAIM, request
                                                 .getParameter(SMSOTPConstants.MOBILE_NUMBER));
-                                        SMSOTPUtils.updateUserAttribute(username, attributes);
+                                        SMSOTPUtils.updateUserAttribute(username, attributes, tenantDomain);
                                     }
                                 }
                                 if (Boolean.parseBoolean(smsOTPParameters.get(SMSOTPConstants.IS_MOBILE_CLAIM))) {
@@ -486,6 +486,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             log.debug("Code is successfully sent to the mobile");
                         }
                         return true;
+                    } else {
+                        log.error("Error while sending SMS: error code is " + httpsConnection.getResponseCode()
+                                + " and error message is " + httpsConnection.getResponseMessage());
+                        return false;
                     }
                 }
             } else {
@@ -536,7 +540,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                         return true;
                     } else {
-                        log.error(httpConnection.getErrorStream().toString());
+                        log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                                + " and error message is " + httpConnection.getResponseMessage());
                         return false;
                     }
                 }

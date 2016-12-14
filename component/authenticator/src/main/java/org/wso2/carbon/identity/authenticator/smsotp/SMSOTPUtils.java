@@ -79,7 +79,7 @@ public class SMSOTPUtils {
         } catch (UserStoreException e) {
             throw new SMSOTPException("Failed while trying to access userRealm of the user : " + username, e);
         }
-        return true;
+        return false;
     }
 
     /**
@@ -89,18 +89,19 @@ public class SMSOTPUtils {
      * @param attribute the attribute
      * @throws SMSOTPException
      */
-    public static void updateUserAttribute(String username, Map<String, String> attribute) throws SMSOTPException {
+    public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
+            throws SMSOTPException {
 
         try {
             // updating user attributes is independent from tenant association.not tenant association check needed here.
             UserRealm userRealm;
             // user is always in the super tenant.
-            userRealm = SMSOTPUtils.getUserRealm(SMSOTPConstants.SUPER_TENANT);
+            userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
                 throw new SMSOTPException(String.format("The specified tenant domain does not exist."));
             }
             // check whether user already exists in the system.
-            SMSOTPUtils.validateUpdateUser(username);
+            SMSOTPUtils.validateUpdateUser(username, tenantDomain);
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             userStoreManager.setUserClaimValues(username, attribute, null);
         } catch (Exception e) {
@@ -114,11 +115,11 @@ public class SMSOTPUtils {
      * @param username the user name
      * @throws SMSOTPException
      */
-    public static void validateUpdateUser(String username) throws SMSOTPException {
+    public static void validateUpdateUser(String username, String tenantDomain) throws SMSOTPException {
         UserRealm userRealm = null;
         boolean isUserExist = false;
         try {
-            userRealm = SMSOTPUtils.getUserRealm(SMSOTPConstants.SUPER_TENANT);
+            userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
                 throw new SMSOTPException("Super tenant realm not loaded.");
             }
