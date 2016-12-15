@@ -23,7 +23,7 @@ Steps to run
 
 <AuthenticatorConfig name="SMSOTP" enabled="true">
 	  <Parameter name="SMSOTPAuthenticationEndpointURL">http://localhost:8080/smsotpauthenticationendpoint/smsotp.jsp</Parameter>
-	  <Parameter name="MobileNumberRegPage">smsotpauthenticationendpoint/mobile.jsp</Parameter>
+	  <Parameter name="MobileNumberRegPage">http://localhost:8080/smsotpauthenticationendpoint/mobile.jsp</Parameter>
 	  <Parameter name="RetryEnable">true</Parameter>
 	  <Parameter name="ResendEnable">false</Parameter>
 	  <Parameter name="BackupCode">false</Parameter>

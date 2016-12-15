@@ -24,8 +24,6 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
 
-<fmt:bundle basename="org.wso2.carbon.identity.application.authentication.endpoint.i18n.Resources">
-
     <%
         request.getSession().invalidate();
         String queryString = request.getQueryString();
@@ -34,7 +32,7 @@
             idpAuthenticatorMapping = (Map<String, String>) request.getAttribute(Constants.IDP_AUTHENTICATOR_MAP);
         }
 
-        String errorMessage = "Authentication Failed!";
+        String errorMessage = "Authentication Failed! Please Retry";
         String authenticationFailed = "false";
 
         if (Boolean.parseBoolean(request.getParameter(Constants.AUTH_FAILURE))) {
@@ -43,8 +41,12 @@
             if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
                 errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
-                    errorMessage = "Authentication Failed!";
+                if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+                    errorMessage = "Authentication Failed! Please Retry";
+                } else if (errorMessage.equalsIgnoreCase("unable.send.code")) {
+                    errorMessage = "Unable to send code to your phone number";
+                } else if (errorMessage.equalsIgnoreCase("smsotp.disable")) {
+                    errorMessage = "Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.";
                 }
             }
         }
@@ -63,15 +65,13 @@
 
         <script src="js/scripts.js"></script>
         <script src="assets/js/jquery-1.7.1.min.js"></script>
-        <script src="/smsotpauthenticationendpoint/assets/js/jquery-1.7.1.min.js"></script>
-        <script src="/smsotpauthenticationendpoint/js/scripts.js"></script>
         <!--[if lt IE 9]>
         <script src="js/html5shiv.min.js"></script>
         <script src="js/respond.min.js"></script>
         <![endif]-->
     </head>
 
-    <body onload="getLoginDiv()">
+    <body>
 
     <!-- header -->
     <header class="header header-default">
@@ -97,25 +97,26 @@
                 <div class="container col-xs-10 col-sm-6 col-md-6 col-lg-4 col-centered wr-content wr-login col-centered">
                     <div>
                         <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
-                            Authentication Failed!
-                        </h2>
+                            Failed Authentication with SMSOTP &nbsp;&nbsp;</h2>
+
                     </div>
                     <div class="boarder-all ">
                         <div class="clearfix"></div>
                         <div class="padding-double login-form">
-                             <div class="alert alert-danger" id="failed-msg">
-                                Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.
-                            </div>
-                            <div class="row">
-                           <div class="clearfix"></div>
+                            <div id="errorDiv"></div>
+                            <%
+                                if ("true".equals(authenticationFailed)) {
+                            %>
+                                    <div class="alert alert-danger" id="failed-msg"><%=errorMessage%></div>
+                            <% } %>
+                            <div id="alertDiv"></div>
+                            <div class="clearfix"></div>
                         </div>
                     </div>
                     <!-- /content -->
-
                 </div>
             </div>
             <!-- /content/body -->
-
         </div>
     </div>
 
@@ -132,4 +133,3 @@
     <script src="libs/bootstrap_3.3.5/js/bootstrap.min.js"></script>
     </body>
     </html>
-</fmt:bundle>

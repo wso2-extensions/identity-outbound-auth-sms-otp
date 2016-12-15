@@ -53,6 +53,8 @@ public class SMSOTPConstants {
     public static final String POST_METHOD = "POST";
 
     public static final String SMSOTP_AUTHENTICATION_ENDPOINT_URL = "SMSOTPAuthenticationEndpointURL";
+    public static final String SMSOTP_AUTHENTICATION_ERROR_PAGE_URL = "SMSOTPAuthenticationEndpointErrorPage";
+
     public static final String LOGIN_PAGE = "authenticationendpoint/login.do";
     public static final String SMS_LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=authentication.fail.message";
@@ -71,4 +73,8 @@ public class SMSOTPConstants {
     public static final String FEDERETOR = "federator";
     public static final String USER_NAME = "username";
     public static final String AUTHENTICATED_USER = "authenticatedUser";
+    public static final String STATUS_CODE = "statusCode";
+    public static final String UNABLE_SEND_CODE = "UnableSend";
+    public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=unable.send.code";
+    public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
 }
