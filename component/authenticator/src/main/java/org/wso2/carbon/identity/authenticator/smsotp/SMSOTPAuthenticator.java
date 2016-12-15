@@ -147,11 +147,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     context.getCallerSessionKey(), context.getContextIdentifier());
             String retryParam = "";
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
+            String errorPage = smsOTPParameters.get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
             // SMS OTP authentication is mandatory and user doesn't disable SMS OTP claim in user's profile.
             if (isSMSOTPMandatory && isSMSOTPDisabledByUser) {
                 // that Enable the SMS OTP in user's Profile. Cannot proceed further without SMS OTP authentication.
-                String errorPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                        .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.ERROR_PAGE);
+                retryParam = SMSOTPConstants.ERROR_SMSOTP_DISABLE;
+                if (StringUtils.isEmpty(errorPage)) {
+                    errorPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                            .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.ERROR_PAGE);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Default authentication endpoint context is used");
+                    }
+                }
                 response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
                         + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
 
@@ -180,13 +187,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 boolean isRetryEnabled = Boolean.parseBoolean(smsOTPParameters
                         .get(SMSOTPConstants.IS_ENABLED_RETRY));
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
-                    if (isRetryEnabled) {
+                    String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
+                    if (statusCode == null && isRetryEnabled) {
                         retryParam = SMSOTPConstants.RETRY_PARAMS;
                         response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
                                 + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                 + isEnableResendCode + retryParam);
                     } else {
-                        throw new AuthenticationFailedException("Authentication failed! Code is Mismatch");
+                        if (isRetryEnabled & !statusCode.equals(SMSOTPConstants.UNABLE_SEND_CODE)) {
+                            retryParam = SMSOTPConstants.RETRY_PARAMS;
+                            response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
+                                    + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                                    + isEnableResendCode + retryParam);
+                        } else {
+                            if (!statusCode.equals(SMSOTPConstants.UNABLE_SEND_CODE)) {
+                                throw new AuthenticationFailedException("Authentication failed! Code is Mismatch");
+                            }
+                        }
                     }
                 } else {
                     if (username != null) {
@@ -239,12 +256,25 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
                                         String payload = authenticatorProperties.get(SMSOTPConstants.PAYLOAD);
                                         String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
-
-                                        response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
-                                                + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
                                         if (!sendRESTCall(smsUrl, httpMethod, headerString, payload, httpResponse, mobile,
                                                 otpToken)) {
+                                            context.setProperty(SMSOTPConstants.STATUS_CODE, SMSOTPConstants.
+                                                    UNABLE_SEND_CODE);
+                                            if (StringUtils.isEmpty(errorPage)) {
+                                                errorPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                                                        .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.ERROR_PAGE);
+                                                if (log.isDebugEnabled()) {
+                                                    log.debug("Default authentication endpoint context is used");
+                                                }
+                                            }
+                                            retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM;
+                                            response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
+                                                    + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                                                    + isEnableResendCode + retryParam);
                                             throw new AuthenticationFailedException("Unable to send the code");
+                                        } else {
+                                            response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
+                                                    + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
                                         }
                                     } catch (IOException e) {
                                         throw new AuthenticationFailedException("Error while sending the HTTP request", e);
