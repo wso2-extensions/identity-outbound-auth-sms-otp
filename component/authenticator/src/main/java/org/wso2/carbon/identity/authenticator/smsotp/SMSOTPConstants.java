@@ -75,6 +75,9 @@ public class SMSOTPConstants {
     public static final String AUTHENTICATED_USER = "authenticatedUser";
     public static final String STATUS_CODE = "statusCode";
     public static final String UNABLE_SEND_CODE = "UnableSend";
-    public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=unable.send.code";
+    public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=";
+    public static final String UNABLE_SEND_CODE_VALUE = "unable.send.code";
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
+    public static final String ERROR_CODE_MISMATCH = "&authFailure=true&authFailureMsg=code.mismatch";
+    public static final String ERROR_CODE = "errorCode";
 }
