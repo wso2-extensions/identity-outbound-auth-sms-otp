@@ -45,6 +45,8 @@
                     errorMessage = "Authentication Failed! Please Retry";
                 } else if (errorMessage.equalsIgnoreCase("unable.send.code")) {
                     errorMessage = "Unable to send code to your phone number";
+                } else if (errorMessage.equalsIgnoreCase("code.mismatch")) {
+                    errorMessage = "The code entered is incorrect. Authentication Failed!";
                 } else if (errorMessage.equalsIgnoreCase("smsotp.disable")) {
                     errorMessage = "Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.";
                 }

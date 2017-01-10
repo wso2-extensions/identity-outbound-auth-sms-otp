@@ -64,6 +64,7 @@ import java.util.Map;
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
+    private boolean codeMismatch;
 
     /**
      * Check whether the authentication or logout request can be handled by the authenticator
@@ -194,13 +195,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                 + isEnableResendCode + retryParam);
                     } else {
-                        if (isRetryEnabled & !statusCode.equals(SMSOTPConstants.UNABLE_SEND_CODE)) {
+                        if (codeMismatch && !isRetryEnabled) {
+                            retryParam = SMSOTPConstants.ERROR_CODE_MISMATCH;
+                            response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
+                                    + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                                    + isEnableResendCode + retryParam);
+
+                        } else if (!SMSOTPConstants.UNABLE_SEND_CODE.equals(statusCode)) {
                             retryParam = SMSOTPConstants.RETRY_PARAMS;
                             response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
                                     + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                     + isEnableResendCode + retryParam);
                         } else {
-                            if (!statusCode.equals(SMSOTPConstants.UNABLE_SEND_CODE)) {
+                            if (!SMSOTPConstants.UNABLE_SEND_CODE.equals(statusCode)) {
                                 throw new AuthenticationFailedException("Authentication failed! Code is Mismatch");
                             }
                         }
@@ -256,7 +263,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                         String headerString = authenticatorProperties.get(SMSOTPConstants.HEADERS);
                                         String payload = authenticatorProperties.get(SMSOTPConstants.PAYLOAD);
                                         String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
-                                        if (!sendRESTCall(smsUrl, httpMethod, headerString, payload, httpResponse, mobile,
+                                        if (!sendRESTCall(context, smsUrl, httpMethod, headerString, payload, httpResponse, mobile,
                                                 otpToken)) {
                                             context.setProperty(SMSOTPConstants.STATUS_CODE, SMSOTPConstants.
                                                     UNABLE_SEND_CODE);
@@ -267,7 +274,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                                     log.debug("Default authentication endpoint context is used");
                                                 }
                                             }
-                                            retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM;
+                                            if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.ERROR_CODE)
+                                                    .toString())) {
+                                                retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
+                                                        context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
+                                            } else {
+                                                retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
+                                                        SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
+                                            }
                                             response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
                                                     + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                                     + isEnableResendCode + retryParam);
@@ -322,6 +336,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (userToken.equals(contextToken)) {
                 context.setSubject(authenticatedUser);
             } else if (smsOTPParameters.get(SMSOTPConstants.BACKUP_CODE).equals("false")) {
+                codeMismatch = true;
                 throw new AuthenticationFailedException("Code mismatch");
             } else {
                 if (username != null) {
@@ -457,7 +472,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         return configProperties;
     }
 
-    public boolean sendRESTCall(String smsUrl, String httpMethod, String headerString, String payload,
+    public boolean sendRESTCall(AuthenticationContext context, String smsUrl, String httpMethod, String headerString, String payload,
                                 String httpResponse, String mobile, String otpToken) throws IOException,
             AuthenticationFailedException {
 
@@ -517,6 +532,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                         return true;
                     } else {
+                        context.setProperty(SMSOTPConstants.ERROR_CODE, httpsConnection.getResponseCode() + " : " +
+                                httpsConnection.getResponseMessage());
                         log.error("Error while sending SMS: error code is " + httpsConnection.getResponseCode()
                                 + " and error message is " + httpsConnection.getResponseMessage());
                         return false;
@@ -570,6 +587,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                         return true;
                     } else {
+                        context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
+                                httpConnection.getResponseMessage());
                         log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
                                 + " and error message is " + httpConnection.getResponseMessage());
                         return false;
