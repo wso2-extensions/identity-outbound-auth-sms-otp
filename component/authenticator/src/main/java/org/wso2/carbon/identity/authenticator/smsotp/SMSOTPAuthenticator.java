@@ -160,7 +160,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         log.debug("Default authentication endpoint context is used");
                     }
                 }
-                response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
+                response.sendRedirect(errorPage + ("?" + queryParams)
                         + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
 
             } else if (isSMSOTPDisabledByUser) {
@@ -191,19 +191,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
                     if (statusCode == null && isRetryEnabled) {
                         retryParam = SMSOTPConstants.RETRY_PARAMS;
-                        response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
+                        response.sendRedirect(loginPage + ("?" + queryParams)
                                 + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                 + isEnableResendCode + retryParam);
                     } else {
                         if (codeMismatch && !isRetryEnabled) {
                             retryParam = SMSOTPConstants.ERROR_CODE_MISMATCH;
-                            response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
+                            response.sendRedirect(errorPage + ("?" + queryParams)
                                     + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                     + isEnableResendCode + retryParam);
 
                         } else if (!SMSOTPConstants.UNABLE_SEND_CODE.equals(statusCode)) {
                             retryParam = SMSOTPConstants.RETRY_PARAMS;
-                            response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
+                            response.sendRedirect(loginPage + ("?" + queryParams)
                                     + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                                     + isEnableResendCode + retryParam);
                         } else {
@@ -238,8 +238,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                     if (isEnableMobileNoUpdate) {
                                         loginPage = smsOTPParameters.get(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
                                         try {
-                                            response.sendRedirect(response.encodeRedirectURL(loginPage + ("?"
-                                                    + queryParams)) + SMSOTPConstants.AUTHENTICATORS + getName()
+                                            response.sendRedirect(loginPage + ("?" + queryParams)
+                                                    + SMSOTPConstants.AUTHENTICATORS + getName()
                                                     + retryParam);
                                         } catch (IOException e) {
                                             throw new AuthenticationFailedException("Authentication failed!", e);
@@ -282,12 +282,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                                 retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
                                                         SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
                                             }
-                                            response.sendRedirect(response.encodeRedirectURL(errorPage + ("?" + queryParams))
-                                                    + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                                            response.sendRedirect(errorPage + ("?" + queryParams)
+                                                    + SMSOTPConstants.AUTHENTICATORS + getName()
+                                                    + SMSOTPConstants.RESEND_CODE
                                                     + isEnableResendCode + retryParam);
                                             throw new AuthenticationFailedException("Unable to send the code");
                                         } else {
-                                            response.sendRedirect(response.encodeRedirectURL(loginPage + ("?" + queryParams))
+                                            response.sendRedirect(loginPage + ("?" + queryParams)
                                                     + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
                                         }
                                     } catch (IOException e) {
