@@ -19,6 +19,7 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
+import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -411,7 +412,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * Get the Context identifier sent with the request.
      */
     public String getContextIdentifier(HttpServletRequest httpServletRequest) {
-        return null;
+        return httpServletRequest.getParameter("sessionDataKey");
     }
 
     @Override
@@ -480,8 +481,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection = null;
         HttpsURLConnection httpsConnection = null;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
+        URLEncoder encoder = new URLEncoder();
         try {
-            smsUrl = smsUrl.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
+            String encodedMobileNo = encoder.encode(mobile);
+            smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                     smsMessage.replaceAll("\\s", "+") + otpToken);
             URL smsProviderUrl = new URL(smsUrl);
             String subUrl = smsProviderUrl.getProtocol();
@@ -491,7 +494,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 httpsConnection.setDoOutput(true);
                 String[] headerList;
                 if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
+                    headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                             smsMessage + otpToken);
                     headerList = headerString.split(",");
                     for (String aHeaderList : headerList) {
@@ -504,7 +507,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
                     httpsConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                     if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg", smsMessage + otpToken);
+                        payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage + otpToken);
                     }
                     OutputStreamWriter writer = null;
                     try {
@@ -546,7 +549,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 httpConnection.setDoOutput(true);
                 String[] headerList;
                 if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg",
+                    headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                             smsMessage + otpToken);
                     headerList = headerString.split(",");
                     for (String aHeaderList : headerList) {
@@ -559,7 +562,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
                     httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                     if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", mobile).replaceAll("\\$ctx.msg", smsMessage + otpToken);
+                        payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage + otpToken);
                     }
                     OutputStreamWriter writer = null;
                     try {
