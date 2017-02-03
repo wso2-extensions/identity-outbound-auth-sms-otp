@@ -287,7 +287,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                                     + SMSOTPConstants.AUTHENTICATORS + getName()
                                                     + SMSOTPConstants.RESEND_CODE
                                                     + isEnableResendCode + retryParam);
-                                            throw new AuthenticationFailedException("Unable to send the code");
                                         } else {
                                             response.sendRedirect(loginPage + ("?" + queryParams)
                                                     + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
