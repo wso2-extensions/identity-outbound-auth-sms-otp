@@ -645,7 +645,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             screenUserAttributeValue = userRealm.getUserStoreManager()
                     .getUserClaimValue(username, screenUserAttributeParam, null);
             noOfDigits = screenUserAttributeValue.length();
-
         }
         if (smsOTPParameters.get(SMSOTPConstants.NO_DIGITS) != null) {
             noOfDigits = Integer.parseInt(smsOTPParameters.get(SMSOTPConstants.NO_DIGITS));
