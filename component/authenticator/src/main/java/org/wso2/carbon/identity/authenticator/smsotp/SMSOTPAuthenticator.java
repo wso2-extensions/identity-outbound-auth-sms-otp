@@ -289,8 +289,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                                     + isEnableResendCode + retryParam);
                                             throw new AuthenticationFailedException("Unable to send the code");
                                         } else {
-                                            response.sendRedirect(loginPage + ("?" + queryParams)
-                                                    + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
+                                            String url = loginPage + ("?" + queryParams)
+                                                    + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam;
+                                            String screenValue = getScreenAttribute(smsOTPParameters, userRealm,
+                                                    username);
+                                            if (screenValue != null) {
+                                                url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
+                                            }
+                                            response.sendRedirect(url);
                                         }
                                     } catch (IOException e) {
                                         throw new AuthenticationFailedException("Error while sending the HTTP request", e);
@@ -310,6 +316,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new AuthenticationFailedException("Failed to get the parameters from authentication xml fie", e);
         }
     }
+
 
     /**
      * Process the response of the SMSOTP end-point.
@@ -614,5 +621,44 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         }
         return false;
+    }
+
+    /**
+     * Get a screen value from the user attributes.
+     *
+     * @param smsOTPParameters the sms OTP Parameters
+     * @param userRealm        the user Realm
+     * @param username         the username
+     * @return the screen attribute
+     * @throws UserStoreException
+     */
+    public String getScreenAttribute(Map<String, String> smsOTPParameters, UserRealm userRealm, String username)
+            throws UserStoreException {
+
+        String screenUserAttributeParam;
+        String screenUserAttributeValue = null;
+        String screenValue = null;
+        int noOfDigits = 0;
+
+        screenUserAttributeParam = smsOTPParameters.get(SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
+        if (screenUserAttributeParam != null) {
+            screenUserAttributeValue = userRealm.getUserStoreManager()
+                    .getUserClaimValue(username, screenUserAttributeParam, null);
+            noOfDigits = screenUserAttributeValue.length();
+
+        }
+        if (smsOTPParameters.get(SMSOTPConstants.NO_DIGITS) != null) {
+            noOfDigits = Integer.parseInt(smsOTPParameters.get(SMSOTPConstants.NO_DIGITS));
+        }
+        if (screenUserAttributeValue != null) {
+            if (SMSOTPConstants.BACKWARD.equals(smsOTPParameters.get(SMSOTPConstants.ORDER))) {
+                int screenAttributeLength = screenUserAttributeValue.length();
+                screenValue = screenUserAttributeValue.substring(screenAttributeLength - noOfDigits,
+                        screenAttributeLength);
+            } else {
+                screenValue = screenUserAttributeValue.substring(0, noOfDigits);
+            }
+        }
+        return screenValue;
     }
 }

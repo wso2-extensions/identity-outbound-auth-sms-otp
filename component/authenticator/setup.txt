@@ -34,6 +34,9 @@ Steps to run
 	  <Parameter name="usecase">association</Parameter>
 	  <Parameter name="secondaryUserstore">primary</Parameter>
 	  <Parameter name="IsEnableMobileNoUpdate">false</Parameter>
+	  <Parameter name="screenUserAttribute">http://wso2.org/claims/mobile</Parameter>
+         <Parameter name="noOfDigits">4</Parameter>
+         <Parameter name="order">backward</Parameter>
 </AuthenticatorConfig>
 
 5.  Follow the steps in https://docs.wso2.com/pages/viewpage.action?title=SMSOTP%2BAuthenticator&spaceKey=ISCONNECTORS
