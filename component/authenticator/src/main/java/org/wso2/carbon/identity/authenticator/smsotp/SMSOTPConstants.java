@@ -80,4 +80,9 @@ public class SMSOTPConstants {
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
     public static final String ERROR_CODE_MISMATCH = "&authFailure=true&authFailureMsg=code.mismatch";
     public static final String ERROR_CODE = "errorCode";
+    public static final String SCREEN_USER_ATTRIBUTE = "screenUserAttribute";
+    public static final String NO_DIGITS = "noOfDigits";
+    public static final String ORDER = "order";
+    public static final String BACKWARD = "backward";
+    public static final String SCREEN_VALUE = "&screenvalue=";
 }
