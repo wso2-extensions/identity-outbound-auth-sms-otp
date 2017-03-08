@@ -634,7 +634,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     public String getScreenAttribute(Map<String, String> smsOTPParameters, UserRealm userRealm, String username)
             throws UserStoreException {
-
         String screenUserAttributeParam;
         String screenUserAttributeValue = null;
         String screenValue = null;
