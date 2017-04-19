@@ -49,6 +49,8 @@
                     errorMessage = "The code entered is incorrect. Authentication Failed!";
                 } else if (errorMessage.equalsIgnoreCase("smsotp.disable")) {
                     errorMessage = "Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.";
+                } else if (errorMessage.equalsIgnoreCase("directly.send.otp.disable")) {
+                    errorMessage = "User not found in the directory. Cannot proceed further without SMS OTP authentication.";
                 }
             }
         }

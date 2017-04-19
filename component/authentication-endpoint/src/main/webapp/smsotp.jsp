@@ -106,7 +106,7 @@
                                     <div class="alert alert-danger" id="failed-msg"><%=errorMessage%></div>
                             <% } %>
                             <div id="alertDiv"></div>
-                            <form id="pin_form" name="pin_form" action="../../commonauth"  method="POST">
+                            <form id="pin_form" name="pin_form" action="../commonauth"  method="POST">
                                 <div id="loginTable1" class="identity-box">
                                     <%
                                         String loginFailed = request.getParameter("authFailure");
@@ -122,7 +122,7 @@
                                              <div class="control-group">
                                                 <label class="control-label" for="password">
                                                 Enter the code sent to your mobile phone:</label>
-                                                <input type="password" id='code' name="code" class="input-xlarge"
+                                                <input type="password" id='OTPcode' name="OTPcode" class="input-xlarge"
                                                 size='30'/>
                                              </div>
                                              <input type="hidden" name="sessionDataKey"
@@ -167,8 +167,8 @@
     <script type="text/javascript">
     $(document).ready(function() {
     	$('#authenticate').click(function() {
-            var code = document.getElementById("code").value;
-            if (code == "") {
+            var OTPcode = document.getElementById("OTPcode").value;
+            if (OTPcode == "") {
                 document.getElementById('alertDiv').innerHTML
                 = '<div id="error-msg" class="alert alert-danger">Please enter the code!</div>';
             } else {
