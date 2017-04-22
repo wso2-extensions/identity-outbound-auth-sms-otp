@@ -118,7 +118,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             String username;
             AuthenticatedUser authenticatedUser;
-            String mobile;
+            String mobileNumber;
             String tenantDomain = context.getTenantDomain();
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
             if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
@@ -147,9 +147,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
-                    mobile = getMobileNumber(request, response, context, username, tenantDomain, queryParams);
-                    if (StringUtils.isNotEmpty(mobile)) {
-                        proceedWithOTP(response, context, errorPage, mobile, queryParams, username);
+                    mobileNumber = getMobileNumber(request, response, context, username, tenantDomain, queryParams);
+                    if (StringUtils.isNotEmpty(mobileNumber)) {
+                        proceedWithOTP(response, context, errorPage, mobileNumber, queryParams, username);
                     }
                 }
             } else {
@@ -178,8 +178,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private String getMobileNumber(HttpServletRequest request, HttpServletResponse response,
                                    AuthenticationContext context, String username, String tenantDomain,
                                    String queryParams) throws AuthenticationFailedException, SMSOTPException {
-        String mobile = SMSOTPUtils.getMobileNumberForUsername(username);
-        if (StringUtils.isEmpty(mobile)) {
+        String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
+        if (StringUtils.isEmpty(mobileNumber)) {
             if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("User has not registered a mobile number: " + username);
@@ -187,10 +187,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 redirectToMobileNoReqPage(response, context, queryParams);
             } else {
                 updateMobileNumberForUsername(context, request, username, tenantDomain);
-                mobile = SMSOTPUtils.getMobileNumberForUsername(username);
+                mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
             }
         }
-        return mobile;
+        return mobileNumber;
     }
 
     /**
@@ -411,7 +411,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         + SMSOTPConstants.AUTHENTICATORS + getName()
                         + SMSOTPConstants.RESEND_CODE
                         + isEnableResendCode + retryParam);
-                throw new AuthenticationFailedException("Unable to send the code.");
             } else {
                 String url = loginPage + "?" + queryParams + SMSOTPConstants.AUTHENTICATORS + getName();
                 boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
@@ -455,14 +454,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_CODE_MISMATCH);
 
-                } else if (!SMSOTPConstants.UNABLE_SEND_CODE.equals(statusCode)) {
-                    response.sendRedirect(loginPage + "?" + queryParams
+                } else {
+                    response.sendRedirect(loginPage + ("?" + queryParams)
                             + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
-                } else {
-                    if (!SMSOTPConstants.UNABLE_SEND_CODE.equals(statusCode)) {
-                        throw new AuthenticationFailedException("Authentication failed: Code is Mismatch.");
-                    }
                 }
             }
         } catch (IOException e) {

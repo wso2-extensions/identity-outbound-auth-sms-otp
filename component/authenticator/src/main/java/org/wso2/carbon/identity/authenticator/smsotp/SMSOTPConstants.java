@@ -45,9 +45,9 @@ public class SMSOTPConstants {
     public static final String IS_ENABLED_RETRY = "RetryEnable";
     public static final String IS_ENABLED_RESEND = "ResendEnable";
     public static final String IS_SMSOTP_MANDATORY = "SMSOTPMandatory";
-    public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "sendOTPDirectlyToMobile";
-    public static final String IS_SMSOTP_ENABLE_BY_USER = "EnableByUserClaim";
-    public static final String IS_ENABLE_MOBILE_NO_UPDATE = "IsEnableMobileNoUpdate";
+    public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "SendOTPDirectlyToMobile";
+    public static final String IS_SMSOTP_ENABLE_BY_USER = "SMSOTPEnableByUserClaim";
+    public static final String IS_ENABLE_MOBILE_NO_UPDATE = "CaptureAndUpdateMobileNumber";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
