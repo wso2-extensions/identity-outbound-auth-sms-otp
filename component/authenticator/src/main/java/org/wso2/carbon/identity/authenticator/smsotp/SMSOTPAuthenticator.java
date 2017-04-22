@@ -455,7 +455,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_CODE_MISMATCH);
 
                 } else {
-                    response.sendRedirect(loginPage + ("?" + queryParams)
+                    response.sendRedirect(loginPage + "?" + queryParams
                             + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
                 }
