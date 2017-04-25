@@ -30,7 +30,7 @@ public class SMSOTPConstants {
     public static final int SECRET_KEY_LENGTH = 5;
     public static final int NUMBER_BASE = 2;
     public static final int NUMBER_DIGIT = 6;
-    public static final String CODE = "code";
+    public static final String CODE = "OTPcode";
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
@@ -45,9 +45,9 @@ public class SMSOTPConstants {
     public static final String IS_ENABLED_RETRY = "RetryEnable";
     public static final String IS_ENABLED_RESEND = "ResendEnable";
     public static final String IS_SMSOTP_MANDATORY = "SMSOTPMandatory";
-    public static final String IS_SMSOTP_ENABLE_BY_USER = "EnableByUserClaim";
-    public static final String IS_ENABLE_MOBILE_NO_UPDATE = "IsEnableMobileNoUpdate";
-    public static final String IS_MOBILE_CLAIM = "MobileClaim";
+    public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "SendOTPDirectlyToMobile";
+    public static final String IS_SMSOTP_ENABLE_BY_USER = "SMSOTPEnableByUserClaim";
+    public static final String IS_ENABLE_MOBILE_NO_UPDATE = "CaptureAndUpdateMobileNumber";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -63,7 +63,7 @@ public class SMSOTPConstants {
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
 
     public static final String RESEND = "resendCode";
-    public static final String AUTHENTICATORS = "&authenticators=";
+    public static final String NAME_OF_AUTHENTICATORS = "authenticators=";
     public static final String RESEND_CODE = "&resendCode=";
     public static final String OTP_TOKEN = "otpToken";
     public static final String AUTHENTICATION = "authentication";
@@ -78,6 +78,7 @@ public class SMSOTPConstants {
     public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=";
     public static final String UNABLE_SEND_CODE_VALUE = "unable.send.code";
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
+    public static final String SEND_OTP_DIRECTLY_DISABLE = "&authFailure=true&authFailureMsg=directly.send.otp.disable";
     public static final String ERROR_CODE_MISMATCH = "&authFailure=true&authFailureMsg=code.mismatch";
     public static final String ERROR_CODE = "errorCode";
     public static final String SCREEN_USER_ATTRIBUTE = "screenUserAttribute";
@@ -85,4 +86,5 @@ public class SMSOTPConstants {
     public static final String ORDER = "order";
     public static final String BACKWARD = "backward";
     public static final String SCREEN_VALUE = "&screenvalue=";
+    public static final String CODE_MISMATCH = "codeMismatch";
 }

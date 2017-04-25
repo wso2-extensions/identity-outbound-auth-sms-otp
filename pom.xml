@@ -394,6 +394,6 @@
         <encoder.wso2.version>1.2.0.wso2v1</encoder.wso2.version>
         <carbon.identity.package.export.project.version>${project.version}
         </carbon.identity.package.export.project.version>
-        <identity.extension.utils>1.0.1</identity.extension.utils>
+        <identity.extension.utils>1.0.4</identity.extension.utils>
     </properties>
 </project>
