@@ -101,7 +101,7 @@ public class SMSOTPUtils {
             // user is always in the super tenant.
             userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
-                throw new SMSOTPException(String.format("The specified tenant domain %s does not exist.", tenantDomain));
+                throw new SMSOTPException("The specified tenant domain " + tenantDomain + " does not exist.");
             }
             // check whether user already exists in the system.
             SMSOTPUtils.verifyUserExists(username, tenantDomain);
@@ -175,17 +175,16 @@ public class SMSOTPUtils {
         String mobile;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(username);
-            userRealm = getUserRealm(tenantDomain);
             String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+            userRealm = getUserRealm(tenantDomain);
             if (userRealm != null) {
                 mobile = userRealm.getUserStoreManager()
                         .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.MOBILE_CLAIM, null);
             } else {
-                throw new SMSOTPException("Cannot find the user realm for the given tenant domain : "
-                        + CarbonContext.getThreadLocalCarbonContext().getTenantDomain());
+                throw new SMSOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
             }
         } catch (UserStoreException e) {
-            throw new SMSOTPException("Cannot find the user claim for mobile ", e);
+            throw new SMSOTPException("Cannot find the user " + username + " to get the mobile number ", e);
         }
         return mobile;
     }

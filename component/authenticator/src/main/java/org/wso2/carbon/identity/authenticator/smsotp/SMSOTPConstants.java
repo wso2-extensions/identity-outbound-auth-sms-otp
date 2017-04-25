@@ -63,7 +63,7 @@ public class SMSOTPConstants {
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
 
     public static final String RESEND = "resendCode";
-    public static final String AUTHENTICATORS = "&authenticators=";
+    public static final String NAME_OF_AUTHENTICATORS = "authenticators=";
     public static final String RESEND_CODE = "&resendCode=";
     public static final String OTP_TOKEN = "otpToken";
     public static final String AUTHENTICATION = "authentication";
@@ -86,4 +86,5 @@ public class SMSOTPConstants {
     public static final String ORDER = "order";
     public static final String BACKWARD = "backward";
     public static final String SCREEN_VALUE = "&screenvalue=";
+    public static final String CODE_MISMATCH = "codeMismatch";
 }

@@ -106,7 +106,7 @@
                                     <div class="alert alert-danger" id="failed-msg"><%=errorMessage%></div>
                             <% } %>
                             <div id="alertDiv"></div>
-                            <form id="pin_form" name="pin_form" action="https://localhost:9443/commonauth"  method="POST">
+                            <form id="pin_form" name="pin_form" action="../../commonauth"  method="POST">
                                 <div id="loginTable1" class="identity-box">
                                     <%
                                         String loginFailed = request.getParameter("authFailure");

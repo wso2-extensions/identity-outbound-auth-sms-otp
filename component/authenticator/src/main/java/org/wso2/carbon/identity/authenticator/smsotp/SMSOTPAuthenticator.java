@@ -65,7 +65,7 @@ import java.util.Map;
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
-    private boolean codeMismatch;
+//    private boolean codeMismatch;
 
     /**
      * Check whether the authentication or logout request can be handled by the authenticator
@@ -232,6 +232,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
+     * To get the redirection URL.
+     *
+     * @param baseURI     the base path
+     * @param queryParams the queryParams
+     * @return url
+     */
+    private String getURL(String baseURI, String queryParams) {
+        String url;
+        if (StringUtils.isNotEmpty(queryParams)) {
+            url = baseURI + "?" + queryParams + "&" + SMSOTPConstants.NAME_OF_AUTHENTICATORS + getName();
+        } else {
+            url = baseURI + "?" + SMSOTPConstants.NAME_OF_AUTHENTICATORS + getName();
+        }
+        return url;
+    }
+
+    /**
      * Redirect to an error page.
      *
      * @param response    the HttpServletResponse
@@ -244,8 +261,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         // that Enable the SMS OTP in user's Profile. Cannot proceed further without SMS OTP authentication.
         try {
             String errorPage = getErrorPage(context);
-            response.sendRedirect(errorPage + "?" + queryParams
-                    + SMSOTPConstants.AUTHENTICATORS + getName() + retryParam);
+            String url = getURL(errorPage, queryParams);
+            response.sendRedirect(url + retryParam);
         } catch (IOException e) {
             throw new AuthenticationFailedException("Exception occurred while redirecting to errorPage. ", e);
         }
@@ -348,7 +365,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
                 String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context, getName());
                 try {
-                    response.sendRedirect(loginPage + "?" + queryParams + SMSOTPConstants.AUTHENTICATORS + getName());
+                    String url = getURL(loginPage, queryParams);
+                    response.sendRedirect(url);
                 } catch (IOException e) {
                     throw new AuthenticationFailedException("Authentication failed!. An IOException occurred ", e);
                 }
@@ -407,12 +425,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else {
                     retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM + SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
                 }
-                response.sendRedirect(errorPage + "?" + queryParams
-                        + SMSOTPConstants.AUTHENTICATORS + getName()
-                        + SMSOTPConstants.RESEND_CODE
-                        + isEnableResendCode + retryParam);
+                String redirectUrl = getURL(errorPage, queryParams);
+                response.sendRedirect(redirectUrl + SMSOTPConstants.RESEND_CODE + isEnableResendCode + retryParam);
             } else {
-                String url = loginPage + "?" + queryParams + SMSOTPConstants.AUTHENTICATORS + getName();
+                String url = getURL(loginPage, queryParams);
                 boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
                 if (isUserExists) {
                     screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
@@ -442,21 +458,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                  String queryParams, String errorPage) throws AuthenticationFailedException {
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context, getName());
         String loginPage = getLoginPage(context);
+        String url = getURL(loginPage, queryParams);
         try {
             String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
             if (statusCode == null && isRetryEnabled) {
-                response.sendRedirect(loginPage + "?" + queryParams
-                        + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                         + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
             } else {
-                if (codeMismatch && !isRetryEnabled) {
-                    response.sendRedirect(errorPage + "?" + queryParams
-                            + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                if (Boolean.parseBoolean((String) context.getProperty(SMSOTPConstants.CODE_MISMATCH)) && !isRetryEnabled) {
+                    url = getURL(errorPage, queryParams);
+                    response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_CODE_MISMATCH);
-
                 } else {
-                    response.sendRedirect(loginPage + "?" + queryParams
-                            + SMSOTPConstants.AUTHENTICATORS + getName() + SMSOTPConstants.RESEND_CODE
+                    response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
                 }
             }
@@ -479,7 +493,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (isEnableMobileNoUpdate) {
             String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context, getName());
             try {
-                response.sendRedirect(loginPage + "?" + queryParams + SMSOTPConstants.AUTHENTICATORS + getName());
+                String url = getURL(loginPage, queryParams);
+                response.sendRedirect(url);
             } catch (IOException e) {
                 throw new AuthenticationFailedException("Authentication failed!. An IOException was caught. ", e);
             }
@@ -513,11 +528,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         if (userToken.equals(contextToken)) {
             context.setSubject(authenticatedUser);
-        } else if (SMSOTPUtils.getBackupCode(context, getName()).equals("false")) {
-            codeMismatch = true;
-            throw new AuthenticationFailedException("Code mismatch");
-        } else {
+        } else if (SMSOTPUtils.getBackupCode(context, getName()).equals("true")) {
             checkWithBackUpCodes(context, userToken, authenticatedUser);
+        } else {
+            context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
+            throw new AuthenticationFailedException("Code mismatch");
         }
     }
 
@@ -541,17 +556,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.SAVED_OTP_LIST, null);
             }
             if (savedOTPString == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("The claim " + SMSOTPConstants.SAVED_OTP_LIST + " does not contain any values");
+                }
                 throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                         " does not contain any values");
+            } else if (savedOTPString.contains(userToken)) {
+                context.setSubject(authenticatedUser);
+                savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+                userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
+                        SMSOTPConstants.SAVED_OTP_LIST, savedOTPString, null);
             } else {
-                if (savedOTPString.contains(userToken)) {
-                    context.setSubject(authenticatedUser);
-                    savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
-                    userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
-                            SMSOTPConstants.SAVED_OTP_LIST, savedOTPString, null);
-                } else {
-                    throw new AuthenticationFailedException("Verification Error due to Code Mismatch.");
+                if (log.isDebugEnabled()) {
+                    log.debug("Verification Error due to Code " + userToken + " mismatch.");
                 }
+                throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " mismatch.");
             }
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Cannot find the user claim for OTP list ", e);
@@ -661,6 +680,92 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
+     * Get the connection and proceed with SMS API's rest call.
+     *
+     * @param httpConnection  the connection
+     * @param context         the authenticationContext
+     * @param headerString    the header string
+     * @param payload         the payload
+     * @param httpResponse    the http response
+     * @param encodedMobileNo the encoded mobileNo
+     * @param smsMessage      the sms message
+     * @param otpToken        the token
+     * @param httpMethod      the http method
+     * @return true or false
+     * @throws AuthenticationFailedException
+     */
+    private boolean getConnection(HttpURLConnection httpConnection, AuthenticationContext context, String headerString,
+                                  String payload, String httpResponse, String encodedMobileNo, String smsMessage,
+                                  String otpToken, String httpMethod) throws AuthenticationFailedException {
+        try {
+            httpConnection.setDoInput(true);
+            httpConnection.setDoOutput(true);
+            String[] headerList;
+            if (!headerString.isEmpty()) {
+                headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
+                        smsMessage + otpToken);
+                headerList = headerString.split(",");
+                for (String aHeaderList : headerList) {
+                    String[] header = aHeaderList.split(":");
+                    httpConnection.setRequestProperty(header[0], header[1]);
+                }
+            }
+            if (httpMethod.toUpperCase().equals(SMSOTPConstants.GET_METHOD)) {
+                httpConnection.setRequestMethod(SMSOTPConstants.GET_METHOD);
+            } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
+                httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
+                if (!payload.isEmpty()) {
+                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage + otpToken);
+                }
+                OutputStreamWriter writer = null;
+                try {
+                    writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
+                    writer.write(payload);
+                } catch (IOException e) {
+                    throw new AuthenticationFailedException("Error while posting payload message ", e);
+                } finally {
+                    if (writer != null) {
+                        writer.close();
+                    }
+                }
+            }
+            if (!httpResponse.isEmpty()) {
+                if (httpResponse.trim().equals(String.valueOf(httpConnection.getResponseCode()))) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Code is successfully sent to the mobile");
+                    }
+                    return true;
+                }
+            } else {
+                if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
+                        || httpConnection.getResponseCode() == 202) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Code is successfully sent to the mobile");
+                    }
+                    return true;
+                } else {
+                    context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
+                            httpConnection.getResponseMessage());
+                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                            + " and error message is " + httpConnection.getResponseMessage());
+                    return false;
+                }
+            }
+        } catch (MalformedURLException e) {
+            throw new AuthenticationFailedException("Invalid URL ", e);
+        } catch (ProtocolException e) {
+            throw new AuthenticationFailedException("Error while setting the HTTP method ", e);
+        } catch (IOException e) {
+            throw new AuthenticationFailedException("Error while setting the HTTP response ", e);
+        } finally {
+            if (httpConnection != null) {
+                httpConnection.disconnect();
+            }
+        }
+        return false;
+    }
+
+    /**
      * Proceed with SMS API's rest call.
      *
      * @param context      the AuthenticationContext
@@ -678,146 +783,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     public boolean sendRESTCall(AuthenticationContext context, String smsUrl, String httpMethod,
                                 String headerString, String payload, String httpResponse, String mobile,
                                 String otpToken) throws IOException, AuthenticationFailedException {
-        HttpURLConnection httpConnection = null;
-        HttpsURLConnection httpsConnection = null;
+        boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
         URLEncoder encoder = new URLEncoder();
-        try {
-            String encodedMobileNo = encoder.encode(mobile);
-            smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                    smsMessage.replaceAll("\\s", "+") + otpToken);
-            URL smsProviderUrl = new URL(smsUrl);
-            String subUrl = smsProviderUrl.getProtocol();
-            if (subUrl.equals(SMSOTPConstants.HTTPS)) {
-                httpsConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
-                httpsConnection.setDoInput(true);
-                httpsConnection.setDoOutput(true);
-                String[] headerList;
-                if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                            smsMessage + otpToken);
-                    headerList = headerString.split(",");
-                    for (String aHeaderList : headerList) {
-                        String[] header = aHeaderList.split(":");
-                        httpsConnection.setRequestProperty(header[0], header[1]);
-                    }
-                }
-                if (httpMethod.toUpperCase().equals(SMSOTPConstants.GET_METHOD)) {
-                    httpsConnection.setRequestMethod(SMSOTPConstants.GET_METHOD);
-                } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
-                    httpsConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
-                    if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage + otpToken);
-                    }
-                    OutputStreamWriter writer = null;
-                    try {
-                        writer = new OutputStreamWriter(httpsConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
-                        writer.write(payload);
-                    } catch (IOException e) {
-                        throw new AuthenticationFailedException("Error while posting payload message ", e);
-                    } finally {
-                        if (writer != null) {
-                            writer.close();
-                        }
-                    }
-                }
-                if (!httpResponse.isEmpty()) {
-                    if (httpResponse.trim().equals(String.valueOf(httpsConnection.getResponseCode()))) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Code is successfully sent to the mobile");
-                        }
-                        return true;
-                    }
-                } else {
-                    if (httpsConnection.getResponseCode() == 200 || httpsConnection.getResponseCode() == 201
-                            || httpsConnection.getResponseCode() == 202) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Code is successfully sent to the mobile");
-                        }
-                        return true;
-                    } else {
-                        context.setProperty(SMSOTPConstants.ERROR_CODE, httpsConnection.getResponseCode() + " : " +
-                                httpsConnection.getResponseMessage());
-                        log.error("Error while sending SMS: error code is " + httpsConnection.getResponseCode()
-                                + " and error message is " + httpsConnection.getResponseMessage());
-                        return false;
-                    }
-                }
-            } else {
-                httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
-                httpConnection.setDoInput(true);
-                httpConnection.setDoOutput(true);
-                String[] headerList;
-                if (!headerString.isEmpty()) {
-                    headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                            smsMessage + otpToken);
-                    headerList = headerString.split(",");
-                    for (String aHeaderList : headerList) {
-                        String[] header = aHeaderList.split(":");
-                        httpConnection.setRequestProperty(header[0], header[1]);
-                    }
-                }
-                if (httpMethod.toUpperCase().equals(SMSOTPConstants.GET_METHOD)) {
-                    httpConnection.setRequestMethod(SMSOTPConstants.GET_METHOD);
-                } else if (httpMethod.toUpperCase().equals(SMSOTPConstants.POST_METHOD)) {
-                    httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
-                    if (!payload.isEmpty()) {
-                        payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage + otpToken);
-                    }
-                    OutputStreamWriter writer = null;
-                    try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
-                        writer.write(payload);
-                    } catch (IOException e) {
-                        throw new AuthenticationFailedException("Error while posting payload message ", e);
-                    } finally {
-                        if (writer != null) {
-                            writer.close();
-                        }
-                    }
-                }
-                if (!httpResponse.isEmpty()) {
-                    if (httpResponse.trim().equals(String.valueOf(httpConnection.getResponseCode()))) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Code is successfully sent to the mobile");
-                        }
-                        return true;
-                    }
-                } else {
-                    if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
-                            || httpConnection.getResponseCode() == 202) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Code is successfully sent to the mobile");
-                        }
-                        return true;
-                    } else {
-                        context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
-                                httpConnection.getResponseMessage());
-                        log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
-                                + " and error message is " + httpConnection.getResponseMessage());
-                        return false;
-                    }
-                }
-            }
-        } catch (MalformedURLException e) {
-            throw new AuthenticationFailedException("Invalid URL ", e);
-        } catch (ProtocolException e) {
-            throw new AuthenticationFailedException("Error while setting the HTTP method ", e);
-        } catch (IOException e) {
-            throw new AuthenticationFailedException("Error while setting the HTTP response ", e);
-        } finally {
-            if (httpConnection != null) {
-                httpConnection.disconnect();
-            }
-            if (httpsConnection != null) {
-                httpsConnection.disconnect();
-            }
+        String encodedMobileNo = encoder.encode(mobile);
+        smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
+                smsMessage.replaceAll("\\s", "+") + otpToken);
+        URL smsProviderUrl = new URL(smsUrl);
+        HttpURLConnection httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
+        String subUrl = smsProviderUrl.getProtocol();
+        if (subUrl.equals(SMSOTPConstants.HTTPS)) {
+            httpConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
+            connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
+                    smsMessage, otpToken, httpMethod);
+        } else {
+            connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
+                    smsMessage, otpToken, httpMethod);
         }
-        return false;
+        return connection;
     }
 
     /**
-     * Get a screen value from the user attributes.
+     * Get a screen value from the user attributes. If you need to show n digits of mobile number or any other user
+     * attribute value in the UI.
      *
      * @param userRealm the user Realm
      * @param username  the username
