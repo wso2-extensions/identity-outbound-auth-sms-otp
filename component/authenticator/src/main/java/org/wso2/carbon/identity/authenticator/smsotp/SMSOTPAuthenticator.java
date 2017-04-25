@@ -65,7 +65,6 @@ import java.util.Map;
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
-//    private boolean codeMismatch;
 
     /**
      * Check whether the authentication or logout request can be handled by the authenticator
@@ -783,6 +782,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     public boolean sendRESTCall(AuthenticationContext context, String smsUrl, String httpMethod,
                                 String headerString, String payload, String httpResponse, String mobile,
                                 String otpToken) throws IOException, AuthenticationFailedException {
+        HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
         URLEncoder encoder = new URLEncoder();
@@ -790,13 +790,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                 smsMessage.replaceAll("\\s", "+") + otpToken);
         URL smsProviderUrl = new URL(smsUrl);
-        HttpURLConnection httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
         String subUrl = smsProviderUrl.getProtocol();
         if (subUrl.equals(SMSOTPConstants.HTTPS)) {
             httpConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
             connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
                     smsMessage, otpToken, httpMethod);
         } else {
+            httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
             connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
                     smsMessage, otpToken, httpMethod);
         }
