@@ -5,7 +5,7 @@ Steps to run
     Or unzip the authenticationendpoint.war & copy the smsotp.jsp from smsotp/org.wso2.carbon.identity.authenticator/src/main/resources 
     to <IS-HOME>/repository/deployment/server/webapps/authenticationendpoint
 
-2.  Build the org.wso2.carbon.identity.authenticator & copy the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.6.jar
+2.  Build the org.wso2.carbon.identity.authenticator & copy the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.8.jar
     to <IS-HOME>/repository/components/dropins
 
 3. Add the following user claims under 'http://wso2.org/claims'.
@@ -22,21 +22,22 @@ Steps to run
  <AuthenticatorConfigs> section
 
 <AuthenticatorConfig name="SMSOTP" enabled="true">
-	  <Parameter name="SMSOTPAuthenticationEndpointURL">http://localhost:8080/smsotpauthenticationendpoint/smsotp.jsp</Parameter>
-	  <Parameter name="MobileNumberRegPage">http://localhost:8080/smsotpauthenticationendpoint/mobile.jsp</Parameter>
-	  <Parameter name="RetryEnable">true</Parameter>
-	  <Parameter name="ResendEnable">false</Parameter>
-	  <Parameter name="BackupCode">false</Parameter>
-	  <Parameter name="EnableByUserClaim">false</Parameter>
-	  <Parameter name="MobileClaim">true</Parameter>
-	  <Parameter name="enableSecondStep">true</Parameter>
-	  <Parameter name="SMSOTPMandatory">true</Parameter>
-	  <Parameter name="usecase">association</Parameter>
-	  <Parameter name="secondaryUserstore">primary</Parameter>
-	  <Parameter name="IsEnableMobileNoUpdate">false</Parameter>
-	  <Parameter name="screenUserAttribute">http://wso2.org/claims/mobile</Parameter>
-         <Parameter name="noOfDigits">4</Parameter>
-         <Parameter name="order">backward</Parameter>
+	<Parameter name="SMSOTPAuthenticationEndpointURL">https://localhost:9443/smsotpauthenticationendpoint/smsotp.jsp</Parameter>
+	<Parameter name="SMSOTPAuthenticationEndpointErrorPage">https://localhost:9443/smsotpauthenticationendpoint/smsotpError.jsp</Parameter>
+	<Parameter name="MobileNumberRegPage">https://localhost:9443/smsotpauthenticationendpoint/mobile.jsp</Parameter>
+	<Parameter name="RetryEnable">true</Parameter>
+	<Parameter name="ResendEnable">true</Parameter>
+	<Parameter name="BackupCode">true</Parameter>
+	<Parameter name="SMSOTPEnableByUserClaim">true</Parameter>
+	<Parameter name="SMSOTPMandatory">false</Parameter>
+	<Parameter name="usecase">userAttribute</Parameter>
+	<Parameter name="userAttribute">email</Parameter>
+	<Parameter name="secondaryUserstore">primary</Parameter>
+	<Parameter name="CaptureAndUpdateMobileNumber">true</Parameter>
+	<Parameter name="SendOTPDirectlyToMobile">true</Parameter>
+	<Parameter name="screenUserAttribute">http://wso2.org/claims/mobile</Parameter>
+	<Parameter name="noOfDigits">4</Parameter>
+	<Parameter name="order">backward</Parameter>
 </AuthenticatorConfig>
 
 5.  Follow the steps in https://docs.wso2.com/pages/viewpage.action?title=SMSOTP%2BAuthenticator&spaceKey=ISCONNECTORS
