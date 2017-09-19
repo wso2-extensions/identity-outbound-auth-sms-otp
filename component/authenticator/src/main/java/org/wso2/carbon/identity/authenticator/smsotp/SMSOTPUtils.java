@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -36,6 +37,7 @@ import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class SMSOTPUtils {
@@ -48,7 +50,13 @@ public class SMSOTPUtils {
     public static Map<String, String> getSMSParameters() {
         AuthenticatorConfig authConfig = FileBasedConfigurationBuilder.getInstance()
                 .getAuthenticatorBean(SMSOTPConstants.AUTHENTICATOR_NAME);
-        return authConfig.getParameterMap();
+        if (authConfig != null) {
+            return authConfig.getParameterMap();
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Authenticator configs not found. Hence returning an empty map");
+        }
+        return Collections.emptyMap();
     }
 
     /**
@@ -69,12 +77,12 @@ public class SMSOTPUtils {
             RealmService realmService = IdentityTenantUtil.getRealmService();
             userRealm = realmService.getTenantUserRealm(tenantId);
             username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
-            boolean isEnableORDisableLocalUserClaim = isSMSOTPEnableOrDisableByUser(context, authenticatorName);
+            boolean isEnablingControlledByUser = isSMSOTPEnableOrDisableByUser(context, authenticatorName);
             if (userRealm != null) {
-                if (isEnableORDisableLocalUserClaim) {
-                    String isSMSOTPEnabledByUser = userRealm.getUserStoreManager().getUserClaimValue(username,
-                            SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI, null);
-                    return Boolean.parseBoolean(isSMSOTPEnabledByUser);
+                if (isEnablingControlledByUser) {
+                    Map<String, String> claimValues = userRealm.getUserStoreManager().getUserClaimValues(username,
+                            new String[]{SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI}, null);
+                    return Boolean.parseBoolean(claimValues.get(SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI));
                 }
             } else {
                 throw new SMSOTPException("Cannot find the user realm for the given tenant domain : " + CarbonContext
@@ -199,21 +207,8 @@ public class SMSOTPUtils {
      */
     public static boolean isSMSOTPMandatory(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean isSMSOTPMandatory = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_SMSOTP_MANDATORY)) {
-            isSMSOTPMandatory = Boolean.parseBoolean(getSMSParameters().get(SMSOTPConstants.IS_SMSOTP_MANDATORY));
-        } else if ((context.getProperty(SMSOTPConstants.IS_SMSOTP_MANDATORY)) != null) {
-            isSMSOTPMandatory = Boolean.parseBoolean(String.valueOf
-                    (context.getProperty(SMSOTPConstants.IS_SMSOTP_MANDATORY)));
-        }
-        return isSMSOTPMandatory;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_SMSOTP_MANDATORY));
     }
 
     /**
@@ -226,22 +221,8 @@ public class SMSOTPUtils {
      */
     public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean sendOTPDirectlyToMobile = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE)) {
-            sendOTPDirectlyToMobile = Boolean.parseBoolean(getSMSParameters().get
-                    (SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE));
-        } else if ((context.getProperty(SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE)) != null) {
-            sendOTPDirectlyToMobile = Boolean.parseBoolean(String.valueOf
-                    (context.getProperty(SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE)));
-        }
-        return sendOTPDirectlyToMobile;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_SEND_OTP_DIRECTLY_TO_MOBILE));
     }
 
     /**
@@ -254,21 +235,8 @@ public class SMSOTPUtils {
      */
     public static boolean isSMSOTPEnableOrDisableByUser(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean isSMSOTPEnableByUser = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)) {
-            isSMSOTPEnableByUser = Boolean.parseBoolean(getSMSParameters().get(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER));
-        } else if ((context.getProperty(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)) != null) {
-            isSMSOTPEnableByUser = Boolean.parseBoolean(String.valueOf(context.getProperty
-                    (SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)));
-        }
-        return isSMSOTPEnableByUser;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_SMSOTP_ENABLE_BY_USER));
     }
 
     /**
@@ -282,22 +250,8 @@ public class SMSOTPUtils {
      */
     public static boolean isEnableMobileNoUpdate(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean enableMobileNoUpdate = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE)) {
-            enableMobileNoUpdate = Boolean.parseBoolean(getSMSParameters().get
-                    (SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE));
-        } else if ((context.getProperty(SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE)) != null) {
-            enableMobileNoUpdate = Boolean.parseBoolean(String.valueOf
-                    (context.getProperty(SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE)));
-        }
-        return enableMobileNoUpdate;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_ENABLE_MOBILE_NO_UPDATE));
     }
 
     /**
@@ -310,21 +264,7 @@ public class SMSOTPUtils {
      */
     public static boolean isEnableResendCode(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean enableResendCode = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_ENABLED_RESEND)) {
-            enableResendCode = Boolean.parseBoolean(getSMSParameters().get(SMSOTPConstants.IS_ENABLED_RESEND));
-        } else if ((context.getProperty(SMSOTPConstants.IS_ENABLED_RESEND)) != null) {
-            enableResendCode = Boolean.parseBoolean(String.valueOf
-                    (context.getProperty(SMSOTPConstants.IS_ENABLED_RESEND)));
-        }
-        return enableResendCode;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants.IS_ENABLED_RESEND));
     }
 
     /**
@@ -337,20 +277,7 @@ public class SMSOTPUtils {
      */
     public static String getErrorPageFromXMLFile(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String errorPage = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL)) {
-            errorPage = getSMSParameters().get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
-        } else if ((context.getProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL)) != null) {
-            errorPage = String.valueOf(context.getProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL));
-        }
-        return errorPage;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
     }
 
     /**
@@ -363,20 +290,7 @@ public class SMSOTPUtils {
      */
     public static String getLoginPageFromXMLFile(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String loginPage = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL)) {
-            loginPage = getSMSParameters().get(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
-        } else if ((context.getProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL)) != null) {
-            loginPage = String.valueOf(context.getProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL));
-        }
-        return loginPage;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
     }
 
     /**
@@ -389,20 +303,8 @@ public class SMSOTPUtils {
      */
     public static boolean isRetryEnabled(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        boolean isRetryEnabled = false;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.IS_ENABLED_RETRY)) {
-            isRetryEnabled = Boolean.parseBoolean(getSMSParameters().get(SMSOTPConstants.IS_ENABLED_RETRY));
-        } else if ((context.getProperty(SMSOTPConstants.IS_ENABLED_RETRY)) != null) {
-            isRetryEnabled = Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.IS_ENABLED_RETRY)));
-        }
-        return isRetryEnabled;
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_ENABLED_RETRY));
     }
 
     /**
@@ -415,20 +317,7 @@ public class SMSOTPUtils {
      */
     public static String getMobileNumberRequestPage(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String mobileNoReqPage = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE)) {
-            mobileNoReqPage = getSMSParameters().get(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
-        } else if ((context.getProperty(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE)) != null) {
-            mobileNoReqPage = String.valueOf(context.getProperty(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE));
-        }
-        return mobileNoReqPage;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
     }
 
     /**
@@ -441,20 +330,7 @@ public class SMSOTPUtils {
      */
     public static String getScreenUserAttribute(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String screenUserAttribute = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.SCREEN_USER_ATTRIBUTE)) {
-            screenUserAttribute = getSMSParameters().get(SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
-        } else if ((context.getProperty(SMSOTPConstants.SCREEN_USER_ATTRIBUTE)) != null) {
-            screenUserAttribute = String.valueOf(context.getProperty(SMSOTPConstants.SCREEN_USER_ATTRIBUTE));
-        }
-        return screenUserAttribute;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
     }
 
     /**
@@ -467,20 +343,7 @@ public class SMSOTPUtils {
      */
     public static String getNoOfDigits(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String noOfDigits = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.NO_DIGITS)) {
-            noOfDigits = getSMSParameters().get(SMSOTPConstants.NO_DIGITS);
-        } else if ((context.getProperty(SMSOTPConstants.NO_DIGITS)) != null) {
-            noOfDigits = String.valueOf(context.getProperty(SMSOTPConstants.NO_DIGITS));
-        }
-        return noOfDigits;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.NO_DIGITS);
     }
 
     /**
@@ -493,20 +356,7 @@ public class SMSOTPUtils {
      */
     public static String getDigitsOrder(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
-        Object propertiesFromLocal = null;
-        String digitsOrder = null;
-        String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.ORDER)) {
-            digitsOrder = getSMSParameters().get(SMSOTPConstants.ORDER);
-        } else if ((context.getProperty(SMSOTPConstants.ORDER)) != null) {
-            digitsOrder = String.valueOf(context.getProperty(SMSOTPConstants.ORDER));
-        }
-        return digitsOrder;
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.ORDER);
     }
 
     /**
@@ -519,19 +369,39 @@ public class SMSOTPUtils {
      */
     public static String getBackupCode(AuthenticationContext context, String authenticatorName)
             throws AuthenticationFailedException {
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.BACKUP_CODE);
+
+    }
+
+    /**
+     * Read configurations from application-authentication.xml for given authenticator.
+     *
+     * @param context           Authentication Context.
+     * @param authenticatorName Name of the Authenticator.
+     * @param configName        Name of the config.
+     * @return Config value.
+     * @throws AuthenticationFailedException
+     */
+    public static String getConfiguration(AuthenticationContext context, String authenticatorName, String configName)
+            throws AuthenticationFailedException {
+
         Object propertiesFromLocal = null;
-        String backupCode = null;
+        String configValue = null;
         String tenantDomain = context.getTenantDomain();
-        if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
+        if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
             IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
             propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
         }
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                getSMSParameters().containsKey(SMSOTPConstants.BACKUP_CODE)) {
-            backupCode = getSMSParameters().get(SMSOTPConstants.BACKUP_CODE);
-        } else if ((context.getProperty(SMSOTPConstants.BACKUP_CODE)) != null) {
-            backupCode = String.valueOf(context.getProperty(SMSOTPConstants.BACKUP_CODE));
+        if ((propertiesFromLocal != null || MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) &&
+                getSMSParameters().containsKey(configName)) {
+            configValue = getSMSParameters().get(configName);
+        } else if ((context.getProperty(configName)) != null) {
+            configValue = String.valueOf(configName);
         }
-        return backupCode;
+        if (log.isDebugEnabled()) {
+            log.debug("Config value for key " + configName + " for tenant " + tenantDomain + " : " +
+                    configValue);
+        }
+        return configValue;
     }
 }

@@ -405,10 +405,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             // One time password is generated and stored in the context.
             OneTimePassword token = new OneTimePassword();
             String secret = OneTimePassword.getRandomNumber(SMSOTPConstants.SECRET_KEY_LENGTH);
-            String otpToken = token.generateToken(secret, ""
-                    + SMSOTPConstants.NUMBER_BASE, SMSOTPConstants.NUMBER_DIGIT);
+            String otpToken = token.generateToken(secret, String.valueOf(SMSOTPConstants.NUMBER_BASE),
+                    SMSOTPConstants.NUMBER_DIGIT);
             context.setProperty(SMSOTPConstants.OTP_TOKEN, otpToken);
-
             //Get the values of the sms provider related api parameters.
             String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
             String httpMethod = authenticatorProperties.get(SMSOTPConstants.HTTP_METHOD);

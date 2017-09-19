@@ -41,7 +41,9 @@ public class SMSOTPAuthenticatorServiceComponent {
     }
 
     protected void setRealmService(RealmService realmService) {
-        log.debug("Setting the Realm Service");
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the Realm Service");
+        }
         SMSOTPAuthenticatorServiceComponent.realmService = realmService;
     }
 
