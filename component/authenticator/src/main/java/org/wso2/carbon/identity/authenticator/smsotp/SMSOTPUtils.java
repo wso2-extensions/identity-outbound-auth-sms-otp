@@ -384,19 +384,14 @@ public class SMSOTPUtils {
      */
     public static String getConfiguration(AuthenticationContext context, String authenticatorName, String configName)
             throws AuthenticationFailedException {
-
-        Object propertiesFromLocal = null;
         String configValue = null;
+        Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
         String tenantDomain = context.getTenantDomain();
-        if (!MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) {
-            IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, authenticatorName, tenantDomain);
-            propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        }
         if ((propertiesFromLocal != null || MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) &&
                 getSMSParameters().containsKey(configName)) {
             configValue = getSMSParameters().get(configName);
         } else if ((context.getProperty(configName)) != null) {
-            configValue = String.valueOf(configName);
+            configValue = String.valueOf(context.getProperty(configName));
         }
         if (log.isDebugEnabled()) {
             log.debug("Config value for key " + configName + " for tenant " + tenantDomain + " : " +
