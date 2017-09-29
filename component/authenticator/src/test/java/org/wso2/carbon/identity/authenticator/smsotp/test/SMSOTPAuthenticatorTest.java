@@ -43,11 +43,12 @@ import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
+import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
+import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -76,10 +77,6 @@ public class SMSOTPAuthenticatorTest {
     @Spy
     private AuthenticationContext context;
 
-
-    @Spy
-    private OneTimePassword oneTimePassword;
-
     @Spy
     private SMSOTPAuthenticator spy;
 
@@ -88,9 +85,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Mock
     private ConfigurationFacade configurationFacade;
-
-    @Mock
-    private FederatedAuthenticatorUtil federatedAuthenticatorUtil;
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -120,21 +114,21 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
-    public void testGetContextIdentifierPassed() throws Exception {
+    public void testGetContextIdentifierPassed() {
         when(httpServletRequest.getParameter(FrameworkConstants.SESSION_DATA_KEY)).thenReturn
                 ("0246893");
         Assert.assertEquals(smsotpAuthenticator.getContextIdentifier(httpServletRequest), "0246893");
     }
 
     @Test
-    public void testCanHandleTrue() throws Exception {
+    public void testCanHandleTrue() {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("resendCode");
         Assert.assertEquals(smsotpAuthenticator.canHandle(httpServletRequest), true);
     }
 
     @Test
-    public void testCanHandleFalse() throws Exception {
+    public void testCanHandleFalse() {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.MOBILE_NUMBER)).thenReturn(null);
@@ -144,7 +138,8 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testGetURL() throws Exception {
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
-        Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL", SMSOTPConstants.LOGIN_PAGE, null),
+        Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL",
+                SMSOTPConstants.LOGIN_PAGE, null),
                 "authenticationendpoint/login.do?authenticators=SMSOTP");
     }
 
@@ -160,10 +155,10 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testGetMobileNumber() throws Exception {
         mockStatic(SMSOTPUtils.class);
-        when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0774894438");
+        when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0775968325");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNumber",
                 httpServletRequest, httpServletResponse, any(AuthenticationContext.class),
-                "Kanapriya", "carbon.super", "queryParams"), "0774894438");
+                "Kanapriya", "carbon.super", "queryParams"), "0775968325");
     }
 
     @Test
@@ -315,14 +310,14 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
-    public void testProcessWthLogoutTrue() throws Exception {
+    public void testProcessWithLogoutTrue() throws AuthenticationFailedException, LogoutFailedException {
         when(context.isLogoutRequest()).thenReturn(true);
         AuthenticatorFlowStatus status = smsotpAuthenticator.process(httpServletRequest, httpServletResponse, context);
         Assert.assertEquals(status, AuthenticatorFlowStatus.SUCCESS_COMPLETED);
     }
 
     @Test
-    public void testProcessWthLogoutFalse() throws Exception {
+    public void testProcessWithLogoutFalse() throws Exception {
         mockStatic(FederatedAuthenticatorUtil.class);
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
@@ -350,7 +345,7 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
-    public void testProcessWthLogout() throws Exception {
+    public void testProcessWithLogout() throws AuthenticationFailedException, LogoutFailedException {
         mockStatic(FederatedAuthenticatorUtil.class);
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
@@ -427,7 +422,7 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
-    public void testGetConfigurationProperties() throws Exception {
+    public void testGetConfigurationProperties() {
         List<Property> configProperties = new ArrayList<Property>();
         Property smsUrl = new Property();
         configProperties.add(smsUrl);

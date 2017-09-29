@@ -30,6 +30,8 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword;
 
 import java.nio.charset.Charset;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -52,17 +54,17 @@ public class OnetimePasswordTest {
     }
 
     @Test
-    public void testCalcChecksum() throws Exception {
+    public void testCalcChecksum() {
         Assert.assertEquals(OneTimePassword.calcChecksum(100, 10), 8);
     }
 
     @Test
-    public void testGetRandomNumber() throws Exception {
+    public void testGetRandomNumber() {
         Assert.assertNotNull(OneTimePassword.getRandomNumber(10));
     }
 
     @Test
-    public void testHmacShaGenerate() throws Exception {
+    public void testHmacShaGenerate() throws InvalidKeyException, NoSuchAlgorithmException {
         String input = "Hello World";
         byte[] bytes = input.getBytes(Charset.forName("UTF-8"));
         byte[] answer = OneTimePassword.hmacShaGenerate(bytes, bytes);
