@@ -439,6 +439,17 @@ public class SMSOTPAuthenticatorTest {
         Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_CODE_MISMATCH));
     }
 
+    @Test(expectedExceptions = {AuthenticationFailedException.class})
+    public void testInitiateAuthenticationRequestWithoutAuthenticatedUser() throws Exception {
+        mockStatic(FederatedAuthenticatorUtil.class);
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(FrameworkUtils.class);
+        context.setTenantDomain("carbon.super");
+        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+    }
+
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithoutOTPCode() throws Exception {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("");
