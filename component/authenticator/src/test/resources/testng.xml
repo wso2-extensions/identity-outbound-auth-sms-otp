@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Identity-connector-smsotp-test-suite">
+    <test name="smsotp-authenticator-all" preserve-order="true" parallel="false">
+        <classes>
+            <class name="org.wso2.carbon.identity.authenticator.smsotp.test.SMSOTPAuthenticatorTest"/>
+            <class name="org.wso2.carbon.identity.authenticator.smsotp.test.SMSOTPUtilsTest"/>
+            <class name="org.wso2.carbon.identity.authenticator.smsotp.test.OnetimePasswordTest"/>
+        </classes>
+    </test>
+</suite>
