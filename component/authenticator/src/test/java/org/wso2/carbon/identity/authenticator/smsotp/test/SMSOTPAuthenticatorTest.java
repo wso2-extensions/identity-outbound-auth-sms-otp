@@ -281,6 +281,21 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
+    public void testCheckStatusCodeWithTokenExpired() throws Exception {
+        mockStatic(SMSOTPUtils.class);
+        context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
+        when(SMSOTPUtils.isEnableResendCode(context, SMSOTPConstants.AUTHENTICATOR_NAME))
+                .thenReturn(true);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
+                httpServletResponse, context, null, SMSOTPConstants.SMS_LOGIN_PAGE);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
+    }
+
+    @Test
     public void testProcessSMSOTPFlow() throws Exception {
         mockStatic(SMSOTPUtils.class);
         when(SMSOTPUtils.isSMSOTPDisableForLocalUser("John", context, SMSOTPConstants.AUTHENTICATOR_NAME))
@@ -417,7 +432,7 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
-        context.setProperty(SMSOTPConstants.CODE_MISMATCH, "true");
+        context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
         when(context.isRetrying()).thenReturn(true);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
@@ -436,7 +451,7 @@ public class SMSOTPAuthenticatorTest {
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
         verify(httpServletResponse).sendRedirect(captor.capture());
-        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_CODE_MISMATCH));
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
@@ -469,6 +484,7 @@ public class SMSOTPAuthenticatorTest {
     public void testProcessAuthenticationResponse() throws Exception {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
+        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",

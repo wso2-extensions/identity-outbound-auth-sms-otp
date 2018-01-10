@@ -251,6 +251,33 @@ public class SMSOTPUtilsTest {
     }
 
     @Test
+    public void testIsEnableAlphanumericTokenFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.IS_ENABLE_ALPHANUMERIC_TOKEN, "true");
+        Assert.assertEquals(SMSOTPUtils.isEnableAlphanumericToken(authenticationContext, SMSOTPConstants.
+                AUTHENTICATOR_NAME), true);
+    }
+
+    @Test
+    public void testTokenExpiryTimeFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.TOKEN_EXPIRY_TIME, "30");
+        Assert.assertEquals(SMSOTPUtils.getTokenExpiryTime(authenticationContext, SMSOTPConstants.
+                AUTHENTICATOR_NAME), "30");
+    }
+
+    @Test
+    public void testTokenLengthFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.TOKEN_LENGTH, "8");
+        Assert.assertEquals(SMSOTPUtils.getTokenLength(authenticationContext, SMSOTPConstants.
+                AUTHENTICATOR_NAME), "8");
+    }
+
+    @Test
     public void testGetSMSParameters() {
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         Map<String, String> parameters = new HashMap<String, String>();

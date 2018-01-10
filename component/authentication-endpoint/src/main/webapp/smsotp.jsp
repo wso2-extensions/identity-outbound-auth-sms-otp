@@ -41,8 +41,11 @@
             if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
                 errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+                if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
                     errorMessage = "Authentication Failed! Please Retry";
+                }
+                if (errorMessage.equalsIgnoreCase("token.expired")) {
+                    errorMessage = "The code entered is expired. Click Resend Code to continue.";
                 }
             }
         }

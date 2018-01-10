@@ -159,7 +159,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 processFirstStepOnly(authenticatedUser, context);
             }
         } catch (SMSOTPException e) {
-            throw new AuthenticationFailedException("Failed to get the parameters from authentication xml fie. ", e);
+            throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file. ", e);
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Failed to get the user from User Store. ", e);
         }
@@ -402,8 +402,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 mobileNumber = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
             }
         } else {
-            if(log.isDebugEnabled()) {
-              log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
+            if (log.isDebugEnabled()) {
+                log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
             }
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
@@ -433,12 +433,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String tenantDomain = MultitenantUtils.getTenantDomain(username);
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
+        int tokenLength = SMSOTPConstants.NUMBER_DIGIT;
+        boolean isEnableAlphanumericToken = SMSOTPUtils.isEnableAlphanumericToken(context, getName());
         try {
             // One time password is generated and stored in the context.
             OneTimePassword token = new OneTimePassword();
             String secret = OneTimePassword.getRandomNumber(SMSOTPConstants.SECRET_KEY_LENGTH);
-            String otpToken = token.generateToken(secret, String.valueOf(SMSOTPConstants.NUMBER_BASE),
-                    SMSOTPConstants.NUMBER_DIGIT);
+            if ((SMSOTPUtils.getTokenLength(context, getName())) != null) {
+                tokenLength = Integer.parseInt(SMSOTPUtils.getTokenLength(context, getName()));
+            }
+            if ((SMSOTPUtils.getTokenExpiryTime(context, getName())) != null) {
+                long tokenExpiryTime = Integer.parseInt(SMSOTPUtils.getTokenExpiryTime(context, getName()));
+                context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME, tokenExpiryTime);
+            }
+            String otpToken = token.generateToken(secret, String.valueOf(SMSOTPConstants.NUMBER_BASE), tokenLength,
+                    isEnableAlphanumericToken);
             context.setProperty(SMSOTPConstants.OTP_TOKEN, otpToken);
             if (log.isDebugEnabled()) {
                 log.debug("Generated OTP successfully and set to the context.");
@@ -461,6 +470,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String redirectUrl = getURL(errorPage, queryParams);
                 response.sendRedirect(redirectUrl + SMSOTPConstants.RESEND_CODE + isEnableResendCode + retryParam);
             } else {
+                long sentOTPTokenTime = System.currentTimeMillis();
+                context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, sentOTPTokenTime);
                 String url = getURL(loginPage, queryParams);
                 boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
                 if (isUserExists) {
@@ -494,7 +505,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String url = getURL(loginPage, queryParams);
         try {
             String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
-            if (statusCode == null && isRetryEnabled) {
+            if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED)) && !(StringUtils.isNotEmpty(statusCode))) {
+                if (SMSOTPUtils.isEnableResendCode(context, getName())) {
+                    response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
+                            + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_TOKEN_EXPIRED);
+                } else {
+                    url = getURL(errorPage, queryParams);
+                    response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
+                            + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_TOKEN_EXPIRED);
+                }
+            } else if (statusCode == null && isRetryEnabled) {
                 response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                         + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
             } else {
@@ -563,7 +583,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
         if (userToken.equals(contextToken)) {
-            context.setSubject(authenticatedUser);
+            if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).toString())) {
+                long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(context.getProperty(SMSOTPConstants.
+                        SENT_OTP_TOKEN_TIME).toString());
+                if (elapsedTokenTime <= (Long.parseLong(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).
+                        toString()) * 1000)) {
+                    context.setSubject(authenticatedUser);
+                } else {
+                    context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
+                    throw new AuthenticationFailedException("OTP code has expired");
+                }
+            } else {
+                context.setSubject(authenticatedUser);
+            }
         } else if (SMSOTPUtils.getBackupCode(context, getName()).equals("true")) {
             checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
@@ -598,7 +630,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                         " does not contain any values");
             } else if (savedOTPString.contains(userToken)) {
-                if(log.isDebugEnabled()) {
+                if (log.isDebugEnabled()) {
                     log.debug("Found saved backup SMS OTP for user :" + authenticatedUser);
                 }
                 context.setSubject(authenticatedUser);

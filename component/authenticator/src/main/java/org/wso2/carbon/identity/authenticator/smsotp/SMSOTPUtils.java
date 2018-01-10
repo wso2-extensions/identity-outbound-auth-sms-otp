@@ -374,6 +374,47 @@ public class SMSOTPUtils {
     }
 
     /**
+     * Check whether admin allows to generate the alphanumeric token or not.
+     *
+     * @param context           the AuthenticationContext
+     * @param authenticatorName the name of the authenticator
+     * @return true or false
+     * @throws AuthenticationFailedException
+     */
+    public static boolean isEnableAlphanumericToken(AuthenticationContext context, String authenticatorName)
+            throws AuthenticationFailedException {
+        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
+                .IS_ENABLE_ALPHANUMERIC_TOKEN));
+
+    }
+
+    /**
+     * Get the token expiry time.
+     *
+     * @param context           the AuthenticationContext
+     * @param authenticatorName the name of the authenticator
+     * @return tokenExpiryTime
+     * @throws AuthenticationFailedException
+     */
+    public static String getTokenExpiryTime(AuthenticationContext context, String authenticatorName)
+            throws AuthenticationFailedException {
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.TOKEN_EXPIRY_TIME);
+    }
+
+    /**
+     * Get the token length.
+     *
+     * @param context           the AuthenticationContext
+     * @param authenticatorName the name of the authenticator
+     * @return tokenLength
+     * @throws AuthenticationFailedException
+     */
+    public static String getTokenLength(AuthenticationContext context, String authenticatorName)
+            throws AuthenticationFailedException {
+        return getConfiguration(context, authenticatorName, SMSOTPConstants.TOKEN_LENGTH);
+    }
+
+    /**
      * Read configurations from application-authentication.xml for given authenticator.
      *
      * @param context           Authentication Context.
