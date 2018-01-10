@@ -38,8 +38,11 @@ Steps to run
 	<Parameter name="screenUserAttribute">http://wso2.org/claims/mobile</Parameter>
 	<Parameter name="noOfDigits">4</Parameter>
 	<Parameter name="order">backward</Parameter>
+	<Parameter name="EnableAlphanumericToken">true</Parameter>
+    <Parameter name="TokenExpiryTime">30</Parameter>
+    <Parameter name="TokenLength">8</Parameter>
 </AuthenticatorConfig>
 
-5.  Follow the steps in https://docs.wso2.com/pages/viewpage.action?title=SMSOTP%2BAuthenticator&spaceKey=ISCONNECTORS
+5.  Follow the steps in https://docs.wso2.com/display/ISCONNECTORS/SMSOTP+Authenticator
 
 
