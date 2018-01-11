@@ -211,7 +211,7 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 7. Click **Update** to save the changes. Now you will be sent back to the Service Providers page.
 8. Go to **Claim configuration** and select the mobile claim.
 
-   <img src="/docs/images/subjectClaim.png" alt="subjectClaim" width="500" height="150">
+   <img src="/docs/images/subjectClaim.png" alt="subjectClaim" width="400" height="100">
 
 9. Go to **Local and Outbound Authentication Configuration** section.
 10. Select the **Advanced configuration** radio button option.
