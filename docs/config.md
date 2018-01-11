@@ -229,7 +229,7 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 2. Click the link to log in with SAML from WSO2 Identity Server.
 3. The basic authentication page will be visible. Use your WSO2 Identity Server credentials to sign in.
 4. You will get a token to your mobile phone.Type the code to authenticate, You will be taken to the home page of the travelocity.com app
- <img src="/images/travelocityLoggedIn.png" alt="alt text" width="500" height="400">
+ <img src="/docs/images/travelocityLoggedIn.png" alt="alt text" width="500" height="400">
  
  ````
  Note : In case, If you forget the mobile phone number or do not have access to it, you can use the backup codes to authenticate and  you will be taken to the home page of the travelocity.com application.
