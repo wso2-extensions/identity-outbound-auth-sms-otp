@@ -164,6 +164,9 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
    **Note** : If Bulksms is used as the SMS provider,
    * Go to [https://www2.bulksms.com/login.mc](https://www2.bulksms.com/login.mc) and create an account.
    * While registering the account, verify your mobile number and click Claim to get free credits. 
+   
+     <img src="/docs/images/bulkSms.png" alt="bulkSms" width="800" height="250">
+
    * Bulksms API authentication is performed by providing username and password request parameters.
    * Bulksms uses a POST method and the required parameters are to be encoded in the URL. So the fields would be as follows.
 
@@ -194,6 +197,9 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 2. In the **Identity** section under the **Main** tab, click **Add** under **Service Providers**.
 3. Enter travelocity.com in the **Service Provider Name** text box and click **Register**.
 4. In the **Inbound Authentication** Configuration section, click **Configure** under the **SAML2 Web SSO Configuration** section.
+
+   <img src="/docs/images/serviceProvider.png" alt="serviceProvider" width="500" height="400">
+
 5. Now set the configuration as follows:
    * **Issuer**: travelocity.com
    * **Assertion Consumer URL**: http://localhost:8080/travelocity.com/home.jsp
@@ -204,32 +210,59 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
    * **Include Attributes in the Response Always**
 7. Click **Update** to save the changes. Now you will be sent back to the Service Providers page.
 8. Go to **Claim configuration** and select the mobile claim.
+
+   <img src="/docs/images/subjectClaim.png" alt="subjectClaim" width="500" height="100">
+
 9. Go to **Local and Outbound Authentication Configuration** section.
 10. Select the **Advanced configuration** radio button option.
 11. Add the **basic** authentication as first step and **SMSOTP** authentication as a second step. Adding basic authentication as a first step ensures that the first step of authentication will be done using the user's credentials that are configured with the WSO2 Identity Server. SMSOTP is a second step that adds another layer of authentication and security.
+
+    <img src="/docs/images/addAuthSteps.png" alt="addAuthSteps" width="500" height="250">
+
 12. Alternatively, federated authentication as the first step and SMSOTP authentication as the second step and click **Update** to save the changes.
     
 ### Configuring claims
 
 1. Select **List** under **Users and Roles** in the IS Management Console.
 2. Go to the **User Profile** and update the mobile number (this number must be registered with Nexmo in order to send SMS). 
+   
+   <img src="/docs/images/updateMobile.png" alt="updateMobile" width="500" height="350">
+
+
    **Note**: If you wish to use the backup codes to authenticate, you can add the following claim, otherwise you can leave it.
 3. In the **Main** menu, click **Add** under **Claims**.
 4. Click [Add New Claim](https://docs.wso2.com/display/IS510/Adding+New+Claim+Mapping).
 5. Select the **Dialect** from the dropdown provided and enter the required information.
 6. Add the following user claims under 'http://wso2.org/claims'.
    * Add the claim Uri - http://wso2.org/claims/identity/smsotp_disabled. This is an optional claim for SMSOTP.
+   
+     <img src="/docs/images/disableSmsOtp.png" alt="disableSmsOtp" width="740" height="300">
+
    * Add the claim Uri -  http://wso2.org/claims/otpbackupcodes 
      The backup code claim is an optional.
+     
+     <img src="/docs/images/backupCodes.png" alt="backupCodes" width="570" height="400">
+
 7. Once you add the above claim, Go to Users → admin →User Profile and update the Backup codes and user can disable SMS OTP by clicking "Disable SMS OTP".  
+
+   <img src="/docs/images/userProfile.png" alt="userProfile" width="600" height="500">
 
 ### Testing the sample
 
 1. To test the sample, go to the following URL: http://localhost:8080/travelocity.com
+
+   <img src="/docs/images/travelocityLogin.png" alt="travelocityLogin" width="500" height="350">
+   
 2. Click the link to log in with SAML from WSO2 Identity Server.
 3. The basic authentication page will be visible. Use your WSO2 Identity Server credentials to sign in.
+   
+   <img src="/docs/images/basicLogin.png" alt="basicLogin" width="500" height="350">
+
 4. You will get a token to your mobile phone.Type the code to authenticate, You will be taken to the home page of the travelocity.com app
    
+   <img src="/docs/images/smsotpLogin.png" alt="smsotpLogin" width="500" height="350">
+   <br/>
+   <br/>
    <img src="/docs/images/travelocityLoggedIn.png" alt="travelocityLoggedIn" width="500" height="250">
  
  ````
