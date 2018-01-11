@@ -198,7 +198,7 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 3. Enter travelocity.com in the **Service Provider Name** text box and click **Register**.
 4. In the **Inbound Authentication** Configuration section, click **Configure** under the **SAML2 Web SSO Configuration** section.
 
-   <img src="/docs/images/serviceProvider.png" alt="serviceProvider" width="500" height="400">
+   <img src="/docs/images/serviceProvider.png" alt="serviceProvider" width="650" height="500">
 
 5. Now set the configuration as follows:
    * **Issuer**: travelocity.com
@@ -211,13 +211,13 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 7. Click **Update** to save the changes. Now you will be sent back to the Service Providers page.
 8. Go to **Claim configuration** and select the mobile claim.
 
-   <img src="/docs/images/subjectClaim.png" alt="subjectClaim" width="500" height="100">
+   <img src="/docs/images/subjectClaim.png" alt="subjectClaim" width="600" height="200">
 
 9. Go to **Local and Outbound Authentication Configuration** section.
 10. Select the **Advanced configuration** radio button option.
 11. Add the **basic** authentication as first step and **SMSOTP** authentication as a second step. Adding basic authentication as a first step ensures that the first step of authentication will be done using the user's credentials that are configured with the WSO2 Identity Server. SMSOTP is a second step that adds another layer of authentication and security.
 
-    <img src="/docs/images/addAuthSteps.png" alt="addAuthSteps" width="500" height="250">
+    <img src="/docs/images/addAuthSteps.png" alt="addAuthSteps" width="600" height="400">
 
 12. Alternatively, federated authentication as the first step and SMSOTP authentication as the second step and click **Update** to save the changes.
     
