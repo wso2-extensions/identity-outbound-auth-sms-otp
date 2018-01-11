@@ -9,7 +9,7 @@ SMSOTP Authenticator is supported by WSO2 Identity Server versions 5.1.0, 5.2.0,
 * [Deploying travelocity.com sample](#deploying-travelocity.com-sample)
 * [Configuring the identity provider](#configuring-the-identity-provider)
 * [Configuring the service provider](#configuring-the-service-provider)
-* [Configuring claims](#configuring-the-claims)
+* [Configuring claims](#configuring-claims)
 * [Testing the sample](#testing-the-sample)
 
 ````
@@ -43,6 +43,9 @@ The artifacts can be obtained from [the store for this authenticator](https://st
         <Parameter name="secondaryUserstore">primary</Parameter>
         <Parameter name="CaptureAndUpdateMobileNumber">true</Parameter>
         <Parameter name="SendOTPDirectlyToMobile">false</Parameter>
+        <Parameter name="EnableAlphanumericToken">true</Parameter>
+        <Parameter name="TokenExpiryTime">30</Parameter>
+        <Parameter name="TokenLength">8</Parameter>
     </AuthenticatorConfig>
     ````
    The following table includes the definition of the parameters and the various values you can configure.
@@ -58,10 +61,13 @@ The artifacts can be obtained from [the store for this authenticator](https://st
    | order    | The order whether first or last number of n digits. The possible value for this property is backward or forward. |
    | secondaryUserstore    | The user store configuration is maintained per tenant as comma separated values. For example, <Parameter name="secondaryUserstore">jdbc, abc, xyz</Parameter>. |
    | usecase    | This field can take one of the following values: local, association, userAttribute, subjectUri. If you do not specify any usecase, the default value is local. See below for more details. |
-   | SMSOTPEnableByUserClaim    | his field makes it possible to disable the 'SMS OTP disabling byuser' functionality. The value can be true or false. If the value is true, the user can enable and disable the SMS OTP according to what the admin selects (SMSOTPMandatory parameter value). |
+   | SMSOTPEnableByUserClaim    | This field makes it possible to disable the 'SMS OTP disabling byuser' functionality. The value can be true or false. If the value is true, the user can enable and disable the SMS OTP according to what the admin selects (SMSOTPMandatory parameter value). |
    | RetryEnable    | This field makes it possible to retry the code if the user uses the wrong code. This value can be true or false. |
    | ResendEnable    | This parameter makes it possible to resend the code in the same page if user applies the wrong code. This value can be true or false. |
-   
+   | EnableAlphanumericToken    | If the value is true, the generated token will be a alphanumeric value. Else it will generate a numeric token.  |
+   | TokenExpiryTime    | This parameter makes it possible to set the expiry time of the OTP token. |
+   | TokenLength    | This parameter makes it possible to set the length of the OTP token. |
+
    An admin can change the priority of the SMSOTP authenticator by changing the  SMSOTPMandatory value (true or false). 
    
         * If Admin specify that SMSOTP is mandatory ( <Parameter name="SMSOTPMandatory">true</Parameter> ) , then you must enable SMSOTP in the user’s profile by adding claim value true in order to authenticate the user. If this is not done, the SMSOTP error page appears.
