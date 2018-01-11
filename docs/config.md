@@ -241,11 +241,11 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
    * Add the claim Uri -  http://wso2.org/claims/otpbackupcodes 
      The backup code claim is an optional.
      
-     <img src="/docs/images/backupCodes.png" alt="backupCodes" width="570" height="400">
+     <img src="/docs/images/backupCodes.png" alt="backupCodes" width="570" height="500">
 
 7. Once you add the above claim, Go to Users → admin →User Profile and update the Backup codes and user can disable SMS OTP by clicking "Disable SMS OTP".  
 
-   <img src="/docs/images/userProfile.png" alt="userProfile" width="600" height="500">
+   <img src="/docs/images/userProfile.png" alt="userProfile" width="600" height="600">
 
 ### Testing the sample
 
