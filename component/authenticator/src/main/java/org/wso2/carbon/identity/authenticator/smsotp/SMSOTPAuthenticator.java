@@ -466,7 +466,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (isUserExists) {
                     screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
                     if (screenValue != null) {
-                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
+                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue + "&order="+ SMSOTPUtils
+                                .getDigitsOrder(context, getName());
                     }
                 }
                 response.sendRedirect(url);
