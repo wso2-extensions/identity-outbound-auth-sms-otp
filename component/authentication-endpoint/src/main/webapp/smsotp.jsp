@@ -124,15 +124,16 @@
                                                 Enter the code sent to your mobile phone:</label>
                                                  <%
                                                      String order = request.getParameter("order");
-                                                     if (order.equals("backward")) {
+                                                     if(order != null) {
+                                                        if (order.equals("backward")) {
                                                  %>
                                                     <b> ******<%= request.getParameter("screenvalue") %></b>
                                                  <%
-                                                     } else if (order.equals("forward")) {
+                                                     } else {
                                                  %>
                                                     <b><%= request.getParameter("screenvalue") %> ******</b>
                                                  <%
-                                                    } else {
+                                                    } } else {
                                                  %>
                                                  <b><%= request.getParameter("screenvalue") %></b>
                                                  <% }  %>

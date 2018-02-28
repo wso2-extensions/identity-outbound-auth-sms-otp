@@ -87,4 +87,5 @@ public class SMSOTPConstants {
     public static final String BACKWARD = "backward";
     public static final String SCREEN_VALUE = "&screenvalue=";
     public static final String CODE_MISMATCH = "codeMismatch";
+    public static final String ORDER_OF_DIGITS = "&order=";
 }
