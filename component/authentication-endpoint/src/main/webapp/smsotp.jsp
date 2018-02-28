@@ -124,14 +124,17 @@
                                                 Enter the code sent to your mobile phone:</label>
                                                  <%
                                                      String order = request.getParameter("order");
-                                                     String screenvalue = request.getParameter("screenvalue");
                                                      if (order.equals("backward")) {
                                                  %>
                                                     <b> ******<%= request.getParameter("screenvalue") %></b>
                                                  <%
-                                                     } else {
+                                                     } else if (order.equals("forward")) {
                                                  %>
                                                     <b><%= request.getParameter("screenvalue") %> ******</b>
+                                                 <%
+                                                    } else {
+                                                 %>
+                                                 <b><%= request.getParameter("screenvalue") %></b>
                                                  <% }  %>
                                                 <input type="password" id='OTPcode' name="OTPcode" class="input-xlarge"
                                                 size='30'/>
