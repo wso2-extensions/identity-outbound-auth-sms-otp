@@ -122,6 +122,21 @@
                                              <div class="control-group">
                                                 <label class="control-label" for="password">
                                                 Enter the code sent to your mobile phone:</label>
+                                                 <%
+                                                     String order = request.getParameter("order");
+                                                     if(order != null) {
+                                                        if (order.equals("backward")) {
+                                                 %>
+                                                    <b> ******<%= request.getParameter("screenvalue") %></b>
+                                                 <%
+                                                     } else {
+                                                 %>
+                                                    <b><%= request.getParameter("screenvalue") %> ******</b>
+                                                 <%
+                                                    } } else {
+                                                 %>
+                                                 <b><%= request.getParameter("screenvalue") %></b>
+                                                 <% }  %>
                                                 <input type="password" id='OTPcode' name="OTPcode" class="input-xlarge"
                                                 size='30'/>
                                              </div>

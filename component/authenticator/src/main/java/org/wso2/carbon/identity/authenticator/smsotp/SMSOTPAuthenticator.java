@@ -465,7 +465,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
                 if (isUserExists) {
                     screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
-                    if (screenValue != null) {
+                    if (screenValue != null && SMSOTPUtils.getDigitsOrder(context, getName()) != null) {
+                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue + SMSOTPConstants.ORDER_OF_DIGITS +
+                                SMSOTPUtils.getDigitsOrder(context, getName());
+                    } else {
                         url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
                     }
                 }
