@@ -119,26 +119,18 @@
                                     <div class="row">
                                         <div class="span6">
                                              <!-- Token Pin -->
-                                             <div class="control-group">
-                                                <label class="control-label" for="password">
-                                                Enter the code sent to your mobile phone:</label>
-                                                 <%
-                                                     String order = request.getParameter("order");
-                                                     if(order != null) {
-                                                        if (order.equals("backward")) {
-                                                 %>
-                                                    <b> ******<%= request.getParameter("screenvalue") %></b>
-                                                 <%
-                                                     } else {
-                                                 %>
-                                                    <b><%= request.getParameter("screenvalue") %> ******</b>
-                                                 <%
-                                                    } } else {
-                                                 %>
-                                                 <b><%= request.getParameter("screenvalue") %></b>
-                                                 <% }  %>
-                                                <input type="password" id='OTPcode' name="OTPcode" class="input-xlarge"
-                                                size='30'/>
+                                             <% if (request.getParameter("screenvalue") != null) { %>
+                                              <div class="control-group">
+                                               <label class="control-label" for="password">
+                                               Enter the code sent to your mobile phone:<%=request.getParameter("screenvalue")%></label>
+                                               <input type="password" id='OTPcode' name="OTPcode"
+                                               class="input-xlarge" size='30'/>
+                                               <% } else { %>
+                                               <div class="control-group">
+                                               <label class="control-label" for="password">Enter the code sent to your mobile phone:</label>
+                                               <input type="password" id='OTPcode' name="OTPcode"
+                                               class="input-xlarge" size='30'/>
+                                               <% } %>
                                              </div>
                                              <input type="hidden" name="sessionDataKey"
                                                 value='<%=request.getParameter("sessionDataKey")%>'/><br/>
