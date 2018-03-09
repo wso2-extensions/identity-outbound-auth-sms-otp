@@ -452,7 +452,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (!sendRESTCall(context, smsUrl, httpMethod, headerString, payload, httpResponse, mobileNumber, otpToken)) {
                 String retryParam;
                 context.setProperty(SMSOTPConstants.STATUS_CODE, SMSOTPConstants.UNABLE_SEND_CODE);
-                if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.ERROR_CODE).toString())) {
+                if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
                     retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
                             context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
                 } else {
@@ -465,10 +465,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
                 if (isUserExists) {
                     screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
-                    if (screenValue != null && SMSOTPUtils.getDigitsOrder(context, getName()) != null) {
-                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue + SMSOTPConstants.ORDER_OF_DIGITS +
-                                SMSOTPUtils.getDigitsOrder(context, getName());
-                    } else {
+                    if (screenValue != null) {
                         url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
                     }
                 }
@@ -887,23 +884,31 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String screenUserAttributeValue = null;
         String screenValue = null;
         int noOfDigits = 0;
-
+        int screenAttributeLength = 0;
+        String hiddenScreenValue;
         screenUserAttributeParam = SMSOTPUtils.getScreenUserAttribute(context, getName());
         if (screenUserAttributeParam != null) {
             screenUserAttributeValue = userRealm.getUserStoreManager()
                     .getUserClaimValue(username, screenUserAttributeParam, null);
-            noOfDigits = screenUserAttributeValue.length();
+            screenAttributeLength = screenUserAttributeValue.length();
         }
         if ((SMSOTPUtils.getNoOfDigits(context, getName())) != null) {
             noOfDigits = Integer.parseInt(SMSOTPUtils.getNoOfDigits(context, getName()));
         }
         if (screenUserAttributeValue != null) {
             if (SMSOTPConstants.BACKWARD.equals(SMSOTPUtils.getDigitsOrder(context, getName()))) {
-                int screenAttributeLength = screenUserAttributeValue.length();
                 screenValue = screenUserAttributeValue.substring(screenAttributeLength - noOfDigits,
                         screenAttributeLength);
+                hiddenScreenValue = screenUserAttributeValue.substring(0, screenAttributeLength - noOfDigits);
+                for (int i = 0; i < hiddenScreenValue.length(); i++) {
+                    screenValue = ("*").concat(screenValue);
+                }
             } else {
                 screenValue = screenUserAttributeValue.substring(0, noOfDigits);
+                hiddenScreenValue = screenUserAttributeValue.substring(noOfDigits, screenAttributeLength);
+                for (int i = 0; i < hiddenScreenValue.length(); i++) {
+                    screenValue = screenValue.concat("*");
+                }
             }
         }
         return screenValue;

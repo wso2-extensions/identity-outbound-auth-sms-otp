@@ -558,11 +558,11 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getNoOfDigits(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("4");
 
         // with forward order
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778******");
 
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("backward");
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"5231");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******5231");
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})
