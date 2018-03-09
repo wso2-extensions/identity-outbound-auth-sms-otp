@@ -452,7 +452,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (!sendRESTCall(context, smsUrl, httpMethod, headerString, payload, httpResponse, mobileNumber, otpToken)) {
                 String retryParam;
                 context.setProperty(SMSOTPConstants.STATUS_CODE, SMSOTPConstants.UNABLE_SEND_CODE);
-                if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.ERROR_CODE).toString())) {
+                if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
                     retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
                             context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
                 } else {
