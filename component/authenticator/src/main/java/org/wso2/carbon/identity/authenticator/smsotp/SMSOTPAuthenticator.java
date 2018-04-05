@@ -489,39 +489,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void checkStatusCode(HttpServletResponse response, AuthenticationContext context,
                                  String queryParams, String errorPage) throws AuthenticationFailedException {
-        String screenValue = null;
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context, getName());
         String loginPage = getLoginPage(context);
         String url = getURL(loginPage, queryParams);
-        String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
-        String tenantDomain = MultitenantUtils.getTenantDomain(username);
-        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
-        UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
-        try {
-            screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
-        } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Failed to get the user from user store. ", e);
+        if (StringUtils.isNotEmpty(getScreenValue(context))) {
+            url = url + SMSOTPConstants.SCREEN_VALUE + getScreenValue(context);
         }
         try {
             String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
             if (statusCode == null && isRetryEnabled) {
-                if (screenValue != null) {
-                    url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
-                }
                 response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                         + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
             } else {
                 if (Boolean.parseBoolean((String) context.getProperty(SMSOTPConstants.CODE_MISMATCH)) && !isRetryEnabled) {
                     url = getURL(errorPage, queryParams);
-                    if (screenValue != null) {
-                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
-                    }
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_CODE_MISMATCH);
                 } else {
-                    if (screenValue != null) {
-                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
-                    }
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
                 }
@@ -529,6 +513,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } catch (IOException e) {
             throw new AuthenticationFailedException("Authentication Failed: An IOException was caught. ", e);
         }
+    }
+
+    /**
+     * Get the screen value for configured screen attribute.
+     *
+     * @param context the AuthenticationContext
+     * @return screenValue
+     * @throws AuthenticationFailedException
+     */
+    private String getScreenValue(AuthenticationContext context) throws AuthenticationFailedException {
+
+        String screenValue;
+        String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
+        String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
+        try {
+            screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
+        } catch (UserStoreException e) {
+            throw new AuthenticationFailedException("Failed to get the screen attribute for the user " +
+                    tenantAwareUsername + " from user store. ", e);
+        }
+        return screenValue;
     }
 
     /**
