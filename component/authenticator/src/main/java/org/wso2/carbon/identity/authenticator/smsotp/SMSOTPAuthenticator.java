@@ -403,7 +403,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         } else {
             if(log.isDebugEnabled()) {
-              log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
+                log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
             }
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
@@ -489,20 +489,39 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void checkStatusCode(HttpServletResponse response, AuthenticationContext context,
                                  String queryParams, String errorPage) throws AuthenticationFailedException {
+        String screenValue = null;
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context, getName());
         String loginPage = getLoginPage(context);
         String url = getURL(loginPage, queryParams);
+        String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
+        String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
+        try {
+            screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
+        } catch (UserStoreException e) {
+            throw new AuthenticationFailedException("Failed to get the user from user store. ", e);
+        }
         try {
             String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
             if (statusCode == null && isRetryEnabled) {
+                if (screenValue != null) {
+                    url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
+                }
                 response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                         + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
             } else {
                 if (Boolean.parseBoolean((String) context.getProperty(SMSOTPConstants.CODE_MISMATCH)) && !isRetryEnabled) {
                     url = getURL(errorPage, queryParams);
+                    if (screenValue != null) {
+                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
+                    }
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.ERROR_CODE_MISMATCH);
                 } else {
+                    if (screenValue != null) {
+                        url = url + SMSOTPConstants.SCREEN_VALUE + screenValue;
+                    }
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context, getName()) + SMSOTPConstants.RETRY_PARAMS);
                 }
