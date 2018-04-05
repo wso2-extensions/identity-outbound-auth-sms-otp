@@ -403,7 +403,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         } else {
             if(log.isDebugEnabled()) {
-              log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
+                log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
             }
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
@@ -492,6 +492,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context, getName());
         String loginPage = getLoginPage(context);
         String url = getURL(loginPage, queryParams);
+        if (StringUtils.isNotEmpty(getScreenValue(context))) {
+            url = url + SMSOTPConstants.SCREEN_VALUE + getScreenValue(context);
+        }
         try {
             String statusCode = (String) context.getProperty(SMSOTPConstants.STATUS_CODE);
             if (statusCode == null && isRetryEnabled) {
@@ -510,6 +513,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } catch (IOException e) {
             throw new AuthenticationFailedException("Authentication Failed: An IOException was caught. ", e);
         }
+    }
+
+    /**
+     * Get the screen value for configured screen attribute.
+     *
+     * @param context the AuthenticationContext
+     * @return screenValue
+     * @throws AuthenticationFailedException
+     */
+    private String getScreenValue(AuthenticationContext context) throws AuthenticationFailedException {
+
+        String screenValue;
+        String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
+        String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
+        try {
+            screenValue = getScreenAttribute(context, userRealm, tenantAwareUsername);
+        } catch (UserStoreException e) {
+            throw new AuthenticationFailedException("Failed to get the screen attribute for the user " +
+                    tenantAwareUsername + " from user store. ", e);
+        }
+        return screenValue;
     }
 
     /**
