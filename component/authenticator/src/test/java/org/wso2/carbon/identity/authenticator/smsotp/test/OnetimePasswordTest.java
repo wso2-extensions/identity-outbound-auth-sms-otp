@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -73,9 +73,16 @@ public class OnetimePasswordTest {
     }
 
     @Test
-    public void testGenerateToken() throws Exception {
+    public void testGenerateTokenWithNumericToken() throws Exception {
         OneTimePassword otp = PowerMockito.spy(oneTimePassword);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10),
+        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, false),
                 "0701282405");
+    }
+
+    @Test
+    public void testGenerateTokenWithAlphaNumericToken() throws Exception {
+        OneTimePassword otp = PowerMockito.spy(oneTimePassword);
+        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, true),
+                "IWYTV8DJ31");
     }
 }

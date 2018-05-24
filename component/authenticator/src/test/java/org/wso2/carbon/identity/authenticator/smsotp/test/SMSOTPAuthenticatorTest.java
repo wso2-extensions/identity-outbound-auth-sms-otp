@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -185,8 +185,7 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(ConfigurationFacade.class);
         when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
         when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
-                thenReturn(null);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
         Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
@@ -199,8 +198,7 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(ConfigurationFacade.class);
         when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
         when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class), anyString())).
-                thenReturn(null);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
         Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
@@ -211,7 +209,7 @@ public class SMSOTPAuthenticatorTest {
     public void testRedirectToErrorPage() throws Exception {
         mockStatic(SMSOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
-        when(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME))
+        when(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext))
                 .thenReturn("/smsotpauthenticationendpoint/smsotpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "redirectToErrorPage",
@@ -224,9 +222,8 @@ public class SMSOTPAuthenticatorTest {
     public void testRedirectToMobileNumberReqPage() throws Exception {
         mockStatic(SMSOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
-        when(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(true);
-        when(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME))
+        when(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext)).thenReturn(true);
+        when(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext))
                 .thenReturn("/smsotpauthenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "redirectToMobileNoReqPage",
@@ -239,9 +236,8 @@ public class SMSOTPAuthenticatorTest {
     public void testCheckStatusCode() throws Exception {
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.STATUS_CODE, "");
-        when(SMSOTPUtils.isRetryEnabled(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(true);
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
@@ -254,9 +250,8 @@ public class SMSOTPAuthenticatorTest {
     public void testCheckStatusCodeWithNullValue() throws Exception {
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.STATUS_CODE, null);
-        when(SMSOTPUtils.isRetryEnabled(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(true);
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
@@ -269,10 +264,10 @@ public class SMSOTPAuthenticatorTest {
     public void testCheckStatusCodeWithMismatch() throws Exception {
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.CODE_MISMATCH, "true");
-        when(SMSOTPUtils.isRetryEnabled(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
-                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(false);
+        when(SMSOTPUtils.isEnableResendCode(context)).thenReturn(true);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
+                thenReturn("/smsotpauthenticationendpoint/smsotpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.ERROR_PAGE);
@@ -281,14 +276,27 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
+    public void testCheckStatusCodeWithTokenExpired() throws Exception {
+        mockStatic(SMSOTPUtils.class);
+        context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
+        when(SMSOTPUtils.isEnableResendCode(context)).thenReturn(true);
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
+                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
+                httpServletResponse, context, null, SMSOTPConstants.SMS_LOGIN_PAGE);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
+    }
+
+    @Test
     public void testProcessSMSOTPFlow() throws Exception {
         mockStatic(SMSOTPUtils.class);
-        when(SMSOTPUtils.isSMSOTPDisableForLocalUser("John", context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(true);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isSMSOTPDisableForLocalUser("John", context)).thenReturn(true);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
-        when(SMSOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class), anyString())).
-                thenReturn(true);
+        when(SMSOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class))).thenReturn(true);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
                 httpServletRequest, httpServletResponse, true, "John@carbon.super", "", "carbon.super", SMSOTPConstants
@@ -300,9 +308,8 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testSendOTPDirectlyToMobile() throws Exception {
         mockStatic(SMSOTPUtils.class);
-        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(true);
-        when(SMSOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(true);
+        when(SMSOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class))).
                 thenReturn("/smsotpauthenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
@@ -315,9 +322,8 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testProcessSMSOTPDisableFlow() throws Exception {
         mockStatic(SMSOTPUtils.class);
-        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
@@ -345,11 +351,9 @@ public class SMSOTPAuthenticatorTest {
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        when(SMSOTPUtils.isSMSOTPMandatory(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn(true);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn
-                (SMSOTPConstants.ERROR_PAGE);
-        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
+        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
         when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
@@ -373,14 +377,12 @@ public class SMSOTPAuthenticatorTest {
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        when(SMSOTPUtils.isSMSOTPMandatory(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn(true);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn
-                (SMSOTPConstants.ERROR_PAGE);
-        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
+        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
         when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
-        when(SMSOTPUtils.getBackupCode(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("false");
+        when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
         AuthenticatorFlowStatus status = spy.process(httpServletRequest, httpServletResponse, context);
         Assert.assertEquals(status, AuthenticatorFlowStatus.INCOMPLETE);
     }
@@ -394,16 +396,14 @@ public class SMSOTPAuthenticatorTest {
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        when(SMSOTPUtils.isSMSOTPMandatory(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn(true);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn
-                (SMSOTPConstants.ERROR_PAGE);
-        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
+        when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
         when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
-        when(SMSOTPUtils.getBackupCode(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("false");
+        when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
@@ -417,26 +417,25 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
-        context.setProperty(SMSOTPConstants.CODE_MISMATCH, "true");
+        context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
         when(context.isRetrying()).thenReturn(true);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        when(SMSOTPUtils.isSMSOTPMandatory(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn(false);
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(false);
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
         when(FederatedAuthenticatorUtil.isUserExistInUserStore(anyString())).thenReturn(true);
         when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0778965320");
-        when(SMSOTPUtils.isRetryEnabled(context, SMSOTPConstants.AUTHENTICATOR_NAME))
-                .thenReturn(false);
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.LOGIN_PAGE);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class), anyString())).
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
         verify(httpServletResponse).sendRedirect(captor.capture());
-        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_CODE_MISMATCH));
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
@@ -469,6 +468,7 @@ public class SMSOTPAuthenticatorTest {
     public void testProcessAuthenticationResponse() throws Exception {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
+        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
@@ -484,7 +484,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
-        when(SMSOTPUtils.getBackupCode(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("true");
+        when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
 
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
@@ -502,7 +502,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
                 thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
-        when(SMSOTPUtils.getBackupCode(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("false");
+        when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -547,7 +547,7 @@ public class SMSOTPAuthenticatorTest {
     public void testGetScreenAttribute() throws UserStoreException, AuthenticationFailedException {
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
-        when(SMSOTPUtils.getScreenUserAttribute(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn
+        when(SMSOTPUtils.getScreenUserAttribute(context)).thenReturn
                 ("http://wso2.org/claims/mobile");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
@@ -555,13 +555,13 @@ public class SMSOTPAuthenticatorTest {
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null)).thenReturn("0778965231");
-        when(SMSOTPUtils.getNoOfDigits(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("4");
+        when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
         // with forward order
         Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778******");
 
         // with backward order
-        when(SMSOTPUtils.getDigitsOrder(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn("backward");
+        when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
         Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******5231");
     }
 

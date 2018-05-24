@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -92,7 +92,7 @@ public class SMSOTPUtilsTest {
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_SMSOTP_MANDATORY, true);
         authenticationContext.setProperty("getPropertiesFromLocal", null);
-        Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME,
+        Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext,
                 SMSOTPConstants.IS_SMSOTP_MANDATORY), "true");
     }
 
@@ -109,7 +109,7 @@ public class SMSOTPUtilsTest {
         when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME,
+        Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext,
                 SMSOTPConstants.IS_SMSOTP_MANDATORY), "true");
     }
 
@@ -118,8 +118,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.BACKUP_CODE, true);
-        Assert.assertEquals(SMSOTPUtils.getBackupCode(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                "true");
+        Assert.assertEquals(SMSOTPUtils.getBackupCode(authenticationContext), "true");
     }
 
     @Test
@@ -127,8 +126,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.ORDER, "backward");
-        Assert.assertEquals(SMSOTPUtils.getDigitsOrder(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                "backward");
+        Assert.assertEquals(SMSOTPUtils.getDigitsOrder(authenticationContext), "backward");
     }
 
     @Test
@@ -136,8 +134,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.NO_DIGITS, "4");
-        Assert.assertEquals(SMSOTPUtils.getNoOfDigits(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                "4");
+        Assert.assertEquals(SMSOTPUtils.getNoOfDigits(authenticationContext), "4");
     }
 
     @Test
@@ -145,7 +142,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.SCREEN_USER_ATTRIBUTE, "http://wso2.org/claims/mobile");
-        Assert.assertEquals(SMSOTPUtils.getScreenUserAttribute(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
+        Assert.assertEquals(SMSOTPUtils.getScreenUserAttribute(authenticationContext),
                 "http://wso2.org/claims/mobile");
     }
 
@@ -155,8 +152,8 @@ public class SMSOTPUtilsTest {
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE,
                 "smsotpauthenticationendpoint/mobile.jsp");
-        Assert.assertEquals(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext,
-                SMSOTPConstants.AUTHENTICATOR_NAME), "smsotpauthenticationendpoint/mobile.jsp");
+        Assert.assertEquals(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext),
+                "smsotpauthenticationendpoint/mobile.jsp");
     }
 
     @Test
@@ -164,8 +161,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_ENABLED_RETRY, "true");
-        Assert.assertEquals(SMSOTPUtils.isRetryEnabled(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                true);
+        Assert.assertEquals(SMSOTPUtils.isRetryEnabled(authenticationContext), true);
     }
 
     @Test
@@ -174,8 +170,8 @@ public class SMSOTPUtilsTest {
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL,
                 SMSOTPConstants.ERROR_PAGE);
-        Assert.assertEquals(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext,
-                SMSOTPConstants.AUTHENTICATOR_NAME), "smsotpauthenticationendpoint/smsotpError.jsp");
+        Assert.assertEquals(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext),
+                "smsotpauthenticationendpoint/smsotpError.jsp");
     }
 
     @Test
@@ -184,7 +180,7 @@ public class SMSOTPUtilsTest {
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL,
                 SMSOTPConstants.SMS_LOGIN_PAGE);
-        Assert.assertEquals(SMSOTPUtils.getLoginPageFromXMLFile(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
+        Assert.assertEquals(SMSOTPUtils.getLoginPageFromXMLFile(authenticationContext),
                 "smsotpauthenticationendpoint/smsotp.jsp");
     }
 
@@ -193,8 +189,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_ENABLED_RESEND, "true");
-        Assert.assertEquals(SMSOTPUtils.isEnableResendCode(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                true);
+        Assert.assertEquals(SMSOTPUtils.isEnableResendCode(authenticationContext), true);
     }
 
     @Test
@@ -202,8 +197,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE, "true");
-        Assert.assertEquals(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                true);
+        Assert.assertEquals(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext), true);
     }
 
     @Test
@@ -211,8 +205,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER, "true");
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPEnableOrDisableByUser(authenticationContext,
-                SMSOTPConstants.AUTHENTICATOR_NAME), true);
+        Assert.assertEquals(SMSOTPUtils.isSMSOTPEnableOrDisableByUser(authenticationContext), true);
     }
 
     @Test
@@ -220,8 +213,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE, "true");
-        Assert.assertEquals(SMSOTPUtils.isSendOTPDirectlyToMobile(authenticationContext,
-                SMSOTPConstants.AUTHENTICATOR_NAME), true);
+        Assert.assertEquals(SMSOTPUtils.isSendOTPDirectlyToMobile(authenticationContext), true);
     }
 
     @Test
@@ -229,8 +221,7 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                true);
+        Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext), true);
     }
 
     @Test
@@ -246,8 +237,31 @@ public class SMSOTPUtilsTest {
         when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext, SMSOTPConstants.AUTHENTICATOR_NAME),
-                true);
+        Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext), true);
+    }
+
+    @Test
+    public void testIsEnableAlphanumericTokenFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.IS_ENABLE_ALPHANUMERIC_TOKEN, "true");
+        Assert.assertEquals(SMSOTPUtils.isEnableAlphanumericToken(authenticationContext), true);
+    }
+
+    @Test
+    public void testTokenExpiryTimeFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.TOKEN_EXPIRY_TIME, "30");
+        Assert.assertEquals(SMSOTPUtils.getTokenExpiryTime(authenticationContext), "30");
+    }
+
+    @Test
+    public void testTokenLengthFromRegistry() throws AuthenticationFailedException {
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setTenantDomain("wso2.org");
+        authenticationContext.setProperty(SMSOTPConstants.TOKEN_LENGTH, "8");
+        Assert.assertEquals(SMSOTPUtils.getTokenLength(authenticationContext), "8");
     }
 
     @Test
@@ -277,12 +291,11 @@ public class SMSOTPUtilsTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(SMSOTPUtils.isSMSOTPEnableOrDisableByUser(context, SMSOTPConstants.AUTHENTICATOR_NAME)).thenReturn(true);
+        when(SMSOTPUtils.isSMSOTPEnableOrDisableByUser(context)).thenReturn(true);
         Map<String, String> claims = new HashMap<>();
         claims.put(SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI, "false");
         userStoreManager.setUserClaimValues(MultitenantUtils.getTenantAwareUsername(username), claims, null);
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPDisableForLocalUser(anyString(), context, SMSOTPConstants
-                .AUTHENTICATOR_NAME), false);
+        Assert.assertEquals(SMSOTPUtils.isSMSOTPDisableForLocalUser(anyString(), context), false);
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})

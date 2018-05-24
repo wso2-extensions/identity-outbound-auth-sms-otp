@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -50,6 +50,8 @@
                     errorMessage = "The code entered is incorrect. Authentication Failed!";
                 } else if (errorMessage.equalsIgnoreCase("smsotp.disable")) {
                     errorMessage = "Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.";
+                } else if (errorMessage.equalsIgnoreCase("token.expired")) {
+                    errorMessage = "The code entered is expired. Authentication Failed!";
                 } else if (errorMessage.equalsIgnoreCase("directly.send.otp.disable")) {
                     errorMessage = "User not found in the directory. Cannot proceed further without SMS OTP authentication.";
                 }

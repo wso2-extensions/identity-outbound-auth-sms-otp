@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -48,6 +48,9 @@ public class SMSOTPConstants {
     public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "SendOTPDirectlyToMobile";
     public static final String IS_SMSOTP_ENABLE_BY_USER = "SMSOTPEnableByUserClaim";
     public static final String IS_ENABLE_MOBILE_NO_UPDATE = "CaptureAndUpdateMobileNumber";
+    public static final String IS_ENABLE_ALPHANUMERIC_TOKEN = "EnableAlphanumericToken";
+    public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
+    public static final String TOKEN_LENGTH = "TokenLength";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -88,4 +91,10 @@ public class SMSOTPConstants {
     public static final String SCREEN_VALUE = "&screenvalue=";
     public static final String CODE_MISMATCH = "codeMismatch";
     public static final String ORDER_OF_DIGITS = "&order=";
+    public static final String TOKEN_VALIDITY_TIME = "tokenValidityTime";
+    public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
+    public static final String TOKEN_EXPIRED = "tokenExpired";
+    public static final String TOKEN_EXPIRED_VALUE = "token.expired";
+    public static final String ERROR_TOKEN_EXPIRED = "&authFailure=true&authFailureMsg=token.expired";
+
 }
