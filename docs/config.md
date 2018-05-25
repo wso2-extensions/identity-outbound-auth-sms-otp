@@ -17,7 +17,7 @@ This topic provides instructions on how to configure the SMSOTP connector and th
 ````
 Note: If you have a older version, upgrade the connector and artifacts to the latest version from the connector store.
 ````
->> NOTE : If you want to lock the account when a number of consecutive failed login attempts are exceeded, then please follow the steps mentioned [here](https://docs.wso2.com/display/IS5xx/Account+Locking+by+Failed+Login+Attempts) to configure WSO2 Identity Server.
+>> NOTE : If you want to lock the account when a number of consecutive failed login attempts are exceeded, then please follow the steps mentioned [here](https://docs.wso2.com/display/IS5xx/Account+Locking+by+Failed+Login+Attempts) to configure WSO2 Identity Server. This functionality will support IS 5.6.0 upwards.
 ### Deploying SMSOTP artifacts
 
 The artifacts can be obtained from [the store for this authenticator](https://store.wso2.com/store/assets/isconnector/list?q=%22_default%22%3A%22smsotp%22).
@@ -58,13 +58,12 @@ The artifacts can be obtained from [the store for this authenticator](https://st
    | screenUserAttribute    |  If you need to show n digits of mobile number or any other user attribute value in UI, This parameter will be used to pick the claim URI. |
    | CaptureAndUpdateMobileNumber    | In SMSOTPMandatory case, If user forgets to update the mobile number in specific user's profile and this property is true, then user can update a mobile claim with value in authentication time (If it is first login) and get the mobile number from user's profile to send OTP. This update functionality will happen in the first login only. Once user updates the mobile number, for the next login mobile number will be taken the updated mobile number from specific user's profile. |                                       
    | SendOTPDirectlyToMobile    | In SMSOTPMandatory case, If user does not exist in user store and If admin enable"SendOTPDirectlyToMobile" as true, then the user can enter the mobile number in authentication time in a mobile number request page and the OTP will directly send to that mobile number. |
-   | BackupCode    | The backup code is used instead of the actual SMS code. The value can be true or false. If you do not want backup codes, set this as false. You can skip the steps 6.a and 7 in the [Configuring claims](https://docs.wso2.com/display/ISCONNECTORS/Configuring+Multi-factor+Authentication+using+SMSOTP#ConfiguringMulti-factorAuthenticationusingSMSOTP-Configuringclaims) section. |
+   | BackupCode    | The backup code is used instead of the actual SMS code. The value can be true or false. If you do not want backup codes, set this as false. You can skip the steps 6.b and 7 in the [Configuring claims](https://docs.wso2.com/display/ISCONNECTORS/Configuring+Multi-factor+Authentication+using+SMSOTP#ConfiguringMulti-factorAuthenticationusingSMSOTP-Configuringclaims) section. |
    | noOfDigits    | The number of digits of claim value to show in UI. That is,if the mobile claim selected for the property "screenUserAttribute" and if the noOfDigits property has the value 4, then we can show the mobile number according to the property "order". If the order is backward, then we can show the last 4 digits of mobile claim in the UI. |
    | order    | The order whether first or last number of n digits. The possible value for this property is backward or forward. |
    | secondaryUserstore    | The user store configuration is maintained per tenant as comma separated values. For example, <Parameter name="secondaryUserstore">jdbc, abc, xyz</Parameter>. |
    | usecase    | This field can take one of the following values: local, association, userAttribute, subjectUri. If you do not specify any usecase, the default value is local. See below for more details. |
-   | SMSOTPEnableByUserClaim    | This field makes it possible to disable the 'SMS OTP disabling byuser' functionality. The value can be true or false. If the value is true, the user can enable and disable the SMS OTP according to what the admin selects (SMSOTPMandatory parameter value). |
-   | RetryEnable    | This field makes it possible to retry the code if the user uses the wrong code. This value can be true or false. |
+   | SMSOTPEnableByUserClaim    | This field makes it possible to disable the 'SMS OTP disabling byuser' functionality. The value can be true or false. If the value is true, the user can enable and disable the SMS OTP according to what the admin selects (SMSOTPMandatory parameter value). If this property is false, then you can skip the steps 6.a and 7 in the [Configuring claims](https://docs.wso2.com/display/ISCONNECTORS/Configuring+Multi-factor+Authentication+using+SMSOTP#ConfiguringMulti-factorAuthenticationusingSMSOTP-Configuringclaims) section |
    | ResendEnable    | This parameter makes it possible to resend the code in the same page if user applies the wrong code. This value can be true or false. |
    | EnableAlphanumericToken    | If the value is true, the generated token will be a alphanumeric value. Else it will generate a numeric token.  |
    | TokenExpiryTime    | This parameter makes it possible to set the expiry time of the OTP token. |
@@ -226,26 +225,27 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 ### Configuring claims
 
 1. Select **List** under **Users and Roles** in the IS Management Console.
-2. Go to the **User Profile** and update the mobile number (this number must be registered with Nexmo in order to send SMS). 
+2. Go to the **User Profile** and update the mobile number (This number must be registered with Nexmo, if you are using Nexmo API in order to send SMS).
    
    ![alt text](images/updateMobile.png)
 
 
-   **Note**: If you wish to use the backup codes to authenticate, you can add the following claim, otherwise you can leave it.
+   **Note**: If you wish to use the backup codes to authenticate, you need to add the following claim mentioned in **Step 7**, otherwise you can leave it.
 3. In the **Main** menu, click **Add** under **Claims**.
 4. Click [Add New Claim](https://docs.wso2.com/display/IS510/Adding+New+Claim+Mapping).
 5. Select the **Dialect** from the dropdown provided and enter the required information.
 6. Add the following user claims under 'http://wso2.org/claims'.
-   * Add the claim Uri - http://wso2.org/claims/identity/smsotp_disabled. This is an optional claim for SMSOTP.
+
+   a. Add the claim Uri - http://wso2.org/claims/identity/smsotp_disabled. This is an optional claim for SMSOTP.
    
      ![alt text](images/disableSmsOtp.png)
 
-   * Add the claim Uri -  http://wso2.org/claims/otpbackupcodes 
+   b. Add the claim Uri -  http://wso2.org/claims/otpbackupcodes
      The backup code claim is an optional.
      
      ![alt text](images/backupCodes.png)
 
-7. Once you add the above claim, Go to Users → admin →User Profile and update the Backup codes and user can disable SMS OTP by clicking "Disable SMS OTP".  
+7. Go to Users → admin →User Profile and update the Backup codes and user can disable SMS OTP by clicking "Disable SMS OTP".
 
    ![alt text](images/userProfile.png)
 

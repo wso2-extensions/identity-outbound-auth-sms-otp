@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -205,26 +206,25 @@ public class OneTimePassword {
      * @param isEnableAlphanumericToken a flag that indicates the token is alphanumeric or not
      * @return the generated token
      */
-    public String generateToken(String key, String base, int digits, boolean isEnableAlphanumericToken) {
+    public String generateToken(String key, String base, int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
         int truncOffset = 0;
         if (isEnableAlphanumericToken){
             try {
                 return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                log.error("Unable to find the Algorithm", e);
+                throw new AuthenticationFailedException(" Unable to find the SHA1 Algorithm to generate OTP ", e);
             } catch (InvalidKeyException e) {
-                log.error("Unable to find the secret key", e);
+                throw new AuthenticationFailedException(" Unable to find the secret key ", e);
             }
         }
         else {
             try {
                 return generateOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                log.error("Unable to find the Algorithm", e);
+                throw new AuthenticationFailedException(" Unable to find the SHA1 Algorithm to generate OTP ", e);
             } catch (InvalidKeyException e) {
-                log.error("Unable to find the secret key", e);
+                throw new AuthenticationFailedException(" Unable to find the secret key ", e);
             }
         }
-        return null;
     }
 }

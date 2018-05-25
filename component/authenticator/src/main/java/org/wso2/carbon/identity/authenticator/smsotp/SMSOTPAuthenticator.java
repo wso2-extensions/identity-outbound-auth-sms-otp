@@ -517,7 +517,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
             } else {
                 url = getURL(errorPage, queryParams);
-                if (Boolean.parseBoolean((String) context.getProperty(SMSOTPConstants.CODE_MISMATCH))) {
+                if (Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.CODE_MISMATCH)))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_CODE_MISMATCH);
                 } else if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
@@ -666,6 +666,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("User entered OTP :" + userToken + " does not match with any of the saved backup codes");
                 }
+                context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
                 throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " mismatch.");
             }
         } catch (UserStoreException e) {
