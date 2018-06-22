@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -287,7 +287,7 @@ public class SMSOTPAuthenticatorTest {
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.SMS_LOGIN_PAGE);
         verify(httpServletResponse).sendRedirect(captor.capture());
-        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.TOKEN_EXPIRED_VALUE));
     }
 
     @Test
@@ -348,8 +348,9 @@ public class SMSOTPAuthenticatorTest {
         when(context.isLogoutRequest()).thenReturn(false);
         when(httpServletRequest.getParameter(SMSOTPConstants.MOBILE_NUMBER)).thenReturn("true");
         context.setTenantDomain("carbon.super");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser)context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -374,8 +375,9 @@ public class SMSOTPAuthenticatorTest {
         when(context.isLogoutRequest()).thenReturn(false);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("");
         context.setTenantDomain("carbon.super");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -393,8 +395,9 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -420,8 +423,9 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
         when(context.isRetrying()).thenReturn(true);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(false);
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
@@ -435,7 +439,7 @@ public class SMSOTPAuthenticatorTest {
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
         verify(httpServletResponse).sendRedirect(captor.capture());
-        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_TOKEN_EXPIRED));
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.TOKEN_EXPIRED_VALUE));
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
@@ -469,8 +473,9 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -482,8 +487,9 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
 
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
@@ -500,8 +506,9 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
@@ -515,8 +522,9 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
@@ -533,8 +541,9 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).
-                thenReturn(AuthenticatedUser.createLocalAuthenticatedUserFromSubjectIdentifier("admin"));
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -78,11 +78,13 @@ public class SMSOTPConstants {
     public static final String AUTHENTICATED_USER = "authenticatedUser";
     public static final String STATUS_CODE = "statusCode";
     public static final String UNABLE_SEND_CODE = "UnableSend";
-    public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=";
+    public static final String ERROR_MESSAGE = "&authFailure=true&authFailureMsg=";
     public static final String UNABLE_SEND_CODE_VALUE = "unable.send.code";
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
+    public static final String ERROR_SMSOTP_DISABLE_MSG = "smsotp.disable";
     public static final String SEND_OTP_DIRECTLY_DISABLE = "&authFailure=true&authFailureMsg=directly.send.otp.disable";
-    public static final String ERROR_CODE_MISMATCH = "&authFailure=true&authFailureMsg=code.mismatch";
+    public static final String SEND_OTP_DIRECTLY_DISABLE_MSG = "directly.send.otp.disable";
+    public static final String ERROR_CODE_MISMATCH = "code.mismatch";
     public static final String ERROR_CODE = "errorCode";
     public static final String SCREEN_USER_ATTRIBUTE = "screenUserAttribute";
     public static final String NO_DIGITS = "noOfDigits";
@@ -95,6 +97,5 @@ public class SMSOTPConstants {
     public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
     public static final String TOKEN_EXPIRED = "tokenExpired";
     public static final String TOKEN_EXPIRED_VALUE = "token.expired";
-    public static final String ERROR_TOKEN_EXPIRED = "&authFailure=true&authFailureMsg=token.expired";
 
 }

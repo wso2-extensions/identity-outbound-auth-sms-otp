@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -19,6 +19,7 @@
 <%@page import="java.util.Arrays" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
+<%@page import="org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -45,7 +46,7 @@
                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
                     errorMessage = "Authentication Failed! Please Retry";
                 }
-                if (errorMessage.equalsIgnoreCase("token.expired")) {
+                if (errorMessage.equalsIgnoreCase(SMSOTPConstants.TOKEN_EXPIRED_VALUE)) {
                     errorMessage = "The code entered is expired. Click Resend Code to continue.";
                 }
             }

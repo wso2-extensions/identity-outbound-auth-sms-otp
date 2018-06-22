@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -80,6 +80,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.CODE))
                 || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.MOBILE_NUMBER)));
     }
+
 
     @Override
     public AuthenticatorFlowStatus process(HttpServletRequest request,
@@ -461,10 +462,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (!sendRESTCall(context, smsUrl, httpMethod, headerString, payload, httpResponse, mobileNumber, otpToken)) {
                 String retryParam;
                 if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
-                    retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM +
+                    retryParam = SMSOTPConstants.ERROR_MESSAGE +
                             context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
                 } else {
-                    retryParam = SMSOTPConstants.UNABLE_SEND_CODE_PARAM + SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
+                    retryParam = SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
                 }
                 String redirectUrl = getURL(errorPage, queryParams);
                 response.sendRedirect(redirectUrl + SMSOTPConstants.RESEND_CODE + isEnableResendCode + retryParam);
@@ -510,7 +511,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (isRetryEnabled) {
                 if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
-                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_TOKEN_EXPIRED);
+                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE +
+                            SMSOTPConstants.TOKEN_EXPIRED_VALUE);
                 } else {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.RETRY_PARAMS);
@@ -519,10 +521,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 url = getURL(errorPage, queryParams);
                 if (Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.CODE_MISMATCH)))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
-                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_CODE_MISMATCH);
+                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE
+                            + SMSOTPConstants.ERROR_CODE_MISMATCH);
                 } else if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
-                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_TOKEN_EXPIRED);
+                            + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants
+                            .TOKEN_EXPIRED_VALUE);
                 } else {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.RETRY_PARAMS);
