@@ -17,7 +17,6 @@ This topic provides instructions on how to configure the SMSOTP connector and th
 ````
 Note: If you have a older version, upgrade the connector and artifacts to the latest version from the connector store.
 ````
->> NOTE : If you want to lock the account when a number of consecutive failed login attempts are exceeded, then please follow the steps mentioned [here](https://docs.wso2.com/display/IS5xx/Account+Locking+by+Failed+Login+Attempts) to configure WSO2 Identity Server. This functionality will support IS 5.6.0 upwards.
 ### Deploying SMSOTP artifacts
 
 The artifacts can be obtained from [the store for this authenticator](https://store.wso2.com/store/assets/isconnector/list?q=%22_default%22%3A%22smsotp%22).
