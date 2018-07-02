@@ -20,6 +20,7 @@
 package org.wso2.carbon.identity.authenticator.smsotp;
 
 public class SMSOTPConstants {
+
     public static final String AUTHENTICATOR_NAME = "SMSOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "SMS OTP";
     public static final String ALGORITHM_NAME = "SHA1PRNG";

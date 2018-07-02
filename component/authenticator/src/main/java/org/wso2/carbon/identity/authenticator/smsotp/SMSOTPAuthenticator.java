@@ -72,6 +72,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     @Override
     public boolean canHandle(HttpServletRequest request) {
+
         if (log.isDebugEnabled()) {
             log.debug("Inside SMSOTPAuthenticator canHandle method and check the existence of mobile number and otp code");
         }
@@ -80,7 +81,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.CODE))
                 || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.MOBILE_NUMBER)));
     }
-
 
     @Override
     public AuthenticatorFlowStatus process(HttpServletRequest request,
@@ -116,6 +116,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     @Override
     protected void initiateAuthenticationRequest(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
+
         try {
             String username;
             AuthenticatedUser authenticatedUser;
@@ -182,6 +183,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private String getMobileNumber(HttpServletRequest request, HttpServletResponse response,
                                    AuthenticationContext context, String username, String tenantDomain,
                                    String queryParams) throws AuthenticationFailedException, SMSOTPException {
+
         String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
         if (StringUtils.isEmpty(mobileNumber)) {
             if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
@@ -205,6 +207,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @throws AuthenticationFailedException
      */
     private String getLoginPage(AuthenticationContext context) throws AuthenticationFailedException {
+
         String loginPage = SMSOTPUtils.getLoginPageFromXMLFile(context);
         if (StringUtils.isEmpty(loginPage)) {
             loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
@@ -224,6 +227,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @throws AuthenticationFailedException
      */
     private String getErrorPage(AuthenticationContext context) throws AuthenticationFailedException {
+
         String errorPage = SMSOTPUtils.getErrorPageFromXMLFile(context);
         if (StringUtils.isEmpty(errorPage)) {
             errorPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
@@ -243,6 +247,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @return url
      */
     private String getURL(String baseURI, String queryParams) {
+
         String url;
         if (StringUtils.isNotEmpty(queryParams)) {
             url = baseURI + "?" + queryParams + "&" + SMSOTPConstants.NAME_OF_AUTHENTICATORS + getName();
@@ -279,6 +284,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @param context           the AuthenticationContext
      */
     private void processFirstStepOnly(AuthenticatedUser authenticatedUser, AuthenticationContext context) {
+
         if (log.isDebugEnabled()) {
             log.debug("Processing First step only. Skipping SMSOTP");
         }
@@ -313,6 +319,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private void updateMobileNumberForUsername(AuthenticationContext context, HttpServletRequest request,
                                                String username, String tenantDomain)
             throws SMSOTPException, AuthenticationFailedException {
+
         if (username != null && !context.isRetrying()) {
             if (log.isDebugEnabled()) {
                 log.debug("Updating mobile number for user : " + username);
@@ -368,6 +375,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                    HttpServletResponse response, boolean isUserExists, String username,
                                    String queryParams, String tenantDomain, String errorPage)
             throws AuthenticationFailedException, SMSOTPException {
+
         String mobileNumber = null;
         if (isUserExists) {
             boolean isSMSOTPDisabledByUser = SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context);
@@ -427,6 +435,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private void proceedWithOTP(HttpServletResponse response, AuthenticationContext context, String errorPage,
                                 String mobileNumber, String queryParams, String username)
             throws AuthenticationFailedException {
+
         String screenValue;
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
         boolean isEnableResendCode = SMSOTPUtils.isEnableResendCode(context);
@@ -489,7 +498,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
-
     /**
      * Check the status codes when resend and retry enabled.
      *
@@ -501,6 +509,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void checkStatusCode(HttpServletResponse response, AuthenticationContext context,
                                  String queryParams, String errorPage) throws AuthenticationFailedException {
+
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context);
         String loginPage = getLoginPage(context);
         String url = getURL(loginPage, queryParams);
@@ -537,7 +546,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
-
     /**
      * Get the screen value for configured screen attribute.
      *
@@ -571,6 +579,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void redirectToMobileNoReqPage(HttpServletResponse response, AuthenticationContext context,
                                            String queryParams) throws AuthenticationFailedException {
+
         boolean isEnableMobileNoUpdate = SMSOTPUtils.isEnableMobileNoUpdate(context);
         if (isEnableMobileNoUpdate) {
             String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
@@ -599,6 +608,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     @Override
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
+
         String userToken = request.getParameter(SMSOTPConstants.CODE);
         String contextToken = (String) context.getProperty(SMSOTPConstants.OTP_TOKEN);
         AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
@@ -643,6 +653,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void checkWithBackUpCodes(AuthenticationContext context, String userToken,
                                       AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
+
         String savedOTPString = null;
         String username = context.getProperty(SMSOTPConstants.USER_NAME).toString();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
@@ -687,6 +698,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @throws AuthenticationFailedException
      */
     private UserRealm getUserRealm(String username) throws AuthenticationFailedException {
+
         UserRealm userRealm = null;
         try {
             if (StringUtils.isNotEmpty(username)) {
@@ -705,6 +717,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * Get the friendly name of the Authenticator
      */
     public String getFriendlyName() {
+
         return SMSOTPConstants.AUTHENTICATOR_FRIENDLY_NAME;
     }
 
@@ -712,6 +725,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * Get the name of the Authenticator
      */
     public String getName() {
+
         return SMSOTPConstants.AUTHENTICATOR_NAME;
     }
 
@@ -719,11 +733,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * Get the Context identifier sent with the request.
      */
     public String getContextIdentifier(HttpServletRequest httpServletRequest) {
+
         return httpServletRequest.getParameter(FrameworkConstants.SESSION_DATA_KEY);
     }
 
     @Override
     protected boolean retryAuthenticationEnabled() {
+
         return true;
     }
 
@@ -799,6 +815,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private boolean getConnection(HttpURLConnection httpConnection, AuthenticationContext context, String headerString,
                                   String payload, String httpResponse, String encodedMobileNo, String smsMessage,
                                   String otpToken, String httpMethod) throws AuthenticationFailedException {
+
         try {
             httpConnection.setDoInput(true);
             httpConnection.setDoOutput(true);
@@ -907,6 +924,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     public boolean sendRESTCall(AuthenticationContext context, String smsUrl, String httpMethod,
                                 String headerString, String payload, String httpResponse, String mobile,
                                 String otpToken) throws IOException, AuthenticationFailedException {
+
         if (log.isDebugEnabled()) {
             log.debug("Preparing message for sending out");
         }
@@ -942,6 +960,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     public String getScreenAttribute(AuthenticationContext context, UserRealm userRealm, String username)
             throws UserStoreException, AuthenticationFailedException {
+
         String screenUserAttributeParam;
         String screenUserAttributeValue = null;
         String screenValue = null;

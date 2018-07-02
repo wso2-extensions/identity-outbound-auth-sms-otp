@@ -18,7 +18,6 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
@@ -47,6 +46,7 @@ public class SMSOTPUtils {
      * Get parameter values from application-authentication.xml local file.
      */
     public static Map<String, String> getSMSParameters() {
+
         AuthenticatorConfig authConfig = FileBasedConfigurationBuilder.getInstance()
                 .getAuthenticatorBean(SMSOTPConstants.AUTHENTICATOR_NAME);
         if (authConfig != null) {
@@ -68,6 +68,7 @@ public class SMSOTPUtils {
      */
     public static boolean isSMSOTPDisableForLocalUser(String username, AuthenticationContext context)
             throws SMSOTPException {
+
         UserRealm userRealm;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(username);
@@ -101,6 +102,7 @@ public class SMSOTPUtils {
      */
     public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
             throws SMSOTPException {
+
         try {
             // updating user attributes is independent from tenant association.not tenant association check needed here.
             UserRealm userRealm;
@@ -126,6 +128,7 @@ public class SMSOTPUtils {
      */
     public static void verifyUserExists(String username, String tenantDomain) throws SMSOTPException,
             AuthenticationFailedException {
+
         UserRealm userRealm;
         boolean isUserExist = false;
         try {
@@ -156,6 +159,7 @@ public class SMSOTPUtils {
      * @throws AuthenticationFailedException
      */
     public static UserRealm getUserRealm(String tenantDomain) throws AuthenticationFailedException {
+
         UserRealm userRealm;
         try {
             int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
@@ -177,6 +181,7 @@ public class SMSOTPUtils {
      */
     public static String getMobileNumberForUsername(String username) throws SMSOTPException,
             AuthenticationFailedException {
+
         UserRealm userRealm;
         String mobile;
         try {
@@ -198,30 +203,33 @@ public class SMSOTPUtils {
     /**
      * Check whether SMSOTP is mandatory or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isSMSOTPMandatory(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SMSOTP_MANDATORY));
     }
 
     /**
      * Check whether admin enable to send otp directly to mobile number or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE));
     }
 
     /**
      * Check whether user enable the second factor or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isSMSOTPEnableOrDisableByUser(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER));
     }
 
@@ -229,100 +237,110 @@ public class SMSOTPUtils {
      * Check whether admin enable to enter and update a mobile number in user profile when user forgets to register
      * the mobile number or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isEnableMobileNoUpdate(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE));
     }
 
     /**
      * Check whether resend functionality enable or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isEnableResendCode(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLED_RESEND));
     }
 
     /**
      * Get the error page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return errorPage
      */
     public static String getErrorPageFromXMLFile(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
     }
 
     /**
      * Get the login page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return loginPage
      */
     public static String getLoginPageFromXMLFile(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
     }
 
     /**
      * Check whether retry functionality enable or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isRetryEnabled(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLED_RETRY));
     }
 
     /**
      * Get the mobile number request page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return mobile number request page
      */
     public static String getMobileNumberRequestPage(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
     }
 
     /**
      * Get the screen user attribute.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return screenUserAttribute
      */
     public static String getScreenUserAttribute(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
     }
 
     /**
      * Check the number of digits of claim value to show in UI.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return noOfDigits
      */
     public static String getNoOfDigits(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.NO_DIGITS);
     }
 
     /**
      * Check the order whether first number or last of n digits.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return digitsOrder
      */
     public static String getDigitsOrder(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.ORDER);
     }
 
     /**
      * Check whether admin allows to use the backup codes or not
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return backupCode
      */
     public static String getBackupCode(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.BACKUP_CODE);
 
     }
@@ -330,41 +348,45 @@ public class SMSOTPUtils {
     /**
      * Check whether admin allows to generate the alphanumeric token or not.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return true or false
      */
     public static boolean isEnableAlphanumericToken(AuthenticationContext context) {
+
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLE_ALPHANUMERIC_TOKEN));
     }
 
     /**
      * Get the token expiry time.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return tokenExpiryTime
      */
     public static String getTokenExpiryTime(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.TOKEN_EXPIRY_TIME);
     }
 
     /**
      * Get the token length.
      *
-     * @param context           the AuthenticationContext
+     * @param context the AuthenticationContext
      * @return tokenLength
      */
     public static String getTokenLength(AuthenticationContext context) {
+
         return getConfiguration(context, SMSOTPConstants.TOKEN_LENGTH);
     }
 
     /**
      * Read configurations from application-authentication.xml for given authenticator.
      *
-     * @param context           Authentication Context.
-     * @param configName        Name of the config.
+     * @param context    Authentication Context.
+     * @param configName Name of the config.
      * @return Config value.
      */
     public static String getConfiguration(AuthenticationContext context, String configName) {
+
         String configValue = null;
         Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
         String tenantDomain = context.getTenantDomain();

@@ -29,6 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public class OneTimePassword {
+
     // These are used to calculate the check-sum digits.
     // 0 1 2 3 4 5 6 7 8 9
     private static final int[] doubleDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
@@ -56,6 +57,7 @@ public class OneTimePassword {
      * @return the checksum of num
      */
     public static int calcChecksum(long num, int digits) {
+
         boolean doubleDigit = true;
         int total = 0;
         while (0 < digits--) {
@@ -87,6 +89,7 @@ public class OneTimePassword {
      */
 
     public static byte[] hmacShaGenerate(byte[] keyBytes, byte[] text) throws NoSuchAlgorithmException, InvalidKeyException {
+
         Mac hmacSha;
         try {
             hmacSha = Mac.getInstance(SMSOTPConstants.ALGORITHM_HMAC);
@@ -200,15 +203,16 @@ public class OneTimePassword {
     /**
      * Generate the token.
      *
-     * @param key    the key
-     * @param base   the base
-     * @param digits the number of digits
+     * @param key                       the key
+     * @param base                      the base
+     * @param digits                    the number of digits
      * @param isEnableAlphanumericToken a flag that indicates the token is alphanumeric or not
      * @return the generated token
      */
     public String generateToken(String key, String base, int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
+
         int truncOffset = 0;
-        if (isEnableAlphanumericToken){
+        if (isEnableAlphanumericToken) {
             try {
                 return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
@@ -216,8 +220,7 @@ public class OneTimePassword {
             } catch (InvalidKeyException e) {
                 throw new AuthenticationFailedException(" Unable to find the secret key ", e);
             }
-        }
-        else {
+        } else {
             try {
                 return generateOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
