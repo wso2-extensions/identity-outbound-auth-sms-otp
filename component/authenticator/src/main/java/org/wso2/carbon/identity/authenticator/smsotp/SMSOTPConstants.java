@@ -20,6 +20,7 @@
 package org.wso2.carbon.identity.authenticator.smsotp;
 
 public class SMSOTPConstants {
+
     public static final String AUTHENTICATOR_NAME = "SMSOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "SMS OTP";
     public static final String ALGORITHM_NAME = "SHA1PRNG";
@@ -48,6 +49,9 @@ public class SMSOTPConstants {
     public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "SendOTPDirectlyToMobile";
     public static final String IS_SMSOTP_ENABLE_BY_USER = "SMSOTPEnableByUserClaim";
     public static final String IS_ENABLE_MOBILE_NO_UPDATE = "CaptureAndUpdateMobileNumber";
+    public static final String IS_ENABLE_ALPHANUMERIC_TOKEN = "EnableAlphanumericToken";
+    public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
+    public static final String TOKEN_LENGTH = "TokenLength";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -75,11 +79,13 @@ public class SMSOTPConstants {
     public static final String AUTHENTICATED_USER = "authenticatedUser";
     public static final String STATUS_CODE = "statusCode";
     public static final String UNABLE_SEND_CODE = "UnableSend";
-    public static final String UNABLE_SEND_CODE_PARAM = "&authFailure=true&authFailureMsg=";
+    public static final String ERROR_MESSAGE = "&authFailure=true&authFailureMsg=";
     public static final String UNABLE_SEND_CODE_VALUE = "unable.send.code";
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
+    public static final String ERROR_SMSOTP_DISABLE_MSG = "smsotp.disable";
     public static final String SEND_OTP_DIRECTLY_DISABLE = "&authFailure=true&authFailureMsg=directly.send.otp.disable";
-    public static final String ERROR_CODE_MISMATCH = "&authFailure=true&authFailureMsg=code.mismatch";
+    public static final String SEND_OTP_DIRECTLY_DISABLE_MSG = "directly.send.otp.disable";
+    public static final String ERROR_CODE_MISMATCH = "code.mismatch";
     public static final String ERROR_CODE = "errorCode";
     public static final String SCREEN_USER_ATTRIBUTE = "screenUserAttribute";
     public static final String NO_DIGITS = "noOfDigits";
@@ -88,4 +94,9 @@ public class SMSOTPConstants {
     public static final String SCREEN_VALUE = "&screenvalue=";
     public static final String CODE_MISMATCH = "codeMismatch";
     public static final String ORDER_OF_DIGITS = "&order=";
+    public static final String TOKEN_VALIDITY_TIME = "tokenValidityTime";
+    public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
+    public static final String TOKEN_EXPIRED = "tokenExpired";
+    public static final String TOKEN_EXPIRED_VALUE = "token.expired";
+
 }

@@ -18,13 +18,11 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.base.MultitenantConstants;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
-import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
 import org.wso2.carbon.identity.application.authentication.framework.config.builder.FileBasedConfigurationBuilder;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.AuthenticatorConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
@@ -48,6 +46,7 @@ public class SMSOTPUtils {
      * Get parameter values from application-authentication.xml local file.
      */
     public static Map<String, String> getSMSParameters() {
+
         AuthenticatorConfig authConfig = FileBasedConfigurationBuilder.getInstance()
                 .getAuthenticatorBean(SMSOTPConstants.AUTHENTICATOR_NAME);
         if (authConfig != null) {
@@ -67,9 +66,9 @@ public class SMSOTPUtils {
      * @return true or false
      * @throws SMSOTPException
      */
-    public static boolean isSMSOTPDisableForLocalUser(String username, AuthenticationContext context,
-                                                      String authenticatorName) throws SMSOTPException,
-            AuthenticationFailedException {
+    public static boolean isSMSOTPDisableForLocalUser(String username, AuthenticationContext context)
+            throws SMSOTPException {
+
         UserRealm userRealm;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(username);
@@ -77,7 +76,7 @@ public class SMSOTPUtils {
             RealmService realmService = IdentityTenantUtil.getRealmService();
             userRealm = realmService.getTenantUserRealm(tenantId);
             username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
-            boolean isEnablingControlledByUser = isSMSOTPEnableOrDisableByUser(context, authenticatorName);
+            boolean isEnablingControlledByUser = isSMSOTPEnableOrDisableByUser(context);
             if (userRealm != null) {
                 if (isEnablingControlledByUser) {
                     Map<String, String> claimValues = userRealm.getUserStoreManager().getUserClaimValues(username,
@@ -103,6 +102,7 @@ public class SMSOTPUtils {
      */
     public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
             throws SMSOTPException {
+
         try {
             // updating user attributes is independent from tenant association.not tenant association check needed here.
             UserRealm userRealm;
@@ -128,6 +128,7 @@ public class SMSOTPUtils {
      */
     public static void verifyUserExists(String username, String tenantDomain) throws SMSOTPException,
             AuthenticationFailedException {
+
         UserRealm userRealm;
         boolean isUserExist = false;
         try {
@@ -158,6 +159,7 @@ public class SMSOTPUtils {
      * @throws AuthenticationFailedException
      */
     public static UserRealm getUserRealm(String tenantDomain) throws AuthenticationFailedException {
+
         UserRealm userRealm;
         try {
             int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
@@ -179,6 +181,7 @@ public class SMSOTPUtils {
      */
     public static String getMobileNumberForUsername(String username) throws SMSOTPException,
             AuthenticationFailedException {
+
         UserRealm userRealm;
         String mobile;
         try {
@@ -200,190 +203,190 @@ public class SMSOTPUtils {
     /**
      * Check whether SMSOTP is mandatory or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isSMSOTPMandatory(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
-                .IS_SMSOTP_MANDATORY));
+    public static boolean isSMSOTPMandatory(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SMSOTP_MANDATORY));
     }
 
     /**
      * Check whether admin enable to send otp directly to mobile number or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
-                .IS_SEND_OTP_DIRECTLY_TO_MOBILE));
+    public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE));
     }
 
     /**
      * Check whether user enable the second factor or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isSMSOTPEnableOrDisableByUser(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
-                .IS_SMSOTP_ENABLE_BY_USER));
+    public static boolean isSMSOTPEnableOrDisableByUser(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER));
     }
 
     /**
      * Check whether admin enable to enter and update a mobile number in user profile when user forgets to register
      * the mobile number or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isEnableMobileNoUpdate(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
-                .IS_ENABLE_MOBILE_NO_UPDATE));
+    public static boolean isEnableMobileNoUpdate(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLE_MOBILE_NO_UPDATE));
     }
 
     /**
      * Check whether resend functionality enable or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isEnableResendCode(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants.IS_ENABLED_RESEND));
+    public static boolean isEnableResendCode(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLED_RESEND));
     }
 
     /**
      * Get the error page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return errorPage
-     * @throws AuthenticationFailedException
      */
-    public static String getErrorPageFromXMLFile(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
+    public static String getErrorPageFromXMLFile(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL);
     }
 
     /**
      * Get the login page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return loginPage
-     * @throws AuthenticationFailedException
      */
-    public static String getLoginPageFromXMLFile(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
+    public static String getLoginPageFromXMLFile(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL);
     }
 
     /**
      * Check whether retry functionality enable or not.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return true or false
-     * @throws AuthenticationFailedException
      */
-    public static boolean isRetryEnabled(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return Boolean.parseBoolean(getConfiguration(context, authenticatorName, SMSOTPConstants
-                .IS_ENABLED_RETRY));
+    public static boolean isRetryEnabled(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLED_RETRY));
     }
 
     /**
      * Get the mobile number request page url from the application-authentication.xml file.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return mobile number request page
-     * @throws AuthenticationFailedException
      */
-    public static String getMobileNumberRequestPage(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
+    public static String getMobileNumberRequestPage(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE);
     }
 
     /**
      * Get the screen user attribute.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return screenUserAttribute
-     * @throws AuthenticationFailedException
      */
-    public static String getScreenUserAttribute(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
+    public static String getScreenUserAttribute(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.SCREEN_USER_ATTRIBUTE);
     }
 
     /**
      * Check the number of digits of claim value to show in UI.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return noOfDigits
-     * @throws AuthenticationFailedException
      */
-    public static String getNoOfDigits(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.NO_DIGITS);
+    public static String getNoOfDigits(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.NO_DIGITS);
     }
 
     /**
      * Check the order whether first number or last of n digits.
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return digitsOrder
-     * @throws AuthenticationFailedException
      */
-    public static String getDigitsOrder(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.ORDER);
+    public static String getDigitsOrder(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.ORDER);
     }
 
     /**
      * Check whether admin allows to use the backup codes or not
      *
-     * @param context           the AuthenticationContext
-     * @param authenticatorName the name of the authenticator
+     * @param context the AuthenticationContext
      * @return backupCode
-     * @throws AuthenticationFailedException
      */
-    public static String getBackupCode(AuthenticationContext context, String authenticatorName)
-            throws AuthenticationFailedException {
-        return getConfiguration(context, authenticatorName, SMSOTPConstants.BACKUP_CODE);
+    public static String getBackupCode(AuthenticationContext context) {
 
+        return getConfiguration(context, SMSOTPConstants.BACKUP_CODE);
+
+    }
+
+    /**
+     * Check whether admin allows to generate the alphanumeric token or not.
+     *
+     * @param context the AuthenticationContext
+     * @return true or false
+     */
+    public static boolean isEnableAlphanumericToken(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLE_ALPHANUMERIC_TOKEN));
+    }
+
+    /**
+     * Get the token expiry time.
+     *
+     * @param context the AuthenticationContext
+     * @return tokenExpiryTime
+     */
+    public static String getTokenExpiryTime(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.TOKEN_EXPIRY_TIME);
+    }
+
+    /**
+     * Get the token length.
+     *
+     * @param context the AuthenticationContext
+     * @return tokenLength
+     */
+    public static String getTokenLength(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.TOKEN_LENGTH);
     }
 
     /**
      * Read configurations from application-authentication.xml for given authenticator.
      *
-     * @param context           Authentication Context.
-     * @param authenticatorName Name of the Authenticator.
-     * @param configName        Name of the config.
+     * @param context    Authentication Context.
+     * @param configName Name of the config.
      * @return Config value.
-     * @throws AuthenticationFailedException
      */
-    public static String getConfiguration(AuthenticationContext context, String authenticatorName, String configName)
-            throws AuthenticationFailedException {
+    public static String getConfiguration(AuthenticationContext context, String configName) {
+
         String configValue = null;
         Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
         String tenantDomain = context.getTenantDomain();

@@ -5,8 +5,8 @@ Steps to run
     Or unzip the authenticationendpoint.war & copy the smsotp.jsp from smsotp/org.wso2.carbon.identity.authenticator/src/main/resources 
     to <IS-HOME>/repository/deployment/server/webapps/authenticationendpoint
 
-2.  Build the org.wso2.carbon.identity.authenticator & copy the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.8.jar
-    to <IS-HOME>/repository/components/dropins
+2.  Build the org.wso2.carbon.identity.authenticator & copy the org.wso2.carbon.extension.identity.authenticator
+.smsotp.connector-x.x.x.jar to <IS-HOME>/repository/components/dropins
 
 3. Add the following user claims under 'http://wso2.org/claims'.
 
@@ -38,8 +38,11 @@ Steps to run
 	<Parameter name="screenUserAttribute">http://wso2.org/claims/mobile</Parameter>
 	<Parameter name="noOfDigits">4</Parameter>
 	<Parameter name="order">backward</Parameter>
+	<Parameter name="EnableAlphanumericToken">true</Parameter>
+    <Parameter name="TokenExpiryTime">30</Parameter>
+    <Parameter name="TokenLength">8</Parameter>
 </AuthenticatorConfig>
 
-5.  Follow the steps in https://docs.wso2.com/pages/viewpage.action?title=SMSOTP%2BAuthenticator&spaceKey=ISCONNECTORS
+5.  Follow the steps in https://docs.wso2.com/display/ISCONNECTORS/SMSOTP+Authenticator
 
 

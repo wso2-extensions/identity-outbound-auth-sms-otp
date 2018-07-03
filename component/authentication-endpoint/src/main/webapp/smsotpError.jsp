@@ -19,6 +19,7 @@
 <%@page import="java.util.Arrays" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
+<%@page import="org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -44,13 +45,15 @@
 
                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
                     errorMessage = "Authentication Failed! Please Retry";
-                } else if (errorMessage.equalsIgnoreCase("unable.send.code")) {
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.UNABLE_SEND_CODE_VALUE)) {
                     errorMessage = "Unable to send code to your phone number";
-                } else if (errorMessage.equalsIgnoreCase("code.mismatch")) {
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.ERROR_CODE_MISMATCH)) {
                     errorMessage = "The code entered is incorrect. Authentication Failed!";
-                } else if (errorMessage.equalsIgnoreCase("smsotp.disable")) {
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.ERROR_SMSOTP_DISABLE_MSG)) {
                     errorMessage = "Enable the SMS OTP in your Profile. Cannot proceed further without SMS OTP authentication.";
-                } else if (errorMessage.equalsIgnoreCase("directly.send.otp.disable")) {
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.TOKEN_EXPIRED_VALUE)) {
+                    errorMessage = "The code entered is expired. Authentication Failed!";
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE_MSG)) {
                     errorMessage = "User not found in the directory. Cannot proceed further without SMS OTP authentication.";
                 }
             }

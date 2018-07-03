@@ -19,6 +19,7 @@
 <%@page import="java.util.Arrays" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
+<%@page import="org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -42,8 +43,11 @@
             if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
                 errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-                 if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+                if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
                     errorMessage = "Authentication Failed! Please Retry";
+                }
+                if (errorMessage.equalsIgnoreCase(SMSOTPConstants.TOKEN_EXPIRED_VALUE)) {
+                    errorMessage = "The code entered is expired. Click Resend Code to continue.";
                 }
             }
         }
