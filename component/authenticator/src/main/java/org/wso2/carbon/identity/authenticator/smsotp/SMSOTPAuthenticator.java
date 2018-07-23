@@ -935,7 +935,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String encodedMobileNo = encoder.encode(mobile);
         smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                 smsMessage.replaceAll("\\s", "+") + otpToken);
-        URL smsProviderUrl = new URL(smsUrl);
+        URL smsProviderUrl = null;
+        try {
+            smsProviderUrl = new URL(smsUrl);
+        } catch (MalformedURLException e) {
+            log.error("Error while parsing SMS provider URL: " + smsUrl, e);
+            context.setProperty(SMSOTPConstants.ERROR_CODE, "The SMS URL does not conform to URL specification");
+            return false;
+        }
         String subUrl = smsProviderUrl.getProtocol();
         if (subUrl.equals(SMSOTPConstants.HTTPS)) {
             httpConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
