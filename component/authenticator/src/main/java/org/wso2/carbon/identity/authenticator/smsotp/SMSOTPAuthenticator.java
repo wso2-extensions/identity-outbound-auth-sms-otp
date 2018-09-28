@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
@@ -46,19 +47,16 @@ import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.net.ssl.HttpsURLConnection;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 /**
  * Authenticator of SMS OTP
@@ -622,24 +620,42 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
         if (userToken.equals(contextToken)) {
-            if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).toString())) {
-                long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(context.getProperty(SMSOTPConstants.
-                        SENT_OTP_TOKEN_TIME).toString());
-                if (elapsedTokenTime <= (Long.parseLong(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).
-                        toString()) * 1000)) {
-                    context.setSubject(authenticatedUser);
-                } else {
-                    context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
-                    throw new AuthenticationFailedException("OTP code has expired");
-                }
-            } else {
-                context.setSubject(authenticatedUser);
-            }
+            processValidUserToken(context, authenticatedUser);
         } else if (SMSOTPUtils.getBackupCode(context).equals("true")) {
             checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
             context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             throw new AuthenticationFailedException("Code mismatch");
+        }
+    }
+
+    private void processValidUserToken(AuthenticationContext context, AuthenticatedUser authenticatedUser) throws
+            AuthenticationFailedException {
+        Optional<Object> tokenValidityTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
+                TOKEN_VALIDITY_TIME));
+        if (!tokenValidityTime.isPresent() || !NumberUtils.isNumber((String) tokenValidityTime.get())) {
+            log.error("TokenExpiryTime property is not configured in application-authentication.xml or SMS OTP " +
+                    "Authenticator UI");
+            context.setSubject(authenticatedUser);
+            return;
+        }
+
+        Optional<Object> otpTokenSentTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
+                SENT_OTP_TOKEN_TIME));
+        if (!otpTokenSentTime.isPresent() || !NumberUtils.isNumber((String) otpTokenSentTime.get())) {
+            if (log.isDebugEnabled()) {
+                log.debug("Could not find OTP sent time");
+            }
+            throw new AuthenticationFailedException("Internal Error Occurred");
+        }
+
+        long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong((String) otpTokenSentTime.get());
+
+        if (elapsedTokenTime <= (Long.parseLong((String) tokenValidityTime.get()) * 1000)) {
+            context.setSubject(authenticatedUser);
+        } else {
+            context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
+            throw new AuthenticationFailedException("OTP code has expired");
         }
     }
 
