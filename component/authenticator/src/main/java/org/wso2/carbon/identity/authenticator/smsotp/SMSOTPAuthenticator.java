@@ -622,7 +622,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
         if (userToken.equals(contextToken)) {
-            if (StringUtils.isNotEmpty(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).toString())) {
+            if ((context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME)!=null) && StringUtils.
+                    isNotEmpty(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).toString())) {
                 long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(context.getProperty(SMSOTPConstants.
                         SENT_OTP_TOKEN_TIME).toString());
                 if (elapsedTokenTime <= (Long.parseLong(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME).
