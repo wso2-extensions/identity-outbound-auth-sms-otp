@@ -98,5 +98,9 @@ public class SMSOTPConstants {
     public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
     public static final String TOKEN_EXPIRED = "tokenExpired";
     public static final String TOKEN_EXPIRED_VALUE = "token.expired";
+    public static final String ATTRIBUTE_SMS_SENT_TO = "send-to" ;
+    public static final String TEMPLATE_TYPE = "TEMPLATE_TYPE";
+    public static final String EVENT_NAME = "SMSOTP";
+    public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
 
 }
