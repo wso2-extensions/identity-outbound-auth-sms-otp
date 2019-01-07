@@ -102,5 +102,7 @@ public class SMSOTPConstants {
     public static final String TEMPLATE_TYPE = "TEMPLATE_TYPE";
     public static final String EVENT_NAME = "SMSOTP";
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
+    public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
+
 
 }

@@ -126,7 +126,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String username;
             AuthenticatedUser authenticatedUser;
             String mobileNumber;
-            Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
+//            Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
             String tenantDomain = context.getTenantDomain();
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
             if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
@@ -143,7 +143,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 throw new AuthenticationFailedException
                         ("Authentication failed: Cannot proceed further without identifying the user. ");
             }
-            boolean sendOtpToFederatedMobile = true;
             boolean isSMSOTPMandatory = SMSOTPUtils.isSMSOTPMandatory(context);
             boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
             String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
@@ -154,7 +153,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("SMS OTP is mandatory. Hence processing in mandatory path");
                 }
-                processSMSOTPMandatoryCase(context, request, response, isUserExists, username, queryParams, smsOTPParameters, sendOtpToFederatedMobile);
+                processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
                     checkStatusCode(response, context, queryParams, errorPage);
@@ -340,59 +339,42 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     private void processSMSOTPMandatoryCase(AuthenticationContext context, HttpServletRequest request,
-                                            HttpServletResponse response, boolean isUserExistence, String username,
-                                            String queryParams, Map<String, String> parameterMap,
-                                            boolean sendOtpToFederatedMobile)
-            throws SMSOTPException, AuthenticationFailedException {
-        String mobile = null;
+                                            HttpServletResponse response, String queryParams, String username,
+                                            boolean isUserExists) throws AuthenticationFailedException, SMSOTPException {
+        //the authentication flow happens with sms otp authentication.
+        String tenantDomain = context.getTenantDomain();
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
             checkStatusCode(response, context, queryParams, errorPage);
         } else {
-            if (isUserExistence) {
-                if (isSMSOTPDisableForUser(username, context, parameterMap)) {
-                    redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
-                } else {
-                    mobile = getSMSValueForUsername(username, context);
-                    if (StringUtils.isEmpty(mobile)) {
-                        if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
-                            redirectToMobileNoReqPage(response, context, queryParams);
-                        }
-                    }
-                }
-                if (StringUtils.isNotEmpty(mobile)) {
-                    processSMSOTPFlow(context, request, response, isUserExistence, username, queryParams, context.getTenantDomain(), getErrorPage(context));
-                }
-            } else {
-                proceedOTPWithFederatedMobileNumber(context, request, response, isUserExistence, username, queryParams,
-                        sendOtpToFederatedMobile);
-            }
+            processSMSOTPFlow(context, request, response, isUserExists, username, queryParams, tenantDomain,
+                    errorPage);
         }
     }
 
-
-    private void proceedOTPWithFederatedMobileNumber(AuthenticationContext context, HttpServletRequest request,
-                                                     HttpServletResponse response, boolean isUserExistence, String username, String queryParams,
-                                                     boolean sendOtpToFederatedEmail)
+    private void proceedOTPWithFederatedMobileNumber(AuthenticationContext context, HttpServletResponse response,
+                                                     String username, String queryParams,
+                                                     boolean sendOtpToFederatedMobile)
             throws AuthenticationFailedException {
+
         try {
-            String federatedEmailAttributeKey;
+            String federatedMobileAttributeKey;
             String mobile = null;
             StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
             String previousStepAuthenticator = stepConfig.getAuthenticatedAutenticator().getName();
             StepConfig currentStep = context.getSequenceConfig().getStepMap().get(context.getCurrentStep());
             String currentStepAuthenticator = currentStep.getAuthenticatorList().iterator().next().getName();
-            if (sendOtpToFederatedEmail) {
-                federatedEmailAttributeKey = getFederatedMobileAttributeKey(context, previousStepAuthenticator);
-                if (StringUtils.isEmpty(federatedEmailAttributeKey)) {
-                    federatedEmailAttributeKey = getFederatedMobileAttributeKey(context, currentStepAuthenticator);
+            if (sendOtpToFederatedMobile) {
+                federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, previousStepAuthenticator);
+                if (StringUtils.isEmpty(federatedMobileAttributeKey)) {
+                    federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, currentStepAuthenticator);
                 }
                 Map<ClaimMapping, String> userAttributes = context.getCurrentAuthenticatedIdPs().values().
                         iterator().next().getUser().getUserAttributes();
                 for (Map.Entry<ClaimMapping, String> entry : userAttributes.entrySet()) {
                     String key = String.valueOf(entry.getKey().getLocalClaim().getClaimUri());
                     String value = entry.getValue();
-                    if (key.equals(federatedEmailAttributeKey)) {
+                    if (key.equals(federatedMobileAttributeKey)) {
                         mobile = String.valueOf(value);
                         proceedWithOTP(response, context, getErrorPage(context), mobile, queryParams, username);
                         break;
@@ -412,8 +394,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
-
     private String getFederatedMobileAttributeKey(AuthenticationContext context, String authenticatorName) {
+
         String federatedSMSAttributeKey = null;
         Map<String, String> parametersMap;
         String tenantDomain = context.getTenantDomain();
@@ -429,83 +411,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     (SMSOTPConstants.FEDERATED_MOBILE_ATTRIBUTE_KEY));
         }
         return federatedSMSAttributeKey;
-    }
-
-
-    private boolean isSMSOTPDisableForUser(String username, AuthenticationContext context,
-                                           Map<String, String> parametersMap)
-            throws AuthenticationFailedException {
-        UserRealm userRealm;
-        try {
-            String tenantDomain = MultitenantUtils.getTenantDomain(username);
-            int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
-            RealmService realmService = IdentityTenantUtil.getRealmService();
-            userRealm = realmService.getTenantUserRealm(tenantId);
-            username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
-            if (userRealm != null) {
-                if (isAdminMakeUserToEnableOrDisableSMSOTP(context, parametersMap)) {
-                    boolean isSMSOTPEnabledByUser = true ;
-                    Map<String, String> claimValues = null;
-                    try {
-                        claimValues = userRealm.getUserStoreManager().getUserClaimValues(username,
-                                new String[]{SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI}, null);
-                        isSMSOTPEnabledByUser = Boolean.parseBoolean(claimValues.
-                                get(SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI));
-                    } catch (UserStoreException e) {
-                        log.debug("SMSOTP Disable claim was not found for the user : " + username);
-                    }
-
-                    return isSMSOTPEnabledByUser;
-                }
-            } else {
-                throw new AuthenticationFailedException("Cannot find the user realm for the given tenant domain : "
-                        + tenantDomain);
-            }
-        } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Failed while trying to access userRealm of the user : "
-                    + username, e);
-        }
-        return false;
-    }
-
-    private boolean isAdminMakeUserToEnableOrDisableSMSOTP(AuthenticationContext context,
-                                                           Map<String, String> parametersMap) {
-        boolean isAdminMakeUserToEnableEmailOTP = false;
-        String tenantDomain = context.getTenantDomain();
-        Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        if ((propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) &&
-                parametersMap.containsKey(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)) {
-            isAdminMakeUserToEnableEmailOTP = Boolean.parseBoolean(parametersMap.get
-                    (SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER));
-        } else if ((context.getProperty(SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)) != null) {
-            isAdminMakeUserToEnableEmailOTP = Boolean.parseBoolean(String.valueOf(context.getProperty
-                    (SMSOTPConstants.IS_SMSOTP_ENABLE_BY_USER)));
-        }
-        return isAdminMakeUserToEnableEmailOTP;
-    }
-
-
-    private String getSMSValueForUsername(String username, AuthenticationContext context)
-            throws SMSOTPException {
-        UserRealm userRealm;
-        String tenantAwareUsername;
-        String mobile;
-        try {
-            String tenantDomain = MultitenantUtils.getTenantDomain(username);
-            int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
-            RealmService realmService = IdentityTenantUtil.getRealmService();
-            userRealm = realmService.getTenantUserRealm(tenantId);
-            tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
-            if (userRealm != null) {
-                mobile = userRealm.getUserStoreManager()
-                        .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.MOBILE_CLAIM, null);
-            } else {
-                throw new SMSOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
-            }
-        } catch (UserStoreException e) {
-            throw new SMSOTPException("Cannot find the mobile claim for username : " + username, e);
-        }
-        return mobile;
     }
 
     /**
@@ -561,6 +466,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 mobileNumber = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
             }
+        } else if (SMSOTPUtils.sendOtpToFederatedMobile(context)) {
+            if (log.isDebugEnabled()) {
+                log.debug("SMS OTP is mandatory. But user is not there in active directory. Hence send the otp to the " +
+                        "federated mobile claim");
+            }
+            proceedOTPWithFederatedMobileNumber(context, response, username, queryParams,
+                    SMSOTPUtils.sendOtpToFederatedMobile(context));
         } else {
             if (log.isDebugEnabled()) {
                 log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
@@ -624,13 +536,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (StringUtils.isNotEmpty(smsUrl)) {
                 connectionResult = sendRESTCall(context, smsUrl, httpMethod, headerString, payload,
                         httpResponse, mobileNumber, otpToken);
-            } else {
-                //Use the default notification mechanism (CEP) to send SMS.
-                AuthenticatedUser authenticatedUser = (AuthenticatedUser)
-                        context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
-                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
-                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
             }
+//            else {
+//                //Use the default notification mechanism (CEP) to send SMS.
+//                AuthenticatedUser authenticatedUser = (AuthenticatedUser)
+//                        context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+//                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
+//                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
+//            }
 
             if (!connectionResult) {
                 String retryParam;
@@ -1167,32 +1080,35 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         return screenValue;
     }
 
-    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
-
-        String eventName = IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION;
-
-        HashMap<String, Object> properties = new HashMap<>();
-        properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
-        properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
-        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
-
-        properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
-        properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
-
-        properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
-        Event identityMgtEvent = new Event(eventName, properties);
-        try {
-            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
-        } catch (Exception e) {
-            String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
-            //We are not throwing any exception from here, because this event notification should not break the main
-            // flow.
-            log.warn(errorMsg);
-            if (log.isDebugEnabled()) {
-                log.debug(errorMsg, e);
-            }
-        }
-    }
+    /**
+     * We can reuse this method once the improvements done into the eventing and notification handler in IS.
+     */
+//    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
+//
+//        String eventName = IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION;
+//
+//        HashMap<String, Object> properties = new HashMap<>();
+//        properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
+//        properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
+//        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+//
+//        properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
+//        properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
+//
+//        properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
+//        Event identityMgtEvent = new Event(eventName, properties);
+//        try {
+//            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
+//        } catch (Exception e) {
+//            String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
+//            //We are not throwing any exception from here, because this event notification should not break the main
+//            // flow.
+//            log.warn(errorMsg);
+//            if (log.isDebugEnabled()) {
+//                log.debug(errorMsg, e);
+//            }
+//        }
+//    }
 
 
 }

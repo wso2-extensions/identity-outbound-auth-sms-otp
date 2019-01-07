@@ -223,6 +223,17 @@ public class SMSOTPUtils {
     }
 
     /**
+     * Check whether admin enable to send otp directly to mobile number which gets from federated idp claims.
+     *
+     * @param context the AuthenticationContext
+     * @return true or false
+     */
+    public static boolean sendOtpToFederatedMobile(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SEND_OTP_TO_FEDERATED_MOBILE));
+    }
+
+    /**
      * Check whether user enable the second factor or not.
      *
      * @param context the AuthenticationContext
