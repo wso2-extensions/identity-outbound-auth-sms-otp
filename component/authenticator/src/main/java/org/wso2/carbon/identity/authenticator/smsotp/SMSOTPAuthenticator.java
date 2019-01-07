@@ -126,7 +126,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String username;
             AuthenticatedUser authenticatedUser;
             String mobileNumber;
-//            Map<String, String> smsOTPParameters = getAuthenticatorConfig().getParameterMap();
             String tenantDomain = context.getTenantDomain();
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
             if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
