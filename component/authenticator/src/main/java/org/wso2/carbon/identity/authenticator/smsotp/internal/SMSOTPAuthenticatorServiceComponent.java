@@ -24,28 +24,24 @@ import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.Hashtable;
 
 /**
  * @scr.component name="identity.application.authenticator.SMSOTP.component" immediate="true"
+ * @scr.reference name="EventMgtService"
+ * interface="org.wso2.carbon.identity.event.services.IdentityEventService" cardinality="1..1"
+ * policy="dynamic" bind="setIdentityEventService" unbind="unsetIdentityEventService"
+ * @scr.reference name="RealmService"
+ * interface="org.wso2.carbon.user.core.service.RealmService" cardinality="1..1"
+ * policy="dynamic" bind="setRealmService" unbind="unsetRealmService"
  */
 public class SMSOTPAuthenticatorServiceComponent {
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticatorServiceComponent.class);
-    private static RealmService realmService;
 
-    public static RealmService getRealmService() {
-        return realmService;
-    }
-
-    protected void setRealmService(RealmService realmService) {
-        if (log.isDebugEnabled()) {
-            log.debug("Setting the Realm Service");
-        }
-        SMSOTPAuthenticatorServiceComponent.realmService = realmService;
-    }
 
     protected void activate(ComponentContext ctxt) {
         try {
@@ -67,9 +63,21 @@ public class SMSOTPAuthenticatorServiceComponent {
         }
     }
 
-    protected void unsetRealmService(RealmService realmService) {
-        log.debug("UnSetting the Realm Service");
-        SMSOTPAuthenticatorServiceComponent.realmService = null;
+    protected void unsetIdentityEventService(IdentityEventService eventService) {
+        SMSOTPServiceDataHolder.getInstance().setIdentityEventService(null);
     }
+
+    protected void setIdentityEventService(IdentityEventService eventService) {
+        SMSOTPServiceDataHolder.getInstance().setIdentityEventService(eventService);
+    }
+
+    protected void setRealmService(RealmService realmService) {
+        SMSOTPServiceDataHolder.getInstance().setRealmService(realmService);
+    }
+
+    protected void unsetRealmService(RealmService realmService) {
+        SMSOTPServiceDataHolder.getInstance().setRealmService(null);
+    }
+
 
 }
