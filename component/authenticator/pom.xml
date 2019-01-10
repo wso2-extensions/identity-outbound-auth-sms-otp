@@ -28,7 +28,11 @@
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
     <dependencies>
-
+        <dependency>
+            <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
+            <artifactId>org.wso2.carbon.extension.identity.helper</artifactId>
+            <version>${identity.extension.utils}</version>
+        </dependency>
         <dependency>
             <groupId>org.jacoco</groupId>
             <artifactId>org.jacoco.agent</artifactId>
@@ -68,18 +72,6 @@
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
-            <artifactId>org.wso2.carbon.extension.identity.helper</artifactId>
-            <version>${identity.extension.utils}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.wso2.carbon.identity.framework</groupId>
-            <artifactId>org.wso2.carbon.identity.event</artifactId>
-            <version>${carbon.identity.version}</version>
-        </dependency>
-
     </dependencies>
     <build>
         <pluginManagement>
