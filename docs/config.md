@@ -47,8 +47,6 @@ The artifacts can be obtained from [the store for this authenticator](https://st
         <Parameter name="EnableAlphanumericToken">true</Parameter>
         <Parameter name="TokenExpiryTime">30</Parameter>
         <Parameter name="TokenLength">8</Parameter>
-        <Parameter name="SendOtpToFederatedMobile">true</Parameter>
-        <Parameter name="federatedMobileAttributeKey">mobile</Parameter>
     </AuthenticatorConfig>
     ````
    The following table includes the definition of the parameters and the various values you can configure.
@@ -69,8 +67,6 @@ The artifacts can be obtained from [the store for this authenticator](https://st
    | EnableAlphanumericToken    | If the value is true, the generated token will be a alphanumeric value. Else it will generate a numeric token.  |
    | TokenExpiryTime    | This parameter makes it possible to set the expiry time of the OTP token. |
    | TokenLength    | This parameter makes it possible to set the length of the OTP token. |
-   | SendOtpToFederatedMobile    | This parameter makes it possible to send the otp to the federated mobile claim when the user is not in active directory.|
-   | federatedMobileAttributeKey    | This parameter identifies the mobile claim of the federated authenticator. Set this parameter if the SendOtpToFederatedMobile is set to true. |
 
    An admin can change the priority of the SMSOTP authenticator by changing the  SMSOTPMandatory value (true or false). 
    
