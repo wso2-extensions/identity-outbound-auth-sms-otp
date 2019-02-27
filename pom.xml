@@ -188,11 +188,13 @@
             <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
             <artifactId>org.wso2.carbon.extension.identity.helper</artifactId>
             <version>${identity.extension.utils}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event</artifactId>
             <version>${carbon.identity.version}</version>
+            <scope>provided</scope>
         </dependency>
 
 
