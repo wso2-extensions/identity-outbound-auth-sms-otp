@@ -597,6 +597,10 @@ public class SMSOTPAuthenticatorTest {
         configProperties.add(payload);
         Property httpResponse = new Property();
         configProperties.add(httpResponse);
+        Property showErrorInfo = new Property();
+        configProperties.add(showErrorInfo);
+        Property maskValues = new Property();
+        configProperties.add(maskValues);
         Assert.assertEquals(configProperties.size(), smsotpAuthenticator.getConfigurationProperties().size());
     }
 

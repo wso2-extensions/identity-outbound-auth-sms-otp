@@ -25,8 +25,10 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
 <%@ page import="org.owasp.encoder.Encode" %>
+<%@ page import="static java.util.Base64.getDecoder" %>
+<%@ page import="org.apache.commons.lang.StringUtils" %>
 
-    <%
+<%
         request.getSession().invalidate();
         String queryString = request.getQueryString();
         Map<String, String> idpAuthenticatorMapping = null;
@@ -36,6 +38,7 @@
 
         String errorMessage = "Authentication Failed! Please Retry";
         String authenticationFailed = "false";
+        String errorInfo = null;
 
         if (Boolean.parseBoolean(request.getParameter(Constants.AUTH_FAILURE))) {
             authenticationFailed = "true";
@@ -56,6 +59,11 @@
                 } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE_MSG)) {
                     errorMessage = "User not found in the directory. Cannot proceed further without SMS OTP authentication.";
                 }
+            }
+            if (request.getParameter(SMSOTPConstants.AUTH_FAILURE_INFO) != null) {
+                errorInfo = new
+                        String(getDecoder().decode(request.getParameter(SMSOTPConstants.AUTH_FAILURE_INFO)));
+
             }
         }
     %>
@@ -116,7 +124,13 @@
                                 if ("true".equals(authenticationFailed)) {
                             %>
                                     <div class="alert alert-danger" id="failed-msg"><%=Encode.forHtmlContent(errorMessage)%></div>
-                            <% } %>
+                                <% if (StringUtils.isNotEmpty(errorInfo)){ %>
+                                   <div class="alert alert-warning" id="failed-msg-info">
+                                       <p class="word-break-all"><%=Encode.forHtmlContent(errorInfo)%></p>
+                                   </div>
+                            <% }
+                             }
+                            %>
                             <div id="alertDiv"></div>
                             <div class="clearfix"></div>
                         </div>
