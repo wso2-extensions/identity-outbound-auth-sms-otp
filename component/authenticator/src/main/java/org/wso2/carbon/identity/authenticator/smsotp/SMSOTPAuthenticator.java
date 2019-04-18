@@ -932,16 +932,17 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (StringUtils.isNotEmpty(payload)) {
                     payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage +
                             otpToken);
-                }
-                OutputStreamWriter writer = null;
-                try {
-                    writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
-                    writer.write(payload);
-                } catch (IOException e) {
-                    throw new AuthenticationFailedException("Error while posting payload message ", e);
-                } finally {
-                    if (writer != null) {
-                        writer.close();
+
+                    OutputStreamWriter writer = null;
+                    try {
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
+                        writer.write(payload);
+                    } catch (IOException e) {
+                        throw new AuthenticationFailedException("Error while posting payload message ", e);
+                    } finally {
+                        if (writer != null) {
+                            writer.close();
+                        }
                     }
                 }
             }
