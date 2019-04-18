@@ -43,6 +43,7 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -67,6 +68,7 @@ import java.util.Map;
 
 import static java.util.Base64.getEncoder;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
+import static org.wso2.carbon.identity.base.IdentityConstants.IdentityTokens.USER_CLAIMS;
 
 /**
  * Authenticator of SMS OTP
@@ -1044,13 +1046,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         content = content.replace(decodedMobileNo, screenValue);
         content = maskConfiguredValues(context, content);
         context.setProperty(SMSOTPConstants.ERROR_INFO, content);
+
+        String errorContent = content;
         if (log.isDebugEnabled()) {
-            log.debug("Following Error occurred while sending SMS for user: " + String.valueOf(context
-                    .getProperty(SMSOTPConstants.USER_NAME)) + ", " + contentRaw);
-        } else {
-            log.error("Following Error occurred while sending SMS for user: " + String.valueOf(context
-                    .getProperty(SMSOTPConstants.USER_NAME)) + ", " + content);
+            errorContent = contentRaw;
         }
+        log.error(String.format("Following Error occurred while sending SMS for user: %s, %s", String.valueOf(context
+                .getProperty(SMSOTPConstants.USER_NAME)), errorContent));
 
         return content;
     }
