@@ -42,10 +42,8 @@ import org.wso2.carbon.identity.application.authentication.framework.util.Framew
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
-import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-import org.wso2.carbon.identity.event.IdentityEventConstants;
-import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -54,16 +52,23 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Base64.getEncoder;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
+import static org.wso2.carbon.identity.base.IdentityConstants.IdentityTokens.USER_CLAIMS;
 
 /**
  * Authenticator of SMS OTP
@@ -337,6 +342,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
+    /**
+     * Check with SMSOTP mandatory case with SMSOTP flow.
+     *
+     * @param context      the AuthenticationContext
+     * @param request      the HttpServletRequest
+     * @param response     the HttpServletResponse
+     * @param queryParams  the queryParams
+     * @param username     the Username
+     * @param isUserExists check whether user exist or not
+     * @throws AuthenticationFailedException
+     * @throws SMSOTPException
+     */
     private void processSMSOTPMandatoryCase(AuthenticationContext context, HttpServletRequest request,
                                             HttpServletResponse response, String queryParams, String username,
                                             boolean isUserExists) throws AuthenticationFailedException, SMSOTPException {
@@ -549,6 +566,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
                     retryParam = SMSOTPConstants.ERROR_MESSAGE +
                             context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
+                    String errorInfo = context.getProperty(SMSOTPConstants.ERROR_INFO).toString();
+                    if (Boolean.parseBoolean(authenticatorProperties.get(SMSOTPConstants.SHOW_ERROR_INFO)) &&
+                            errorInfo != null) {
+                        retryParam = retryParam + SMSOTPConstants.ERROR_MESSAGE_DETAILS + getEncoder().encodeToString
+                                (errorInfo.getBytes());
+                    }
                 } else {
                     retryParam = SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
                 }
@@ -831,7 +854,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Property smsUrl = new Property();
         smsUrl.setName(SMSOTPConstants.SMS_URL);
         smsUrl.setDisplayName("SMS URL");
-        smsUrl.setRequired(false);
+        smsUrl.setRequired(true);
         smsUrl.setDescription("Enter client sms url value. If the phone number and text message are in URL, " +
                 "specify them as $ctx.num and $ctx.msg");
         smsUrl.setDisplayOrder(0);
@@ -840,7 +863,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Property httpMethod = new Property();
         httpMethod.setName(SMSOTPConstants.HTTP_METHOD);
         httpMethod.setDisplayName("HTTP Method");
-        httpMethod.setRequired(false);
+        httpMethod.setRequired(true);
         httpMethod.setDescription("Enter the HTTP Method used by the SMS API");
         httpMethod.setDisplayOrder(1);
         configProperties.add(httpMethod);
@@ -870,6 +893,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         httpResponse.setDescription("Enter the HTTP response code the API sends upon successful call. Leave empty if unknown");
         httpResponse.setDisplayOrder(4);
         configProperties.add(httpResponse);
+
+        Property showErrorInfo = new Property();
+        showErrorInfo.setName(SMSOTPConstants.SHOW_ERROR_INFO);
+        showErrorInfo.setDisplayName("Show Detailed Error Information");
+        showErrorInfo.setRequired(false);
+        showErrorInfo.setDescription("Enter \"true\" if detailed error information from SMS provider needs to be " +
+                "displayed in the UI");
+        showErrorInfo.setDisplayOrder(5);
+        configProperties.add(showErrorInfo);
+
+        Property valuesToBeMasked = new Property();
+        valuesToBeMasked.setName(SMSOTPConstants.VALUES_TO_BE_MASKED_IN_ERROR_INFO);
+        valuesToBeMasked.setDisplayName("Mask values in Error Info");
+        valuesToBeMasked.setRequired(false);
+        valuesToBeMasked.setDescription("Enter comma separated Values to be masked by * in the detailed error messages");
+        valuesToBeMasked.setDisplayOrder(6);
+        configProperties.add(valuesToBeMasked);
 
         return configProperties;
     }
@@ -965,8 +1005,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else {
                     context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
                             httpConnection.getResponseMessage());
+                    String content = getSanitizedErrorInfo(httpConnection, context, encodedMobileNo);
+
                     log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
                             + " and error message is " + httpConnection.getResponseMessage());
+                    context.setProperty(SMSOTPConstants.ERROR_INFO, content);
                     return false;
                 }
             }
@@ -982,6 +1025,62 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         }
         return false;
+    }
+
+
+    private String getSanitizedErrorInfo(HttpURLConnection httpConnection, AuthenticationContext context, String
+            encodedMobileNo) throws IOException, AuthenticationFailedException {
+
+        String contentRaw = readContent(httpConnection);
+
+        String screenValue = getScreenValue(context);
+        if (StringUtils.isEmpty(screenValue)) {
+            int noOfDigits = 0;
+            if ((SMSOTPUtils.getNoOfDigits(context)) != null) {
+                noOfDigits = Integer.parseInt(SMSOTPUtils.getNoOfDigits(context));
+            }
+            screenValue = getMaskedValue(context, encodedMobileNo, noOfDigits);
+        }
+        String content = contentRaw.replace(encodedMobileNo, screenValue);
+        URLDecoder decoder = new URLDecoder();
+        String decodedMobileNo = decoder.decode(encodedMobileNo);
+        content = content.replace(decodedMobileNo, screenValue);
+        content = maskConfiguredValues(context, content);
+        context.setProperty(SMSOTPConstants.ERROR_INFO, content);
+
+        String errorContent = content;
+        if (log.isDebugEnabled()) {
+            errorContent = contentRaw;
+        }
+        log.error(String.format("Following Error occurred while sending SMS for user: %s, %s", String.valueOf(context
+                .getProperty(SMSOTPConstants.USER_NAME)), errorContent));
+
+        return content;
+    }
+
+    private String maskConfiguredValues(AuthenticationContext context, String content) {
+
+        String valuesToMask = context.getAuthenticatorProperties().get(SMSOTPConstants
+                .VALUES_TO_BE_MASKED_IN_ERROR_INFO);
+        if (StringUtils.isNotEmpty(valuesToMask)) {
+            String[] values = valuesToMask.split(MASKING_VALUE_SEPARATOR);
+            for (String val : values) {
+                content = content.replaceAll(val, getMaskedValue(context, val, 0));
+            }
+
+        }
+        return content;
+    }
+
+    private String readContent(HttpURLConnection httpConnection) throws IOException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(httpConnection.getErrorStream()));
+        StringBuilder sb = new StringBuilder();
+        String output;
+        while ((output = br.readLine()) != null) {
+            sb.append(output);
+        }
+        return sb.toString();
     }
 
     /**
@@ -1050,31 +1149,40 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String screenUserAttributeValue = null;
         String screenValue = null;
         int noOfDigits = 0;
-        int screenAttributeLength = 0;
-        String hiddenScreenValue;
+
         screenUserAttributeParam = SMSOTPUtils.getScreenUserAttribute(context);
         if (screenUserAttributeParam != null) {
             screenUserAttributeValue = userRealm.getUserStoreManager()
                     .getUserClaimValue(username, screenUserAttributeParam, null);
-            screenAttributeLength = screenUserAttributeValue.length();
         }
-        if ((SMSOTPUtils.getNoOfDigits(context)) != null) {
-            noOfDigits = Integer.parseInt(SMSOTPUtils.getNoOfDigits(context));
-        }
+
         if (screenUserAttributeValue != null) {
-            if (SMSOTPConstants.BACKWARD.equals(SMSOTPUtils.getDigitsOrder(context))) {
-                screenValue = screenUserAttributeValue.substring(screenAttributeLength - noOfDigits,
-                        screenAttributeLength);
-                hiddenScreenValue = screenUserAttributeValue.substring(0, screenAttributeLength - noOfDigits);
-                for (int i = 0; i < hiddenScreenValue.length(); i++) {
-                    screenValue = ("*").concat(screenValue);
-                }
-            } else {
-                screenValue = screenUserAttributeValue.substring(0, noOfDigits);
-                hiddenScreenValue = screenUserAttributeValue.substring(noOfDigits, screenAttributeLength);
-                for (int i = 0; i < hiddenScreenValue.length(); i++) {
-                    screenValue = screenValue.concat("*");
-                }
+            if ((SMSOTPUtils.getNoOfDigits(context)) != null) {
+                noOfDigits = Integer.parseInt(SMSOTPUtils.getNoOfDigits(context));
+            }
+            screenValue = getMaskedValue(context, screenUserAttributeValue, noOfDigits);
+        }
+        return screenValue;
+    }
+
+    private String getMaskedValue(AuthenticationContext context, String screenUserAttributeValue, int noOfDigits) {
+
+        String screenValue;
+        String hiddenScreenValue;
+
+        int screenAttributeLength = screenUserAttributeValue.length();
+        if (SMSOTPConstants.BACKWARD.equals(SMSOTPUtils.getDigitsOrder(context))) {
+            screenValue = screenUserAttributeValue.substring(screenAttributeLength - noOfDigits,
+                    screenAttributeLength);
+            hiddenScreenValue = screenUserAttributeValue.substring(0, screenAttributeLength - noOfDigits);
+            for (int i = 0; i < hiddenScreenValue.length(); i++) {
+                screenValue = ("*").concat(screenValue);
+            }
+        } else {
+            screenValue = screenUserAttributeValue.substring(0, noOfDigits);
+            hiddenScreenValue = screenUserAttributeValue.substring(noOfDigits, screenAttributeLength);
+            for (int i = 0; i < hiddenScreenValue.length(); i++) {
+                screenValue = screenValue.concat("*");
             }
         }
         return screenValue;

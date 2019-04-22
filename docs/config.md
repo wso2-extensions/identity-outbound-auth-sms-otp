@@ -129,7 +129,8 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 7. Go to the **SMSOTP Configuration** under **Federated Authenticators**.
 8. Select both checkboxes to **Enable SMSOTP Authenticator** and make it the **Default**.
 9. Enter the SMS URL and the HTTP Method used (e.g., GET or POST). Include the headers and payload if the API uses any. If the text message and the phone number are passed as parameters in any field, then include them as $ctx.num and $ctx.msg respectively. You must also enter the HTTP Response Code the SMS service provider sends when the API is successfully called. Nexmo API and  Bulksms API send 200 as the code, while Clickatell and Plivo send 202. If this value is unknown, leave it blank and the connector checks if the response is 200, 201 or 202. 
-   
+      - If you need to enable displaying detailed error messages coming from the SMS provider in the front end, set the value of **Show Detailed Error Information** to **true**. Additionally, if you need to prevent any sensitive values coming in the detailed error messages getting displayed in the UI, then mention them as comma separated values in the **Mask values in Error Info** field.
+    
    **Note** : If Nexmo is used as the SMS provider,
    * Go to [https://dashboard.nexmo.com/sign-up](https://dashboard.nexmo.com/sign-up) and click free signup and register.
    * Under **API Settings** in **Settings**, copy and save the API key and Secret.
@@ -269,6 +270,11 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
    <br/>
    <br/>
    ![alt text](images/travelocityLoggedIn.png)
+
+5. If you enable **Show Detailed Error Information** in the SMS authenticator configurations, you will see the 
+detailed error message provided by the SMS provider as below.
+   <br/>
+   ![alt text](images/detailedErrorInfo.png)
  
  ````
  Note : In case, If you forget the mobile phone number or do not have access to it, you can use the backup codes to authenticate and  you will be taken to the home page of the travelocity.com application.
