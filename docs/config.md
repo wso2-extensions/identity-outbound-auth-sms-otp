@@ -21,15 +21,22 @@ Note: If you have a older version, upgrade the connector and artifacts to the la
 
 The artifacts can be obtained from [the store for this authenticator](https://store.wso2.com/store/assets/isconnector/list?q=%22_default%22%3A%22smsotp%22).
 1. Place the smsotpauthenticationendpoint.war file into the <IS_HOME>/repository/deployment/server/webapps directory.
-2. Place the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.13.jar file into the <IS_HOME>/repository/components/dropins directory.<br/>
+2. Place the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.x.jar file into the <IS_HOME>/repository/components/dropins directory.<br/>
     
     ---
     **NOTE :**
        If you want to upgrade the SMSOTP Authenticator in your existing IS pack, please refer [upgrade instructions](https://docs.wso2.com/display/ISCONNECTORS/Authenticator+Upgrade+Instructions).
     
     ---
+    
+3. Place the org.wso2.carbon.extension.identity.helper-1.0.x.jar file into the <IS_HOME>/repository/components/dropins directory.
+    
+    ---
+    **NOTE :**
+        If you already has lower version of org.wso2.carbon.extension.identity.helper in <IS_HOME>/repository/components/dropins directory. Remove the older jar.
+    ---
 
-3. Add the following configurations in the <IS_HOME>/repository/conf/identity/application-authentication.xml file under the <AuthenticatorConfigs> section.<br/>
+4. Add the following configurations in the <IS_HOME>/repository/conf/identity/application-authentication.xml file under the <AuthenticatorConfigs> section.<br/>
     ```` 
     <AuthenticatorConfig name="SMSOTP" enabled="true">
         <Parameter name="SMSOTPAuthenticationEndpointURL">https://localhost:9443/smsotpauthenticationendpoint/smsotp.jsp</Parameter>
