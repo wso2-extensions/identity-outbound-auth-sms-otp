@@ -129,14 +129,14 @@
                             org.wso2.carbon.identity.application.authentication.framework.*,
                             javax.servlet,
                             javax.servlet.http,
+                            org.wso2.carbon.extension.identity.helper.*;
+                            version="${identity.extension.utils.import.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.authenticator.smsotp.internal,
                             org.wso2.carbon.identity.authenticator.smsotp.*;
-                            version="${carbon.identity.package.export.project.version}",
-                            org.wso2.carbon.extension.identity.helper.*;
-                            version="${identity.extension.utils}",
+                            version="${carbon.identity.package.export.project.version}"
                         </Export-Package>
                     </instructions>
                 </configuration>
