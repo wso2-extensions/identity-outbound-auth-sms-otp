@@ -19,11 +19,11 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
         <artifactId>identity-outbound-auth-sms-otp</artifactId>
-        <version>2.0.16.1-SNAPSHOT</version>
+        <version>2.0.16.1</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
-    <version>2.0.16.1-SNAPSHOT</version>
+    <version>2.0.16.1</version>
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
