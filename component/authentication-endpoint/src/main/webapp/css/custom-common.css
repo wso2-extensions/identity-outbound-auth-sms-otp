@@ -120,3 +120,7 @@ button.font-extra-large {
 img.idp-image {
     padding: 3px 2px;
 }
+
+p.word-break-all {
+    word-break: break-all;
+}

@@ -41,6 +41,8 @@ public class SMSOTPConstants {
     public static final String HEADERS = "headers";
     public static final String PAYLOAD = "payload";
     public static final String HTTP_RESPONSE = "http_response";
+    public static final String SHOW_ERROR_INFO = "show_detailed_error_info";
+    public static final String VALUES_TO_BE_MASKED_IN_ERROR_INFO = "values_to_be_masked";
     public static final String SMS_MESSAGE = "Verification Code: ";
     public static final String BACKUP_CODE = "BackupCode";
     public static final String IS_ENABLED_RETRY = "RetryEnable";
@@ -80,6 +82,10 @@ public class SMSOTPConstants {
     public static final String STATUS_CODE = "statusCode";
     public static final String UNABLE_SEND_CODE = "UnableSend";
     public static final String ERROR_MESSAGE = "&authFailure=true&authFailureMsg=";
+    public static final String ERROR_MESSAGE_DETAILS = "&authFailureInfo=";
+    public static final String AUTH_FAILURE_INFO = "authFailureInfo";
+    public static final String ERROR_INFO = "errorInfo";
+    public static final String MASKING_VALUE_SEPARATOR = ",";
     public static final String UNABLE_SEND_CODE_VALUE = "unable.send.code";
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
     public static final String ERROR_SMSOTP_DISABLE_MSG = "smsotp.disable";

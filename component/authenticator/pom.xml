@@ -19,11 +19,11 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
         <artifactId>identity-outbound-auth-sms-otp</artifactId>
-        <version>2.0.18-SNAPSHOT</version>
+        <version>2.0.21-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
-    <version>2.0.18-SNAPSHOT</version>
+    <version>2.0.21-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
@@ -108,8 +108,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.0</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -129,14 +129,14 @@
                             org.wso2.carbon.identity.application.authentication.framework.*,
                             javax.servlet,
                             javax.servlet.http,
+                            org.wso2.carbon.extension.identity.helper.*;
+                            version="${identity.extension.utils.import.version.range}",
                             *;resolution:=optional
                         </Import-Package>
                         <Export-Package>
                             !org.wso2.carbon.identity.authenticator.smsotp.internal,
                             org.wso2.carbon.identity.authenticator.smsotp.*;
-                            version="${carbon.identity.package.export.project.version}",
-                            org.wso2.carbon.extension.identity.helper.*;
-                            version="${identity.extension.utils}",
+                            version="${carbon.identity.package.export.project.version}"
                         </Export-Package>
                     </instructions>
                 </configuration>
