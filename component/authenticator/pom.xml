@@ -27,18 +27,20 @@
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
-    <dependencies>
 
+    <dependencies>
         <dependency>
             <groupId>org.jacoco</groupId>
             <artifactId>org.jacoco.agent</artifactId>
             <classifier>runtime</classifier>
             <version>${jacoco.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
@@ -56,6 +58,7 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>${mockito.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
@@ -67,20 +70,22 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
+            <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.wso2.carbon.identity.framework</groupId>
+            <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
             <artifactId>org.wso2.carbon.extension.identity.helper</artifactId>
-            <version>${identity.extension.utils}</version>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
             <artifactId>org.wso2.carbon.identity.event</artifactId>
-            <version>${carbon.identity.version}</version>
         </dependency>
-
     </dependencies>
+
     <build>
         <pluginManagement>
             <plugins>
