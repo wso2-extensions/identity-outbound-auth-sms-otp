@@ -27,13 +27,14 @@
     <name>WSO2 Carbon - identity SMS OTP Feature</name>
     <url>http://wso2.org</url>
     <description>This feature contains extension feature for smsotp</description>
+
     <dependencies>
         <dependency>
             <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
             <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
