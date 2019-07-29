@@ -42,8 +42,11 @@ import org.wso2.carbon.identity.application.authentication.framework.util.Framew
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
+import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
@@ -552,14 +555,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (StringUtils.isNotEmpty(smsUrl)) {
                 connectionResult = sendRESTCall(context, smsUrl, httpMethod, headerString, payload,
                         httpResponse, mobileNumber, otpToken);
+            } else {
+                //Use the default notification mechanism (CEP) to send SMS.
+                AuthenticatedUser authenticatedUser = (AuthenticatedUser)
+                        context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
+                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
             }
-//            else {
-//                //Use the default notification mechanism (CEP) to send SMS.
-//                AuthenticatedUser authenticatedUser = (AuthenticatedUser)
-//                        context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
-//                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
-//                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
-//            }
 
             if (!connectionResult) {
                 String retryParam;
@@ -854,7 +856,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Property smsUrl = new Property();
         smsUrl.setName(SMSOTPConstants.SMS_URL);
         smsUrl.setDisplayName("SMS URL");
-        smsUrl.setRequired(true);
+        smsUrl.setRequired(false);
         smsUrl.setDescription("Enter client sms url value. If the phone number and text message are in URL, " +
                 "specify them as $ctx.num and $ctx.msg");
         smsUrl.setDisplayOrder(0);
@@ -863,7 +865,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Property httpMethod = new Property();
         httpMethod.setName(SMSOTPConstants.HTTP_METHOD);
         httpMethod.setDisplayName("HTTP Method");
-        httpMethod.setRequired(true);
+        httpMethod.setRequired(false);
         httpMethod.setDescription("Enter the HTTP Method used by the SMS API");
         httpMethod.setDisplayOrder(1);
         configProperties.add(httpMethod);
@@ -1191,32 +1193,32 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * We can reuse this method once the improvements done into the eventing and notification handler in IS.
      */
-//    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
-//
-//        String eventName = IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION;
-//
-//        HashMap<String, Object> properties = new HashMap<>();
-//        properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
-//        properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
-//        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
-//
-//        properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
-//        properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
-//
-//        properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
-//        Event identityMgtEvent = new Event(eventName, properties);
-//        try {
-//            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
-//        } catch (Exception e) {
-//            String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
-//            //We are not throwing any exception from here, because this event notification should not break the main
-//            // flow.
-//            log.warn(errorMsg);
-//            if (log.isDebugEnabled()) {
-//                log.debug(errorMsg, e);
-//            }
-//        }
-//    }
+    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
+
+        String eventName = IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION;
+
+        HashMap<String, Object> properties = new HashMap<>();
+        properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
+        properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
+        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+
+        properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
+        properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
+
+        properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
+        Event identityMgtEvent = new Event(eventName, properties);
+        try {
+            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
+        } catch (Exception e) {
+            String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
+            //We are not throwing any exception from here, because this event notification should not break the main
+            // flow.
+            log.warn(errorMsg);
+            if (log.isDebugEnabled()) {
+                log.debug(errorMsg, e);
+            }
+        }
+    }
 
 
 }
