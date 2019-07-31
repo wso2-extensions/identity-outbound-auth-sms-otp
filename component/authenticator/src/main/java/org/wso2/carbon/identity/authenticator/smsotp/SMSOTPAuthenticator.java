@@ -79,6 +79,7 @@ import static org.wso2.carbon.identity.base.IdentityConstants.IdentityTokens.USE
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
     private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
+    private static final String TRIGGER_SMS_NOTIFICATION = "TRIGGER_SMS_NOTIFICATION";
 
     /**
      * Check whether the authentication or logout request can be handled by the authenticator
@@ -1195,7 +1196,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
 
-        String eventName = IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION;
+        String eventName = TRIGGER_SMS_NOTIFICATION;
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
