@@ -78,7 +78,7 @@ import static org.wso2.carbon.identity.base.IdentityConstants.IdentityTokens.USE
  */
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
-    private static Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
+    private static final Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
     private static final String TRIGGER_SMS_NOTIFICATION = "TRIGGER_SMS_NOTIFICATION";
 
     /**
