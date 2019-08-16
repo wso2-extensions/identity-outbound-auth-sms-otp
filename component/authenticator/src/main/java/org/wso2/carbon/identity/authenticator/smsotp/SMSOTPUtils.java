@@ -40,7 +40,7 @@ import java.util.Map;
 
 public class SMSOTPUtils {
 
-    private static Log log = LogFactory.getLog(SMSOTPUtils.class);
+    private static final Log log = LogFactory.getLog(SMSOTPUtils.class);
 
     /**
      * Get parameter values from application-authentication.xml local file.

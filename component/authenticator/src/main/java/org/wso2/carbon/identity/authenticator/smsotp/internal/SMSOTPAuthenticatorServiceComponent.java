@@ -40,7 +40,7 @@ import java.util.Hashtable;
  */
 public class SMSOTPAuthenticatorServiceComponent {
 
-    private static Log log = LogFactory.getLog(SMSOTPAuthenticatorServiceComponent.class);
+    private static final Log log = LogFactory.getLog(SMSOTPAuthenticatorServiceComponent.class);
 
 
     protected void activate(ComponentContext ctxt) {
