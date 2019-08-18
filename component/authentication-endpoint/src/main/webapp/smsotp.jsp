@@ -179,13 +179,18 @@
     <script type="text/javascript">
     $(document).ready(function() {
     	$('#authenticate').click(function() {
-            var OTPcode = document.getElementById("OTPcode").value;
-            if (OTPcode == "") {
-                document.getElementById('alertDiv').innerHTML
-                = '<div id="error-msg" class="alert alert-danger">Please enter the code!</div>';
+    	    if ($('#pin_form').data("submitted") === true) {
+                console.warn("Prevented a possible double submit event");
             } else {
-	            $('#pin_form').submit();
-	        }
+                var OTPcode = document.getElementById("OTPcode").value;
+                if (OTPcode == "") {
+                    document.getElementById('alertDiv').innerHTML
+                        = '<div id="error-msg" class="alert alert-danger">Please enter the code!</div>';
+                } else {
+                    $('#pin_form').data("submitted", true);
+                    $('#pin_form').submit();
+                }
+            }
     	});
     });
     $(document).ready(function() {
