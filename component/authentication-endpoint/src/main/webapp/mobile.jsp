@@ -16,17 +16,13 @@
   ~ under the License.
   --%>
 
-<%@page import="java.util.ArrayList" %>
-<%@page import="java.util.Arrays" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
+<%@page import="org.owasp.encoder.Encode" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
+<%@ page import="java.util.Map" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
-<%@ page import="org.owasp.encoder.Encode" %>
 
-<fmt:bundle basename="org.wso2.carbon.identity.application.authentication.endpoint.i18n.Resources">
+
+
 
     <%
         request.getSession().invalidate();
@@ -59,12 +55,12 @@
         <title>WSO2 Identity Server</title>
 
         <link rel="icon" href="images/favicon.png" type="image/x-icon"/>
-        <link href="libs/bootstrap_3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link href="libs/bootstrap_3.4.1/css/bootstrap.min.css" rel="stylesheet">
         <link href="css/Roboto.css" rel="stylesheet">
         <link href="css/custom-common.css" rel="stylesheet">
 
         <script src="js/scripts.js"></script>
-        <script src="assets/js/jquery-1.7.1.min.js"></script>
+        <script src="assets/js/jquery-3.4.1.min.js"></script>
         <!--[if lt IE 9]>
         <script src="js/html5shiv.min.js"></script>
         <script src="js/respond.min.js"></script>
@@ -158,8 +154,8 @@
             </p>
         </div>
     </footer>
-    <script src="libs/jquery_1.11.3/jquery-1.11.3.js"></script>
-    <script src="libs/bootstrap_3.3.5/js/bootstrap.min.js"></script>
+    <script src="libs/jquery_3.4.1/jquery-3.4.1.js"></script>
+    <script src="libs/bootstrap_3.4.1/js/bootstrap.min.js"></script>
      <script type="text/javascript">
         $(document).ready(function() {
         	$('#update').click(function() {
@@ -175,4 +171,4 @@
         </script>
     </body>
     </html>
-</fmt:bundle>
+

@@ -40,7 +40,7 @@ import java.util.Map;
 
 public class SMSOTPUtils {
 
-    private static Log log = LogFactory.getLog(SMSOTPUtils.class);
+    private static final Log log = LogFactory.getLog(SMSOTPUtils.class);
 
     /**
      * Get parameter values from application-authentication.xml local file.
@@ -220,6 +220,17 @@ public class SMSOTPUtils {
     public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context) {
 
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE));
+    }
+
+    /**
+     * Check whether admin enable to send otp directly to mobile number which gets from federated idp claims.
+     *
+     * @param context the AuthenticationContext
+     * @return true or false
+     */
+    public static boolean sendOtpToFederatedMobile(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_SEND_OTP_TO_FEDERATED_MOBILE));
     }
 
     /**

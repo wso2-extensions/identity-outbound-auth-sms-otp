@@ -21,15 +21,22 @@ Note: If you have a older version, upgrade the connector and artifacts to the la
 
 The artifacts can be obtained from [the store for this authenticator](https://store.wso2.com/store/assets/isconnector/list?q=%22_default%22%3A%22smsotp%22).
 1. Place the smsotpauthenticationendpoint.war file into the <IS_HOME>/repository/deployment/server/webapps directory.
-2. Place the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.13.jar file into the <IS_HOME>/repository/components/dropins directory.<br/>
+2. Place the org.wso2.carbon.extension.identity.authenticator.smsotp.connector-2.0.x.jar file into the <IS_HOME>/repository/components/dropins directory.<br/>
     
     ---
     **NOTE :**
        If you want to upgrade the SMSOTP Authenticator in your existing IS pack, please refer [upgrade instructions](https://docs.wso2.com/display/ISCONNECTORS/Authenticator+Upgrade+Instructions).
     
     ---
+    
+3. Place the org.wso2.carbon.extension.identity.helper-1.0.x.jar file into the <IS_HOME>/repository/components/dropins directory.
+    
+    ---
+    **NOTE :**
+        If you already has lower version of org.wso2.carbon.extension.identity.helper in <IS_HOME>/repository/components/dropins directory. Remove the older jar.
+    ---
 
-3. Add the following configurations in the <IS_HOME>/repository/conf/identity/application-authentication.xml file under the <AuthenticatorConfigs> section.<br/>
+4. Add the following configurations in the <IS_HOME>/repository/conf/identity/application-authentication.xml file under the <AuthenticatorConfigs> section.<br/>
     ```` 
     <AuthenticatorConfig name="SMSOTP" enabled="true">
         <Parameter name="SMSOTPAuthenticationEndpointURL">https://localhost:9443/smsotpauthenticationendpoint/smsotp.jsp</Parameter>
@@ -47,6 +54,8 @@ The artifacts can be obtained from [the store for this authenticator](https://st
         <Parameter name="EnableAlphanumericToken">true</Parameter>
         <Parameter name="TokenExpiryTime">30</Parameter>
         <Parameter name="TokenLength">8</Parameter>
+        <Parameter name="SendOtpToFederatedMobile">true</Parameter>
+        <Parameter name="federatedMobileAttributeKey">mobile</Parameter>
     </AuthenticatorConfig>
     ````
    The following table includes the definition of the parameters and the various values you can configure.
@@ -67,6 +76,8 @@ The artifacts can be obtained from [the store for this authenticator](https://st
    | EnableAlphanumericToken    | If the value is true, the generated token will be a alphanumeric value. Else it will generate a numeric token.  |
    | TokenExpiryTime    | This parameter makes it possible to set the expiry time of the OTP token. |
    | TokenLength    | This parameter makes it possible to set the length of the OTP token. |
+   | SendOtpToFederatedMobile    | This parameter makes it possible to send the otp to the federated mobile claim when the user is not in active directory.|
+   | federatedMobileAttributeKey    | This parameter identifies the mobile claim of the federated authenticator. Set this parameter if the SendOtpToFederatedMobile is set to true. |
 
    An admin can change the priority of the SMSOTP authenticator by changing the  SMSOTPMandatory value (true or false). 
    
@@ -125,7 +136,8 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
 7. Go to the **SMSOTP Configuration** under **Federated Authenticators**.
 8. Select both checkboxes to **Enable SMSOTP Authenticator** and make it the **Default**.
 9. Enter the SMS URL and the HTTP Method used (e.g., GET or POST). Include the headers and payload if the API uses any. If the text message and the phone number are passed as parameters in any field, then include them as $ctx.num and $ctx.msg respectively. You must also enter the HTTP Response Code the SMS service provider sends when the API is successfully called. Nexmo API and  Bulksms API send 200 as the code, while Clickatell and Plivo send 202. If this value is unknown, leave it blank and the connector checks if the response is 200, 201 or 202. 
-   
+      - If you need to enable displaying detailed error messages coming from the SMS provider in the front end, set the value of **Show Detailed Error Information** to **true**. Additionally, if you need to prevent any sensitive values coming in the detailed error messages getting displayed in the UI, then mention them as comma separated values in the **Mask values in Error Info** field.
+    
    **Note** : If Nexmo is used as the SMS provider,
    * Go to [https://dashboard.nexmo.com/sign-up](https://dashboard.nexmo.com/sign-up) and click free signup and register.
    * Under **API Settings** in **Settings**, copy and save the API key and Secret.
@@ -265,6 +277,11 @@ Now you have to configure WSO2 Identity Server by [adding a new identity provide
    <br/>
    <br/>
    ![alt text](images/travelocityLoggedIn.png)
+
+5. If you enable **Show Detailed Error Information** in the SMS authenticator configurations, you will see the 
+detailed error message provided by the SMS provider as below.
+   <br/>
+   ![alt text](images/detailedErrorInfo.png)
  
  ````
  Note : In case, If you forget the mobile phone number or do not have access to it, you can use the backup codes to authenticate and  you will be taken to the home page of the travelocity.com application.
