@@ -19,7 +19,6 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
-import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.logging.Log;
@@ -61,6 +60,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +71,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR_SET;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 
 import static java.util.Base64.getEncoder;
@@ -1130,8 +1131,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
-        URLEncoder encoder = new URLEncoder();
-        String encodedMobileNo = encoder.encode(mobile);
+        String encodedMobileNo = URLEncoder.encode(mobile, CHAR_SET);
         smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                 smsMessage.replaceAll("\\s", "+") + otpToken);
         URL smsProviderUrl = null;
