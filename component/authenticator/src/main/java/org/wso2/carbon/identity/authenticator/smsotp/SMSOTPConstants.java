@@ -26,8 +26,7 @@ public class SMSOTPConstants {
     public static final String ALGORITHM_NAME = "SHA1PRNG";
     public static final String ALGORITHM_HMAC = "HmacSHA1";
     public static final String ALGORITHM_HMAC_SHA = "HMAC-SHA-1";
-    public static final String CHAR_SET = "UTF-8";
-    public static final String UTF_8 = "UTF-8";
+    public static final String CHAR_SET_UTF_8 = "UTF-8";
 
     public static final int SECRET_KEY_LENGTH = 5;
     public static final int NUMBER_BASE = 2;

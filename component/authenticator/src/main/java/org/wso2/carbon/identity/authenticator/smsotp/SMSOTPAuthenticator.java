@@ -71,7 +71,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR_SET;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR_SET_UTF_8;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 
 import static java.util.Base64.getEncoder;
@@ -998,7 +998,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET);
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET_UTF_8);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message ", e);
@@ -1131,7 +1131,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
-        String encodedMobileNo = URLEncoder.encode(mobile, CHAR_SET);
+        String encodedMobileNo = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
         smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                 smsMessage.replaceAll("\\s", "+") + otpToken);
         URL smsProviderUrl = null;
