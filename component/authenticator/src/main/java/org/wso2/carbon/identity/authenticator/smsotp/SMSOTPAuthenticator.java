@@ -810,7 +810,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 context.setSubject(authenticatedUser);
                 savedOTPs = (String[]) ArrayUtils.removeElement(savedOTPs, userToken);
                 userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
-                        SMSOTPConstants.SAVED_OTP_LIST, String.join(", ", savedOTPs), null);
+                        SMSOTPConstants.SAVED_OTP_LIST,
+                        String.join(FrameworkUtils.getMultiAttributeSeparator(), savedOTPs), null);
             } else {
                 if (log.isDebugEnabled()) {
                     log.debug("User entered OTP :" + userToken + " does not match with any of the saved " +
