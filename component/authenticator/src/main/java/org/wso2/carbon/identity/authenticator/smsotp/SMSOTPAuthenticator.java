@@ -19,6 +19,7 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.logging.Log;
@@ -41,6 +42,7 @@ import org.wso2.carbon.identity.application.authentication.framework.util.Framew
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
+import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -48,6 +50,7 @@ import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
+import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
@@ -777,40 +780,63 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private void checkWithBackUpCodes(AuthenticationContext context, String userToken,
                                       AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
 
-        String savedOTPString = null;
+        String[] savedOTPs = null;
         String username = context.getProperty(SMSOTPConstants.USER_NAME).toString();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = getUserRealm(username);
         try {
             if (userRealm != null) {
-                savedOTPString = userRealm.getUserStoreManager()
-                        .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.SAVED_OTP_LIST, null);
+                UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+                if (userStoreManager != null) {
+                    String savedOTPString = userStoreManager
+                            .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.SAVED_OTP_LIST, null);
+                    if (StringUtils.isNotEmpty(savedOTPString)) {
+                        savedOTPs = savedOTPString.split(FrameworkUtils.getMultiAttributeSeparator());
+                    }
+                }
             }
-            if (StringUtils.isEmpty(savedOTPString)) {
+            // Check whether there is any backup OTPs and return.
+            if (ArrayUtils.isEmpty(savedOTPs)) {
                 if (log.isDebugEnabled()) {
                     log.debug("The claim " + SMSOTPConstants.SAVED_OTP_LIST + " does not contain any values");
                 }
                 throw new AuthenticationFailedException("The claim " + SMSOTPConstants.SAVED_OTP_LIST +
                         " does not contain any values");
-            } else if (savedOTPString.contains(userToken)) {
+            }
+            if (isBackUpCodeValid(savedOTPs, userToken)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Found saved backup SMS OTP for user :" + authenticatedUser);
                 }
                 context.setSubject(authenticatedUser);
-                savedOTPString = savedOTPString.replaceAll(userToken, "").replaceAll(",,", ",");
+                savedOTPs = (String[]) ArrayUtils.removeElement(savedOTPs, userToken);
                 userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
-                        SMSOTPConstants.SAVED_OTP_LIST, savedOTPString, null);
+                        SMSOTPConstants.SAVED_OTP_LIST, String.join(", ", savedOTPs), null);
             } else {
                 if (log.isDebugEnabled()) {
-                    log.debug("User entered OTP :" + userToken + " does not match with any of the saved backup codes");
+                    log.debug("User entered OTP :" + userToken + " does not match with any of the saved " +
+                            "backup codes");
                 }
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
-                throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " mismatch.");
+                throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " " +
+                        "mismatch.", authenticatedUser);
             }
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Cannot find the user claim for OTP list for user : " +
                     authenticatedUser, e);
         }
+    }
+
+    private boolean isBackUpCodeValid(String[] savedOTPs, String userToken) {
+
+        if (StringUtils.isEmpty(userToken)) {
+            return false;
+        }
+        // Check whether the usertoken exists in the saved backup OTP list.
+        for (String value : savedOTPs) {
+            if (value.equals(userToken))
+                return true;
+        }
+        return false;
     }
 
     /**
