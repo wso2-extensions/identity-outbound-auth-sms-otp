@@ -26,6 +26,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -50,6 +51,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
+import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -74,6 +76,7 @@ import static org.powermock.api.mockito.PowerMockito.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
         IdentityTenantUtil.class})
+@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User"})
 public class SMSOTPAuthenticatorTest {
     private SMSOTPAuthenticator smsotpAuthenticator;
 
@@ -480,8 +483,8 @@ public class SMSOTPAuthenticatorTest {
                 httpServletRequest, httpServletResponse, context);
     }
 
-    @Test(expectedExceptions = {AuthenticationFailedException.class})
-    public void testProcessAuthenticationResponseWithBackupCode() throws Exception {
+    @Test
+    public void testProcessAuthenticationResponseWithvalidBackupCode() throws Exception {
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
@@ -496,6 +499,10 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        when(userStoreManager
+                .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
+        mockStatic(FrameworkUtils.class);
+        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -529,6 +536,8 @@ public class SMSOTPAuthenticatorTest {
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
         AuthenticatedUser user = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        mockStatic(FrameworkUtils.class);
+        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         Whitebox.invokeMethod(smsotpAuthenticator, "checkWithBackUpCodes",
                 context,"1234",user);
     }
@@ -544,12 +553,13 @@ public class SMSOTPAuthenticatorTest {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        mockStatic(FrameworkUtils.class);
+        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
-        AuthenticatedUser user = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkWithBackUpCodes",
-                context,"45698789",user);
+                context, "45698789", authenticatedUser);
     }
 
     @Test
