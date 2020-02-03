@@ -480,8 +480,8 @@ public class SMSOTPAuthenticatorTest {
                 httpServletRequest, httpServletResponse, context);
     }
 
-    @Test(expectedExceptions = {AuthenticationFailedException.class})
-    public void testProcessAuthenticationResponseWithBackupCode() throws Exception {
+    @Test
+    public void testProcessAuthenticationResponseWithvalidBackupCode() throws Exception {
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
@@ -496,6 +496,8 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        when(userStoreManager
+                .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -547,9 +549,8 @@ public class SMSOTPAuthenticatorTest {
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
-        AuthenticatedUser user = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkWithBackUpCodes",
-                context,"45698789",user);
+                context, "45698789", authenticatedUser);
     }
 
     @Test
