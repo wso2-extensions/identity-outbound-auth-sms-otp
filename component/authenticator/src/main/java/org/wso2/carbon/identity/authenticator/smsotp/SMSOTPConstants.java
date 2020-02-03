@@ -35,6 +35,7 @@ public class SMSOTPConstants {
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
+    public static final String BACKUP_CODES_SEPARATOR = ",";
 
     public static final String SMS_URL = "sms_url";
     public static final String HTTP_METHOD = "http_method";
