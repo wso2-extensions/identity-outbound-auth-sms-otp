@@ -21,6 +21,7 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 public class SMSOTPConstants {
 
+    private static final String APPLICATION_MANAGEMENT_PREFIX = "SMSOTP - ";
     public static final String AUTHENTICATOR_NAME = "SMSOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "SMS OTP";
     public static final String ALGORITHM_NAME = "SHA1PRNG";
@@ -110,5 +111,44 @@ public class SMSOTPConstants {
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
 
+    /**
+     * Enums for error messages.
+     */
+    public enum ErrorMessage {
 
+        CLIENT_BAD_REQUEST("10001", "Bad request. Please check the request and re-submit"),
+        CLIENT_UNAUTHORIZED("10002", "Unauthorized request. Please note that you are unauthorized for this request."),
+        CLIENT_FORBIDDEN("10003", "Forbidden. Please note that you are not permitted to access this resource."),
+        CLIENT_NOT_FOUND("10004", "Not Found. Please note that the resource is not found. Check the request and " +
+                "re-submit"),
+        CLIENT_METHOD_NOT_ALLOWED("10005", "Method Not Allowed. Please note that the used HTTP method is not allowed " +
+                "from the method."),
+        CLIENT_NOT_ACCEPTABLE("10006", "Not Acceptable. Please note that the requested media type cannot be generated."),
+        SERVER_INTERNAL_SERVER_ERROR("10100", "Internal Server Error. Please check the SMS OTP configurations."),
+        SERVER_NOT_IMPLEMENTED("10101", "Not Implemented. Server cannot recognize the request method.");
+
+        private final String code;
+        private final String message;
+
+        ErrorMessage(String code, String message) {
+
+            this.code = code;
+            this.message = message;
+        }
+
+        public String getCode() {
+
+            return APPLICATION_MANAGEMENT_PREFIX + code;
+        }
+
+        public String getMessage() {
+
+            return message;
+        }
+
+        public String toString() {
+
+            return getCode() + " | " + message;
+        }
+    }
 }

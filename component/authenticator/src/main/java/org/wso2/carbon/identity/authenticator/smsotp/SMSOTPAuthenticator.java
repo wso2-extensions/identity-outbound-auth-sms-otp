@@ -64,6 +64,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -585,7 +586,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     retryParam = SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants.UNABLE_SEND_CODE_VALUE;
                 }
                 String redirectUrl = getURL(errorPage, queryParams);
-                response.sendRedirect(redirectUrl + SMSOTPConstants.RESEND_CODE + isEnableResendCode + retryParam);
+                response.sendRedirect(redirectUrl + SMSOTPConstants.RESEND_CODE + isEnableResendCode +
+                        URLEncoder.encode(retryParam, StandardCharsets.UTF_8.name()));
             } else {
                 long sentOTPTokenTime = System.currentTimeMillis();
                 context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, sentOTPTokenTime);
