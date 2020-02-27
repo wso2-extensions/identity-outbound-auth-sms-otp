@@ -42,7 +42,6 @@ import org.wso2.carbon.identity.application.authentication.framework.util.Framew
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -573,8 +572,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (!connectionResult) {
                 String retryParam;
                 if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
-                    retryParam = SMSOTPConstants.ERROR_MESSAGE +
-                            context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
+                    String errorCode = context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
+                    // If useInternalErrorCodes is configured as true, then http response error codes will be mapped
+                    // to local error codes and passed as query param value for authfailure msg.
+                    if (SMSOTPUtils.useInternalErrorCodes(context)) {
+                        String errorResponseCode = getHttpErrorResponseCode(errorCode);
+                        if (StringUtils.isNotEmpty(errorResponseCode)) {
+                            String internalErrorCode = SMSOTPConstants.ErrorMessage.
+                                    getMappedInternalErrorCode(errorResponseCode).getCode();
+                            errorCode = URLEncoder.encode(internalErrorCode, CHAR_SET_UTF_8);
+                        }
+                    }
+                    retryParam = SMSOTPConstants.ERROR_MESSAGE + errorCode;
                     String errorInfo = context.getProperty(SMSOTPConstants.ERROR_INFO).toString();
                     if (Boolean.parseBoolean(authenticatorProperties.get(SMSOTPConstants.SHOW_ERROR_INFO)) &&
                             errorInfo != null) {
@@ -1165,7 +1174,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             smsProviderUrl = new URL(smsUrl);
         } catch (MalformedURLException e) {
             log.error("Error while parsing SMS provider URL: " + smsUrl, e);
-            context.setProperty(SMSOTPConstants.ERROR_CODE, "The SMS URL does not conform to URL specification");
+            if (SMSOTPUtils.useInternalErrorCodes(context)) {
+                context.setProperty(SMSOTPConstants.ERROR_CODE, SMSOTPConstants.ErrorMessage.MALFORMED_URL.getCode());
+            } else {
+                context.setProperty(SMSOTPConstants.ERROR_CODE, "The SMS URL does not conform to URL specification");
+            }
             return false;
         }
         String subUrl = smsProviderUrl.getProtocol();
@@ -1266,5 +1279,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
+    private String getHttpErrorResponseCode(String errorMsg) {
 
+        String errorCode = errorMsg;
+        if (StringUtils.contains(errorCode, ":")) {
+            errorCode = errorCode.split(":")[0];
+        }
+        return StringUtils.trim(errorCode);
+    }
 }
