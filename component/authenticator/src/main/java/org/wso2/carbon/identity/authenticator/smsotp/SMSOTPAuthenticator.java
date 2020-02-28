@@ -573,7 +573,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String retryParam;
                 if (context.getProperty(SMSOTPConstants.ERROR_CODE) != null) {
                     String errorCode = context.getProperty(SMSOTPConstants.ERROR_CODE).toString();
-                    // If useInternalErrorCodes is configured as true, then http response error codes will be mapped
+                    // If UseInternalErrorCodes is configured as true, then http response error codes will be mapped
                     // to local error codes and passed as query param value for authfailure msg.
                     if (SMSOTPUtils.useInternalErrorCodes(context)) {
                         String errorResponseCode = getHttpErrorResponseCode(errorCode);

@@ -59,7 +59,7 @@ public class SMSOTPConstants {
     public static final String IS_ENABLE_ALPHANUMERIC_TOKEN = "EnableAlphanumericToken";
     public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
     public static final String TOKEN_LENGTH = "TokenLength";
-    public static final String USE_INTERNAL_ERROR_CODES = "useInternalErrorCodes";
+    public static final String USE_INTERNAL_ERROR_CODES = "UseInternalErrorCodes";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
