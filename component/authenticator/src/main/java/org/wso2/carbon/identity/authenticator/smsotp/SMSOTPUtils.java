@@ -362,7 +362,7 @@ public class SMSOTPUtils {
      * Return whether internal errorcodes support is configured.
      *
      * @param context Authentication Context.
-     * @return Ture if useInternalError codes is enabled, else return false.
+     * @return Ture if UseInternalError codes is enabled, else return false.
      */
     public static boolean useInternalErrorCodes(AuthenticationContext context) {
 
