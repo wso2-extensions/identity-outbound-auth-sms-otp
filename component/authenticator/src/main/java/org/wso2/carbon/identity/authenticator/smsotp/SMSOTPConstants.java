@@ -19,8 +19,13 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
+
 public class SMSOTPConstants {
 
+    private static final String SMSOTP_PREFIX = "SMSOTP-";
     public static final String AUTHENTICATOR_NAME = "SMSOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "SMS OTP";
     public static final String ALGORITHM_NAME = "SHA1PRNG";
@@ -54,6 +59,7 @@ public class SMSOTPConstants {
     public static final String IS_ENABLE_ALPHANUMERIC_TOKEN = "EnableAlphanumericToken";
     public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
     public static final String TOKEN_LENGTH = "TokenLength";
+    public static final String USE_INTERNAL_ERROR_CODES = "useInternalErrorCodes";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -110,5 +116,87 @@ public class SMSOTPConstants {
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
 
+    /**
+     * Enums for error messages.
+     */
+    public enum ErrorMessage {
 
+        CLIENT_BAD_REQUEST("60001", "Bad request. Please check the request and re-submit"),
+        CLIENT_UNAUTHORIZED("60002", "Unauthorized request. Server is not authorized to access the SMS Provider"),
+        CLIENT_PAYMENT_REQUIRED("60003", "Payment requirement for the request."),
+        CLIENT_FORBIDDEN("60004", "Server is permitted to access the SMS Provider URL."),
+        CLIENT_NOT_FOUND("60005", "Not Found. Please note that SMS Provider resource is not found."),
+        CLIENT_METHOD_NOT_ALLOWED("60006", "Method Not Allowed. HTTP method used by the Server to connect SMS " +
+                "provider is allowed"),
+        CLIENT_NOT_ACCEPTABLE("60007", "Not Acceptable. Please note that the requested media type cannot be " +
+                "generated."), //406
+        SERVER_INTERNAL_ERROR("65001", "Internal Error in the SMS Provider Server."),
+        SERVER_NOT_IMPLEMENTED("65002", "Not Implemented. SMS Provider Server cannot recognize the request method."),
+        SERVER_BAD_GATEWAY("65003", "Bad Gateway or SMS Provider server overloaded."),
+        SERVER_UNAVAILABLE("65004", "SMS Service unavailable or gateway time-out."),
+        SERVER_TIMEOUT("65005", "Secondary gateway or SMS provider server time-out."),
+        MALFORMED_URL("10001", "The SMS URL does not conform to URL specification."),
+        SERVER_UNKNOWN_ERROR("10002", "Unknown error occured. Please try again.");
+
+        private final String code;
+        private final String message;
+
+        private static final Map<String, ErrorMessage> errorIndex = new HashMap<>(ErrorMessage.values().length);
+        static final String BUNDLE = "ServerClientErrorMappings";
+        static ResourceBundle resourceBundle = ResourceBundle.getBundle(BUNDLE);
+
+        static {
+            for (ErrorMessage em : ErrorMessage.values()) {
+                errorIndex.put(em.getCode(), em);
+            }
+        }
+
+        ErrorMessage(String code, String message) {
+
+            this.code = code;
+            this.message = message;
+        }
+
+        public String getCode() {
+
+            return SMSOTP_PREFIX + code;
+        }
+
+        public String getMessage() {
+
+            return message;
+        }
+
+        public String toString() {
+
+            return getCode() + " | " + message;
+        }
+
+        /**
+         * Get the proper error message mapped to the server error code.
+         *
+         * @param serverErrorCode Server error code.
+         * @return Respective error message for the server error code.
+         */
+        public static String getMappedErrorMessage(String serverErrorCode) {
+
+            return errorIndex.get(serverErrorCode).getMessage();
+        }
+
+        /**
+         * Get the proper server side error code mapped to the error response from the SMS Provider.
+         *
+         * @param smsProviderErrorCode SMS Provider Error Code.
+         * @return Respective server error code for the SMS Provider error code.
+         */
+        public static ErrorMessage getMappedInternalErrorCode(String smsProviderErrorCode) {
+
+            if (resourceBundle.containsKey(smsProviderErrorCode)) {
+                return errorIndex.get(SMSOTP_PREFIX + resourceBundle.getString(smsProviderErrorCode));
+            } else if (errorIndex.containsKey(SMSOTPConstants.SMSOTP_PREFIX + smsProviderErrorCode)) {
+                return errorIndex.get(SMSOTPConstants.SMSOTP_PREFIX + smsProviderErrorCode);
+            }
+            return ErrorMessage.SERVER_UNKNOWN_ERROR;
+        }
+    }
 }
