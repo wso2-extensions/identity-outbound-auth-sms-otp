@@ -25,7 +25,7 @@
     </parent>
     <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
     <artifactId>identity-outbound-auth-sms-otp</artifactId>
-    <version>2.0.35-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon Extension - SMS OTP Pom</name>
     <url>http://wso2.org</url>
@@ -194,6 +194,11 @@
                 <artifactId>encoder</artifactId>
                 <version>${encoder.wso2.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+                <version>${apache.felix.scr.ds.annotations.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -253,7 +258,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-scr-plugin</artifactId>
-                    <version>1.7.2</version>
+                    <version>${maven.scr.plugin.version}</version>
                     <executions>
                         <execution>
                             <id>generate-scr-scrdescriptor</id>
@@ -266,7 +271,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.3.5</version>
+                    <version>3.2.0</version>
                     <extensions>true</extensions>
                     <configuration>
                         <obrRepository>NONE</obrRepository>
@@ -294,6 +299,16 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                    <configuration>
+                        <suiteXmlFiles>
+                            <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                        </suiteXmlFiles>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -379,10 +394,10 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.12.153</carbon.identity.version>
-        <carbon.identity.version.range>[5.11.0,5.13.0)</carbon.identity.version.range>
+        <carbon.identity.version>5.16.0</carbon.identity.version>
+        <carbon.identity.version.range>[5.16.0,5.18.0)</carbon.identity.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
-        <carbon.kernel.version>4.4.35</carbon.kernel.version>
+        <carbon.kernel.version>4.6.0</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>
         <org.apache.oltu.oauth2.client.version>1.0.0</org.apache.oltu.oauth2.client.version>
         <oltu.package.import.version.range>[1.0.0, 2.0.0)</oltu.package.import.version.range>
@@ -406,5 +421,8 @@
         <identity.extension.utils>1.0.8</identity.extension.utils>
         <identity.extension.utils.import.version.range>[1.0.8,2.0.0)
         </identity.extension.utils.import.version.range>
+        <maven.scr.plugin.version>1.26.0</maven.scr.plugin.version>
+        <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
+        <osgi.service.import.version.range>[1.2.0,2.0.0)</osgi.service.import.version.range>
     </properties>
 </project>
