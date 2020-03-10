@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
@@ -752,7 +752,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             AuthenticationFailedException {
         Optional<Object> tokenValidityTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
                 TOKEN_VALIDITY_TIME));
-        if (!tokenValidityTime.isPresent() || !NumberUtils.isNumber((String) tokenValidityTime.get())) {
+        if (!tokenValidityTime.isPresent() || !NumberUtils.isNumber(tokenValidityTime.get().toString())) {
             log.error("TokenExpiryTime property is not configured in application-authentication.xml or SMS OTP " +
                     "Authenticator UI");
             context.setSubject(authenticatedUser);
@@ -761,16 +761,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         Optional<Object> otpTokenSentTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
                 SENT_OTP_TOKEN_TIME));
-        if (!otpTokenSentTime.isPresent() || !NumberUtils.isNumber((String) otpTokenSentTime.get())) {
+        if (!otpTokenSentTime.isPresent() || !NumberUtils.isNumber(otpTokenSentTime.get().toString())) {
             if (log.isDebugEnabled()) {
                 log.debug("Could not find OTP sent time");
             }
             throw new AuthenticationFailedException("Internal Error Occurred");
         }
 
-        long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong((String) otpTokenSentTime.get());
+        long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(otpTokenSentTime.get().toString());
 
-        if (elapsedTokenTime <= (Long.parseLong((String) tokenValidityTime.get()) * 1000)) {
+        if (elapsedTokenTime <= (Long.parseLong(tokenValidityTime.get().toString()) * 1000)) {
             context.setSubject(authenticatedUser);
         } else {
             context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
