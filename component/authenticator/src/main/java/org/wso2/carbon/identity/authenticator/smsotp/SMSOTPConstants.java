@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 public class SMSOTPConstants {
 
+    public static final String USER_IS_LOCKED = "17003";
     private static final String SMSOTP_PREFIX = "SMSOTP-";
     public static final String AUTHENTICATOR_NAME = "SMSOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "SMS OTP";
@@ -40,6 +41,11 @@ public class SMSOTPConstants {
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
+    public static final String SMS_OTP_FAIL_ATTEMPTS_CLAIM = "http://wso2.org/claims/identity/failedSmsOtpAttempts";
+    public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM = "http://wso2.org/claims/identity/" +
+            "failedLoginLockoutCount";
+    public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
+    public static final String ACCOUNT_UNLOCK_TIME_CLAIM = "http://wso2.org/claims/identity/unlockTime";
 
     public static final String SMS_URL = "sms_url";
     public static final String HTTP_METHOD = "http_method";
@@ -60,6 +66,8 @@ public class SMSOTPConstants {
     public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
     public static final String TOKEN_LENGTH = "TokenLength";
     public static final String USE_INTERNAL_ERROR_CODES = "UseInternalErrorCodes";
+    public static final String SHOW_AUTH_FAILURE_REASON = "ShowAuthFailureReason";
+    public static final String ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS = "EnableAccountLockingForFailedAttempts";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -116,22 +124,30 @@ public class SMSOTPConstants {
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
 
+    public static final String PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO = "account.lock.handler.login.fail.timeout.ratio";
+    public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
+    public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX = "account.lock.handler.On.Failure.Max.Attempts";
+    public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
+
+
     /**
      * Enums for error messages.
      */
     public enum ErrorMessage {
 
         CLIENT_BAD_REQUEST("60001", "Bad request. Please check the request and re-submit"),
-        CLIENT_UNAUTHORIZED("60002", "Unauthorized request. Server is not authorized to access the SMS Provider"),
+        CLIENT_UNAUTHORIZED("60002", "Unauthorized request. Server is not authorized to access the SMS " +
+                "Provider"),
         CLIENT_PAYMENT_REQUIRED("60003", "Payment requirement for the request."),
         CLIENT_FORBIDDEN("60004", "Server is permitted to access the SMS Provider URL."),
         CLIENT_NOT_FOUND("60005", "Not Found. Please note that SMS Provider resource is not found."),
-        CLIENT_METHOD_NOT_ALLOWED("60006", "Method Not Allowed. HTTP method used by the Server to connect SMS " +
-                "provider is allowed"),
-        CLIENT_NOT_ACCEPTABLE("60007", "Not Acceptable. Please note that the requested media type cannot be " +
-                "generated."), //406
+        CLIENT_METHOD_NOT_ALLOWED("60006", "Method Not Allowed. HTTP method used by the Server to " +
+                "connect SMS provider is allowed"),
+        CLIENT_NOT_ACCEPTABLE("60007", "Not Acceptable. Please note that the requested media type " +
+                "cannot be generated."), //406
         SERVER_INTERNAL_ERROR("65001", "Internal Error in the SMS Provider Server."),
-        SERVER_NOT_IMPLEMENTED("65002", "Not Implemented. SMS Provider Server cannot recognize the request method."),
+        SERVER_NOT_IMPLEMENTED("65002", "Not Implemented. SMS Provider Server cannot recognize the " +
+                "request method."),
         SERVER_BAD_GATEWAY("65003", "Bad Gateway or SMS Provider server overloaded."),
         SERVER_UNAVAILABLE("65004", "SMS Service unavailable or gateway time-out."),
         SERVER_TIMEOUT("65005", "Secondary gateway or SMS provider server time-out."),
