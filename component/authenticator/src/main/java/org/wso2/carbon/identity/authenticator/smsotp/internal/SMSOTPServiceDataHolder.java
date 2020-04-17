@@ -18,6 +18,8 @@ package org.wso2.carbon.identity.authenticator.smsotp.internal;
 
 import org.osgi.framework.BundleContext;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.governance.IdentityGovernanceService;
+import org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService;
 import org.wso2.carbon.user.core.service.RealmService;
 
 public class SMSOTPServiceDataHolder {
@@ -27,6 +29,8 @@ public class SMSOTPServiceDataHolder {
     private BundleContext bundleContext;
     private IdentityEventService identityEventService;
     private RealmService realmService;
+    private AccountLockService accountLockService;
+    private IdentityGovernanceService identityGovernanceService;
 
     private SMSOTPServiceDataHolder(){
 
@@ -59,5 +63,24 @@ public class SMSOTPServiceDataHolder {
 
     public void setRealmService(RealmService realmService) {
         this.realmService = realmService;
+    }
+
+    public IdentityGovernanceService getIdentityGovernanceService() {
+        if(identityGovernanceService == null) {
+            throw new RuntimeException("IdentityGovernanceService not available. Component is not started properly.");
+        }
+        return identityGovernanceService;
+    }
+
+    public void setIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
+        this.identityGovernanceService = identityGovernanceService;
+    }
+
+    public AccountLockService getAccountLockService() {
+        return accountLockService;
+    }
+
+    public void setAccountLockService(AccountLockService accountLockService) {
+        this.accountLockService = accountLockService;
     }
 }

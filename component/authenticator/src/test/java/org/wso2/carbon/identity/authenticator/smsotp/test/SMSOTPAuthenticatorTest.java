@@ -51,7 +51,6 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -473,12 +472,25 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testProcessAuthenticationResponse() throws Exception {
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain())).thenReturn(new Property[]{property});
+        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -492,6 +504,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
 
@@ -503,6 +516,12 @@ public class SMSOTPAuthenticatorTest {
                 .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
+
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain())).thenReturn(new Property[]{property});
+
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -510,13 +529,26 @@ public class SMSOTPAuthenticatorTest {
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testProcessAuthenticationResponseWithCodeMismatch() throws Exception {
         mockStatic(SMSOTPUtils.class);
+        mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
+
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain())).thenReturn(new Property[]{property});
+
+        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
