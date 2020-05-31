@@ -1392,6 +1392,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 userStoreManager.setUserClaimValues(usernameWithDomain, updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
             }
         } catch (UserStoreException e) {
+            log.error("Error while resetting failed SMS OTP attempts", e);
             throw new AuthenticationFailedException("Failed to reset failed attempts count for user : " +
                     authenticatedUser, e);
         }
@@ -1447,7 +1448,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     UserCoreConstants.DEFAULT_PROFILE);
 
         } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Failed to update user claims for user : " +
+            log.error("Error while reading user claims", e);
+            throw new AuthenticationFailedException("Failed to read user claims for user : " +
                     authenticatedUser, e);
         }
 
@@ -1479,6 +1481,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
                 throw new AuthenticationFailedException("User account is locked " + authenticatedUser.getUserName());
             } catch (UserStoreException e) {
+                log.error("Error while updating user claims", e);
                 throw new AuthenticationFailedException("Failed to update user claims for user : " +
                         authenticatedUser, e);
             }
@@ -1488,6 +1491,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
                         authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
             } catch (UserStoreException e) {
+                log.error("Error while updating user claims", e);
                 throw new AuthenticationFailedException("Failed to update user claims for user : " +
                         authenticatedUser, e);
             }
