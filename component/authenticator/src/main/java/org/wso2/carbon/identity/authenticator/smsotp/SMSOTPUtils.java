@@ -26,6 +26,7 @@ import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.identity.application.authentication.framework.config.builder.FileBasedConfigurationBuilder;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.AuthenticatorConfig;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
@@ -514,5 +515,24 @@ public class SMSOTPUtils {
         }
 
         return connectorConfigs;
+    }
+
+    /**
+     * Check whether the user being authenticated via a local authenticator or not
+     *
+     * @param context
+     * @return
+     */
+    public static boolean isLocalUser(AuthenticationContext context){
+        Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
+        for (StepConfig stepConfig : stepConfigMap.values()) {
+            if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep()) {
+                if (stepConfig.getAuthenticatedIdP().equals(SMSOTPConstants.LOCAL_AUTHENTICATOR)) {
+                    return true;
+                }
+                break;
+            }
+        }
+        return false;
     }
 }

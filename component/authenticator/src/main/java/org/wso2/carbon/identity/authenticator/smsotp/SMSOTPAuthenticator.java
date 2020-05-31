@@ -736,8 +736,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
 
         AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        boolean isLocalUser = SMSOTPUtils.isLocalUser(context);
 
-        if (authenticatedUser != null && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
+        if (authenticatedUser != null && isLocalUser && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
             if (log.isDebugEnabled()) {
                 log.debug("Authentication failed due to account lock: " + authenticatedUser);
             }
@@ -760,24 +761,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             if (userToken.equals(contextToken)) {
                 processValidUserToken(context, authenticatedUser);
-            } else if (SMSOTPUtils.getBackupCode(context).equals("true")) {
-                checkWithBackUpCodes(context, userToken, authenticatedUser);
+            } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
+                    checkWithBackUpCodes(context, userToken, authenticatedUser);
             } else {
                 handleCodeMismatch(context);
             }
         } catch (AuthenticationFailedException e){
-            // Check whether account locking enabled for SMS OTP to keep backward compatibility
-            if (SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context)) {
-                handleSmsOtpVerificationFail(authenticatedUser);
-            }
+            handleSmsOtpVerificationFail(context);
             throw e;
         }
 
         // It reached here means the authentication was successful
-        // Check whether account locking enabled for SMS OTP to keep backward compatibility
-        if (SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context)) {
-            resetSmsOtpFailedAttempts(authenticatedUser);
-        }
+        resetSmsOtpFailedAttempts(context);
+
     }
 
     private void handleCodeMismatch(AuthenticationContext context) throws AuthenticationFailedException {
@@ -1354,12 +1350,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Reset SMS OTP Failed Attempts count upon successful completion of the SMS OTP verification
      *
-     * @param authenticatedUser
+     * @param context
      * @throws AuthenticationFailedException
      */
-    private void resetSmsOtpFailedAttempts(AuthenticatedUser authenticatedUser)
+    private void resetSmsOtpFailedAttempts(AuthenticationContext context)
             throws AuthenticationFailedException {
+        
+        // Check whether account locking enabled for Email OTP to keep backward compatibility
+        // Account locking is not done for federated flows
+        if (!SMSOTPUtils.isLocalUser(context) || !SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context)) {
+            return;
+        }
 
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
 
         // return if account lock handler is not enabled
@@ -1401,13 +1404,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Execute account lock flow for OTP verification failures
      *
-     * @param authenticatedUser
+     * @param context
      * @throws AuthenticationFailedException
      */
-    private void handleSmsOtpVerificationFail(AuthenticatedUser authenticatedUser) throws
+    private void handleSmsOtpVerificationFail(AuthenticationContext context) throws
             AuthenticationFailedException {
 
-        if (SMSOTPUtils.isAccountLocked(authenticatedUser)) {
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+
+        // Account locking is not done for federated flows
+        // Check whether account locking enabled for Email OTP to keep backward compatibility
+        // No need to continue if the account is already locked
+        if (!SMSOTPUtils.isLocalUser(context) || !SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context) || 
+                SMSOTPUtils.isAccountLocked(authenticatedUser)) {
             return;
         }
 
@@ -1477,6 +1486,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
                     String.valueOf(failedLoginLockoutCountValue + 1));
             try {
+                IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
                 userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
                         authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
                 throw new AuthenticationFailedException("User account is locked " + authenticatedUser.getUserName());

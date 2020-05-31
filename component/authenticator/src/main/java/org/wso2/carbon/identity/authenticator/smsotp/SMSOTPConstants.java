@@ -121,6 +121,7 @@ public class SMSOTPConstants {
     public static final String ATTRIBUTE_SMS_SENT_TO = "send-to" ;
     public static final String TEMPLATE_TYPE = "TEMPLATE_TYPE";
     public static final String EVENT_NAME = "SMSOTP";
+    public static final String LOCAL_AUTHENTICATOR = "LOCAL";
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
 
@@ -128,6 +129,7 @@ public class SMSOTPConstants {
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX = "account.lock.handler.On.Failure.Max.Attempts";
     public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
+    public static final String ADMIN_INITIATED = "AdminInitiated";
 
     /**
      * Enums for error messages.
