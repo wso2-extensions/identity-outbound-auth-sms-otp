@@ -1421,49 +1421,41 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 SMSOTPUtils.isAccountLocked(authenticatedUser)) {
             return;
         }
-
-        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
-
         int maxAttempts = 0;
         long unlockTimePropertyValue = 0;
         double unlockTimeRatio = 1;
+
+        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
         for (Property connectorConfig : connectorConfigs) {
-            if ((SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE.equals(connectorConfig.getName())) &&
-                    !Boolean.parseBoolean(connectorConfig.getValue())) {
-                return;
-            } else if (SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX.equals(connectorConfig.getName())
-                    && NumberUtils.isNumber(connectorConfig.getValue())) {
-                maxAttempts = Integer.parseInt(connectorConfig.getValue());
-            } else if (SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_TIME.equals(connectorConfig.getName())
-                    && NumberUtils.isNumber(connectorConfig.getValue())) {
-                unlockTimePropertyValue = Integer.parseInt(connectorConfig.getValue());
-            } else if (SMSOTPConstants.PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO.equals(connectorConfig.getName())
-                    && NumberUtils.isNumber(connectorConfig.getValue())) {
-                double value = Double.parseDouble(connectorConfig.getValue());
-                if (value > 0) {
-                    unlockTimeRatio = value;
-                }
+            switch (connectorConfig.getName()) {
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE:
+                    if (!Boolean.parseBoolean(connectorConfig.getValue())) {
+                        return;
+                    }
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        maxAttempts = Integer.parseInt(connectorConfig.getValue());
+                    }
+                    break;
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_TIME:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        unlockTimePropertyValue = Integer.parseInt(connectorConfig.getValue());
+                    }
+                    break;
+                case SMSOTPConstants.PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        double value = Double.parseDouble(connectorConfig.getValue());
+                        if (value > 0) {
+                            unlockTimeRatio = value;
+                        }
+                    }
+                    break;
             }
         }
-
-        UserStoreManager userStoreManager;
-        Map<String, String> claimValues;
-        try {
-            UserRealm userRealm = getUserRealm(authenticatedUser);
-            userStoreManager = userRealm.getUserStoreManager();
-
-            claimValues = userStoreManager.getUserClaimValues(IdentityUtil.addDomainToName(
-                    authenticatedUser.getUserName(), authenticatedUser.getUserStoreDomain()), new String[]{
-                            SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM,
-                            SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM},
-                    UserCoreConstants.DEFAULT_PROFILE);
-
-        } catch (UserStoreException e) {
-            log.error("Error while reading user claims", e);
-            String errorMessage = String.format("Failed to read user claims for user : %s.", authenticatedUser);
-            throw new AuthenticationFailedException(errorMessage, e);
+        Map<String, String> claimValues = getUserClaimValues(authenticatedUser);
+        if (claimValues == null) {
+            claimValues = new HashMap<>();
         }
-
         int currentAttempts = 0;
         if (NumberUtils.isNumber(claimValues.get(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM))) {
             currentAttempts = Integer.parseInt(claimValues.get(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM));
@@ -1486,27 +1478,48 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             updatedClaims.put(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, String.valueOf(unlockTime));
             updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
                     String.valueOf(failedLoginLockoutCountValue + 1));
-            try {
-                IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
-                userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
-                        authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
-                String errorMessage = String.format("User account: %s is locked.", authenticatedUser.getUserName());
-                throw new AuthenticationFailedException(errorMessage);
-            } catch (UserStoreException e) {
-                log.error("Error while updating user claims", e);
-                String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
-                throw new AuthenticationFailedException(errorMessage, e);
-            }
+            IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
+            setUserClaimValues(authenticatedUser, updatedClaims);
+            String errorMessage = String.format("User account: %s is locked.", authenticatedUser.getUserName());
+            throw new AuthenticationFailedException(errorMessage);
         } else {
             updatedClaims.put(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM, String.valueOf(currentAttempts + 1));
-            try {
-                userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
-                        authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
-            } catch (UserStoreException e) {
-                log.error("Error while updating user claims", e);
-                String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
-                throw new AuthenticationFailedException(errorMessage, e);
-            }
+            setUserClaimValues(authenticatedUser, updatedClaims);
+        }
+    }
+
+    private Map<String, String> getUserClaimValues(AuthenticatedUser authenticatedUser)
+            throws AuthenticationFailedException {
+
+        Map<String, String> claimValues;
+        try {
+            UserRealm userRealm = getUserRealm(authenticatedUser);
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            claimValues = userStoreManager.getUserClaimValues(IdentityUtil.addDomainToName(
+                    authenticatedUser.getUserName(), authenticatedUser.getUserStoreDomain()), new String[]{
+                            SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM,
+                            SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM},
+                    UserCoreConstants.DEFAULT_PROFILE);
+        } catch (UserStoreException e) {
+            log.error("Error while reading user claims", e);
+            String errorMessage = String.format("Failed to read user claims for user : %s.", authenticatedUser);
+            throw new AuthenticationFailedException(errorMessage, e);
+        }
+        return claimValues;
+    }
+
+    private void setUserClaimValues(AuthenticatedUser authenticatedUser, Map<String, String> updatedClaims)
+            throws AuthenticationFailedException {
+
+        try {
+            UserRealm userRealm = getUserRealm(authenticatedUser);
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
+                    authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
+        } catch (UserStoreException e) {
+            log.error("Error while updating user claims", e);
+            String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
+            throw new AuthenticationFailedException(errorMessage, e);
         }
     }
 }
