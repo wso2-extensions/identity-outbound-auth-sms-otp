@@ -66,21 +66,25 @@ public class SMSOTPServiceDataHolder {
     }
 
     public IdentityGovernanceService getIdentityGovernanceService() {
-        if(identityGovernanceService == null) {
+
+        if (identityGovernanceService == null) {
             throw new RuntimeException("IdentityGovernanceService not available. Component is not started properly.");
         }
         return identityGovernanceService;
     }
 
     public void setIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
+
         this.identityGovernanceService = identityGovernanceService;
     }
 
     public AccountLockService getAccountLockService() {
+
         return accountLockService;
     }
 
     public void setAccountLockService(AccountLockService accountLockService) {
+
         this.accountLockService = accountLockService;
     }
 }

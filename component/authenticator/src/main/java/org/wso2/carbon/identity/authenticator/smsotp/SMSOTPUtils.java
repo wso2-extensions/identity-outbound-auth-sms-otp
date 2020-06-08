@@ -450,8 +450,8 @@ public class SMSOTPUtils {
     /**
      * Check whether ShowAuthFailureReason is enabled or not.
      *
-     * @param context the AuthenticationContext
-     * @return true or false
+     * @param context Authentication context.
+     * @return True if showing authentication failure reason is enabled.
      */
     public static boolean isShowAuthFailureReason(AuthenticationContext context) {
 
@@ -459,23 +459,23 @@ public class SMSOTPUtils {
     }
 
     /**
-     * Check whether account locking is enabled for SMS OTP
+     * Check whether account locking is enabled for SMS OTP.
      *
-     * @param context
-     * @return
+     * @param context Authentication context.
+     * @return Whether account locking is enabled for SMS OTP.
      */
     public static boolean isAccountLockingEnabledForSmsOtp(AuthenticationContext context) {
 
-        return Boolean.parseBoolean(getConfiguration(context,
-                SMSOTPConstants.ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS));
+        return Boolean
+                .parseBoolean(getConfiguration(context, SMSOTPConstants.ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS));
     }
 
     /**
-     * Check whether a given user is locked
+     * Check whether the given user account is locked.
      *
-     * @param authenticatedUser
-     * @return true or false
-     * @throws AuthenticationFailedException
+     * @param authenticatedUser Authenticated user.
+     * @return True if user account is locked.
+     * @throws AuthenticationFailedException Exception on authentication failure.
      */
     public static boolean isAccountLocked(AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
 
@@ -484,17 +484,18 @@ public class SMSOTPUtils {
                     .isAccountLocked(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
                             authenticatedUser.getUserStoreDomain());
         } catch (Exception e) {
-            throw new AuthenticationFailedException("Error while validating account lock status of user: " +
-                    authenticatedUser.getUserName(), e);
+            String errorMessage = String.format("Error while validating account lock status of user: %s.",
+                    authenticatedUser.getUserName());
+            throw new AuthenticationFailedException(errorMessage, e);
         }
     }
 
     /**
-     * Get Account Lock Connector Configs
+     * Get Account Lock Connector Configs.
      *
-     * @param tenantDomain
-     * @return AccountLockConnectorConfigs
-     * @throws AuthenticationFailedException
+     * @param tenantDomain Tenant domain.
+     * @return Account Lock Connector configs.
+     * @throws AuthenticationFailedException Exception on authentication failure.
      */
     public static Property[] getAccountLockConnectorConfigs(String tenantDomain) throws AuthenticationFailedException {
 
@@ -518,19 +519,22 @@ public class SMSOTPUtils {
     }
 
     /**
-     * Check whether the user being authenticated via a local authenticator or not
+     * Check whether the user being authenticated via a local authenticator or not.
      *
-     * @param context
-     * @return
+     * @param context Authentication context.
+     * @return Whether the user being authenticated via a local authenticator.
      */
-    public static boolean isLocalUser(AuthenticationContext context){
+    public static boolean isLocalUser(AuthenticationContext context) {
+
         Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
-        for (StepConfig stepConfig : stepConfigMap.values()) {
-            if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep()) {
-                if (stepConfig.getAuthenticatedIdP().equals(SMSOTPConstants.LOCAL_AUTHENTICATOR)) {
-                    return true;
+        if(stepConfigMap != null) {
+            for (StepConfig stepConfig : stepConfigMap.values()) {
+                if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep()) {
+                    if (stepConfig.getAuthenticatedIdP().equals(SMSOTPConstants.LOCAL_AUTHENTICATOR)) {
+                        return true;
+                    }
+                    break;
                 }
-                break;
             }
         }
         return false;

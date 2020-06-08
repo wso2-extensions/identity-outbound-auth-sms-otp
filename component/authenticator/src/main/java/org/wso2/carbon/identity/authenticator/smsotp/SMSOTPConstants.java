@@ -41,8 +41,8 @@ public class SMSOTPConstants {
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
     public static final String SMS_OTP_FAILED_ATTEMPTS_CLAIM = "http://wso2.org/claims/identity/failedSmsOtpAttempts";
-    public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM = "http://wso2.org/claims/identity/" +
-            "failedLoginLockoutCount";
+    public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM =
+            "http://wso2.org/claims/identity/failedLoginLockoutCount";
     public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
     public static final String ACCOUNT_UNLOCK_TIME_CLAIM = "http://wso2.org/claims/identity/unlockTime";
 

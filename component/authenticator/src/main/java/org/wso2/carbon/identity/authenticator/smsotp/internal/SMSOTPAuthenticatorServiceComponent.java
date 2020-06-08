@@ -106,10 +106,12 @@ public class SMSOTPAuthenticatorServiceComponent {
             unbind = "unsetIdentityGovernanceService"
     )
     protected void setIdentityGovernanceService(IdentityGovernanceService idpManager) {
+
         SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(idpManager);
     }
 
     protected void unsetIdentityGovernanceService(IdentityGovernanceService idpManager) {
+
         SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(null);
     }
 
@@ -121,10 +123,12 @@ public class SMSOTPAuthenticatorServiceComponent {
             unbind = "unsetAccountLockService"
     )
     protected void setAccountLockService(AccountLockService accountLockService) {
+
         SMSOTPServiceDataHolder.getInstance().setAccountLockService(accountLockService);
     }
 
     protected void unsetAccountLockService(AccountLockService accountLockService) {
+
         SMSOTPServiceDataHolder.getInstance().setAccountLockService(null);
     }
 }

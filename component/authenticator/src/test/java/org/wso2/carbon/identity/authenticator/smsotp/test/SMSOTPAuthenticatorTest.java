@@ -582,6 +582,7 @@ public class SMSOTPAuthenticatorTest {
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testCheckWithInvalidBackUpCodes() throws Exception {
         mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
