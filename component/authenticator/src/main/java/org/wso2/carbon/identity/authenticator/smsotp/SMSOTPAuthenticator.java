@@ -45,11 +45,13 @@ import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
@@ -93,7 +95,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     public boolean canHandle(HttpServletRequest request) {
 
         if (log.isDebugEnabled()) {
-            log.debug("Inside SMSOTPAuthenticator canHandle method and check the existence of mobile number and otp code");
+            log.debug("Inside SMSOTPAuthenticator canHandle method and check the existence of mobile number and " +
+                    "otp code");
         }
         return ((StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.RESEND))
                 && StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE)))
@@ -634,7 +637,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             url = url + SMSOTPConstants.SCREEN_VALUE + getScreenValue(context);
         }
         try {
-            if (isRetryEnabled) {
+            if (Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.ACCOUNT_LOCKED))) &&
+                    SMSOTPUtils.isShowAuthFailureReason(context)) {
+                response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
+                        + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants
+                        .ACCOUNT_LOCKED_ERROR);
+            } else if (isRetryEnabled) {
                 if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
                             + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE +
@@ -726,9 +734,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
+        AuthenticatedUser authenticatedUser =
+                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        boolean isLocalUser = SMSOTPUtils.isLocalUser(context);
+
+        if (authenticatedUser != null && isLocalUser && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Authentication failed since authenticated user: %s,  account is locked.",
+                        authenticatedUser));
+            }
+            context.setProperty(SMSOTPConstants.ACCOUNT_LOCKED, true);
+            throw new AuthenticationFailedException("User account is locked.");
+        }
+
         String userToken = request.getParameter(SMSOTPConstants.CODE);
         String contextToken = (String) context.getProperty(SMSOTPConstants.OTP_TOKEN);
-        AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE))) {
             throw new InvalidCredentialsException("Code cannot not be null");
         }
@@ -738,14 +758,26 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
+
         if (userToken.equals(contextToken)) {
             processValidUserToken(context, authenticatedUser);
-        } else if (SMSOTPUtils.getBackupCode(context).equals("true")) {
+        } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
             checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
-            context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
-            throw new AuthenticationFailedException("Code mismatch");
+            handleSmsOtpVerificationFail(context);
+            handleCodeMismatch(context);
         }
+        // It reached here means the authentication was successful.
+        resetSmsOtpFailedAttempts(context);
+    }
+
+    private void handleCodeMismatch(AuthenticationContext context) throws AuthenticationFailedException {
+
+        if (log.isDebugEnabled()) {
+            log.debug("User entered OTP is incorrect and backup codes are not enabled.");
+        }
+        context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
+        throw new AuthenticationFailedException("Code mismatch");
     }
 
     private void processValidUserToken(AuthenticationContext context, AuthenticatedUser authenticatedUser) throws
@@ -826,6 +858,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             "backup codes");
                 }
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
+                handleSmsOtpVerificationFail(context);
                 throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " " +
                         "mismatch.", authenticatedUser);
             }
@@ -867,6 +900,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Cannot find the user realm. ", e);
+        }
+        return userRealm;
+    }
+
+    /**
+     * Get the user realm of the logged in user.
+     *
+     * @param authenticatedUser Authenticated user.
+     * @return The userRealm.
+     * @throws AuthenticationFailedException Exception on authentication failure.
+     */
+    private UserRealm getUserRealm(AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
+
+        UserRealm userRealm = null;
+        try {
+            if (authenticatedUser != null) {
+                String tenantDomain = authenticatedUser.getTenantDomain();
+                int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
+                RealmService realmService = IdentityTenantUtil.getRealmService();
+                userRealm = realmService.getTenantUserRealm(tenantId);
+            }
+        } catch (UserStoreException e) {
+            throw new AuthenticationFailedException("Cannot find the user realm.", e);
         }
         return userRealm;
     }
@@ -1286,5 +1342,184 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             errorCode = errorCode.split(":")[0];
         }
         return StringUtils.trim(errorCode);
+    }
+
+    /**
+     * Reset SMS OTP Failed Attempts count upon successful completion of the SMS OTP verification.
+     *
+     * @param context Authentication context.
+     * @throws AuthenticationFailedException Exception on authentication failure.
+     */
+    private void resetSmsOtpFailedAttempts(AuthenticationContext context) throws AuthenticationFailedException {
+        
+        /*
+        Check whether account locking enabled for SMS OTP to keep backward compatibility.
+        Account locking is not done for federated flows.
+         */
+        if (!SMSOTPUtils.isLocalUser(context) || !SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context)) {
+            return;
+        }
+        AuthenticatedUser authenticatedUser =
+                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
+
+        // Return if account lock handler is not enabled.
+        for (Property connectorConfig : connectorConfigs) {
+            if ((SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE.equals(connectorConfig.getName())) &&
+                    !Boolean.parseBoolean(connectorConfig.getValue())) {
+                return;
+            }
+        }
+
+        String usernameWithDomain = IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
+                authenticatedUser.getUserStoreDomain());
+        try {
+            UserRealm userRealm = getUserRealm(authenticatedUser);
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+
+            // Avoid updating the claims if they are already zero.
+            String[] claimsToCheck = {SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM,
+                    SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM};
+            Map<String, String> userClaims = userStoreManager.getUserClaimValues(usernameWithDomain, claimsToCheck,
+                    UserCoreConstants.DEFAULT_PROFILE);
+            String failedSmsOtpAttempts = userClaims.get(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM);
+            String failedLoginLockoutCount = userClaims.get(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM);
+
+            if (NumberUtils.isNumber(failedSmsOtpAttempts) && Integer.parseInt(failedSmsOtpAttempts) > 0 ||
+                    NumberUtils.isNumber(failedLoginLockoutCount) && Integer.parseInt(failedLoginLockoutCount) > 0) {
+                Map<String, String> updatedClaims = new HashMap<>();
+                updatedClaims.put(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM, "0");
+                updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM, "0");
+                userStoreManager
+                        .setUserClaimValues(usernameWithDomain, updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
+            }
+        } catch (UserStoreException e) {
+            log.error("Error while resetting failed SMS OTP attempts", e);
+            String errorMessage =
+                    String.format("Failed to reset failed attempts count for user : %s.", authenticatedUser);
+            throw new AuthenticationFailedException(errorMessage, e);
+        }
+    }
+
+    /**
+     * Execute account lock flow for OTP verification failures.
+     *
+     * @param context Authentication context.
+     * @throws AuthenticationFailedException Exception on authentication failure.
+     */
+    private void handleSmsOtpVerificationFail(AuthenticationContext context) throws AuthenticationFailedException {
+
+        AuthenticatedUser authenticatedUser =
+                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+
+        /*
+        Account locking is not done for federated flows.
+        Check whether account locking enabled for SMS OTP to keep backward compatibility.
+        No need to continue if the account is already locked.
+         */
+        if (!SMSOTPUtils.isLocalUser(context) || !SMSOTPUtils.isAccountLockingEnabledForSmsOtp(context) ||
+                SMSOTPUtils.isAccountLocked(authenticatedUser)) {
+            return;
+        }
+        int maxAttempts = 0;
+        long unlockTimePropertyValue = 0;
+        double unlockTimeRatio = 1;
+
+        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
+        for (Property connectorConfig : connectorConfigs) {
+            switch (connectorConfig.getName()) {
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE:
+                    if (!Boolean.parseBoolean(connectorConfig.getValue())) {
+                        return;
+                    }
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        maxAttempts = Integer.parseInt(connectorConfig.getValue());
+                    }
+                    break;
+                case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_TIME:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        unlockTimePropertyValue = Integer.parseInt(connectorConfig.getValue());
+                    }
+                    break;
+                case SMSOTPConstants.PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO:
+                    if (NumberUtils.isNumber(connectorConfig.getValue())) {
+                        double value = Double.parseDouble(connectorConfig.getValue());
+                        if (value > 0) {
+                            unlockTimeRatio = value;
+                        }
+                    }
+                    break;
+            }
+        }
+        Map<String, String> claimValues = getUserClaimValues(authenticatedUser);
+        if (claimValues == null) {
+            claimValues = new HashMap<>();
+        }
+        int currentAttempts = 0;
+        if (NumberUtils.isNumber(claimValues.get(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM))) {
+            currentAttempts = Integer.parseInt(claimValues.get(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM));
+        }
+        int failedLoginLockoutCountValue = 0;
+        if (NumberUtils.isNumber(claimValues.get(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM))) {
+            failedLoginLockoutCountValue =
+                    Integer.parseInt(claimValues.get(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM));
+        }
+
+        Map<String, String> updatedClaims = new HashMap<>();
+        if ((currentAttempts + 1) >= maxAttempts) {
+            // Calculate the incremental unlock-time-interval in milli seconds.
+            unlockTimePropertyValue = (long) (unlockTimePropertyValue * 1000 * 60 * Math.pow(unlockTimeRatio,
+                    failedLoginLockoutCountValue));
+            // Calculate unlock-time by adding current-time and unlock-time-interval in milli seconds.
+            long unlockTime = System.currentTimeMillis() + unlockTimePropertyValue;
+            updatedClaims.put(SMSOTPConstants.ACCOUNT_LOCKED_CLAIM, Boolean.TRUE.toString());
+            updatedClaims.put(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM, "0");
+            updatedClaims.put(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, String.valueOf(unlockTime));
+            updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
+                    String.valueOf(failedLoginLockoutCountValue + 1));
+            IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
+            setUserClaimValues(authenticatedUser, updatedClaims);
+            String errorMessage = String.format("User account: %s is locked.", authenticatedUser.getUserName());
+            throw new AuthenticationFailedException(errorMessage);
+        } else {
+            updatedClaims.put(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM, String.valueOf(currentAttempts + 1));
+            setUserClaimValues(authenticatedUser, updatedClaims);
+        }
+    }
+
+    private Map<String, String> getUserClaimValues(AuthenticatedUser authenticatedUser)
+            throws AuthenticationFailedException {
+
+        Map<String, String> claimValues;
+        try {
+            UserRealm userRealm = getUserRealm(authenticatedUser);
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            claimValues = userStoreManager.getUserClaimValues(IdentityUtil.addDomainToName(
+                    authenticatedUser.getUserName(), authenticatedUser.getUserStoreDomain()), new String[]{
+                            SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM,
+                            SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM},
+                    UserCoreConstants.DEFAULT_PROFILE);
+        } catch (UserStoreException e) {
+            log.error("Error while reading user claims", e);
+            String errorMessage = String.format("Failed to read user claims for user : %s.", authenticatedUser);
+            throw new AuthenticationFailedException(errorMessage, e);
+        }
+        return claimValues;
+    }
+
+    private void setUserClaimValues(AuthenticatedUser authenticatedUser, Map<String, String> updatedClaims)
+            throws AuthenticationFailedException {
+
+        try {
+            UserRealm userRealm = getUserRealm(authenticatedUser);
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
+                    authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
+        } catch (UserStoreException e) {
+            log.error("Error while updating user claims", e);
+            String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
+            throw new AuthenticationFailedException(errorMessage, e);
+        }
     }
 }
