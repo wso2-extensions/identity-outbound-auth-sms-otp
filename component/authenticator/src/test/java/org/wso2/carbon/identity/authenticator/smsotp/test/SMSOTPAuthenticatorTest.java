@@ -457,15 +457,21 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithoutOTPCode() throws Exception {
+
+        mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("");
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithResend() throws Exception {
+
+        mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -520,8 +526,9 @@ public class SMSOTPAuthenticatorTest {
         Property property = new Property();
         property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
-        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain())).thenReturn(new Property[]{property});
-
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+                .thenReturn(new Property[]{property});
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -577,6 +584,7 @@ public class SMSOTPAuthenticatorTest {
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testCheckWithInvalidBackUpCodes() throws Exception {
         mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
