@@ -759,13 +759,17 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
 
-        if (userToken.equals(contextToken)) {
-            processValidUserToken(context, authenticatedUser);
-        } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
-            checkWithBackUpCodes(context, userToken, authenticatedUser);
-        } else {
+        try {
+            if (userToken.equals(contextToken)) {
+                processValidUserToken(context, authenticatedUser);
+            } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
+                checkWithBackUpCodes(context, userToken, authenticatedUser);
+            } else {
+                handleCodeMismatch(context);
+            }
+        } catch (AuthenticationFailedException e) {
             handleSmsOtpVerificationFail(context);
-            handleCodeMismatch(context);
+            throw e;
         }
         // It reached here means the authentication was successful.
         resetSmsOtpFailedAttempts(context);
@@ -858,7 +862,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             "backup codes");
                 }
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
-                handleSmsOtpVerificationFail(context);
                 throw new AuthenticationFailedException("Verification Error due to Code " + userToken + " " +
                         "mismatch.", authenticatedUser);
             }
