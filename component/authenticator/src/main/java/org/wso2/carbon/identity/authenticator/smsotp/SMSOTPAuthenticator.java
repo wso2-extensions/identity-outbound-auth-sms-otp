@@ -765,11 +765,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
             succeededAttempt = checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Given otp code is a mismatch.");
+            }
             context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
         }
         if (!succeededAttempt) {
             handleSmsOtpVerificationFail(context);
-            throw new AuthenticationFailedException("Code mismatch.");
+            throw new AuthenticationFailedException("Invalid code. Verification failed.");
         }
         // It reached here means the authentication was successful.
         resetSmsOtpFailedAttempts(context);
@@ -801,6 +804,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             context.setSubject(authenticatedUser);
         } else {
             context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
+            handleSmsOtpVerificationFail(context);
             throw new AuthenticationFailedException("OTP code has expired");
         }
     }
@@ -813,12 +817,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @param userToken         The userToken.
      * @param authenticatedUser The authenticatedUser.
      * @return True if the user entered code matches with a backup code.
-     * @throws AuthenticationFailedException Authentication failure exception when retrieving user claim for OTP list.
+     * @throws AuthenticationFailedException If an error occurred while retrieving user claim for OTP list.
      */
     private boolean checkWithBackUpCodes(AuthenticationContext context, String userToken,
                                          AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
 
-        boolean isMatchedWithBackupCode = false;
+        boolean isMatchingToken = false;
         String[] savedOTPs = null;
         String username = context.getProperty(SMSOTPConstants.USER_NAME).toString();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
@@ -845,7 +849,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("Found saved backup SMS OTP for user :" + authenticatedUser);
                 }
-                isMatchedWithBackupCode = true;
+                isMatchingToken = true;
                 context.setSubject(authenticatedUser);
                 savedOTPs = (String[]) ArrayUtils.removeElement(savedOTPs, userToken);
                 userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
@@ -861,7 +865,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new AuthenticationFailedException("Cannot find the user claim for OTP list for user : " +
                     authenticatedUser, e);
         }
-        return isMatchedWithBackupCode;
+        return isMatchingToken;
     }
 
     private boolean isBackUpCodeValid(String[] savedOTPs, String userToken) {
