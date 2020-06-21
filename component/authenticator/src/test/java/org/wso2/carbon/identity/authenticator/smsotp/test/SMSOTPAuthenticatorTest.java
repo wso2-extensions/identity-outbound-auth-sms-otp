@@ -57,6 +57,8 @@ import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.user.api.Claim;
+import org.wso2.carbon.user.api.ClaimManager;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserRealm;
 import org.wso2.carbon.user.core.UserStoreManager;
@@ -106,6 +108,9 @@ public class SMSOTPAuthenticatorTest {
 
     @Mock
     private RealmService realmService;
+
+    @Mock private ClaimManager claimManager;
+    @Mock private Claim claim;
 
     @BeforeMethod
     public void setUp() throws Exception {
@@ -482,11 +487,13 @@ public class SMSOTPAuthenticatorTest {
 
         mockStatic(SMSOTPUtils.class);
         mockStatic(IdentityTenantUtil.class);
+        context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserName("admin");
         authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
 
@@ -513,6 +520,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserName("admin");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
 
@@ -531,6 +539,9 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
                 .thenReturn(new Property[]{property});
         when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
+        when(userStoreManager.getClaimManager()).thenReturn(claimManager);
+        when(userStoreManager.getClaimManager().getClaim(SMSOTPConstants.SAVED_OTP_LIST)).thenReturn(claim);
+        when(context.getProperty(SMSOTPConstants.CODE_MISMATCH)).thenReturn(false);
 
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
@@ -585,7 +596,6 @@ public class SMSOTPAuthenticatorTest {
                 context,"1234",user);
     }
 
-    @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testCheckWithInvalidBackUpCodes() throws Exception {
 
         mockStatic(IdentityTenantUtil.class);
