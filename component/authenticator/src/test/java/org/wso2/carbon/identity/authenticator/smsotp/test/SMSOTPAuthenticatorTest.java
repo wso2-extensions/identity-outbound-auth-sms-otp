@@ -581,7 +581,6 @@ public class SMSOTPAuthenticatorTest {
                 context,"1234",user);
     }
 
-    @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testCheckWithInvalidBackUpCodes() throws Exception {
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
