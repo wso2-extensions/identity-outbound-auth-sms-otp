@@ -455,27 +455,46 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithoutOTPCode() throws Exception {
+
+        mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("");
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithResend() throws Exception {
+
+        mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
 
     @Test
     public void testProcessAuthenticationResponse() throws Exception {
+
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+                .thenReturn(new Property[]{property});
+        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -498,20 +517,41 @@ public class SMSOTPAuthenticatorTest {
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager
                 .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+                .thenReturn(new Property[]{property});
+        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
+
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testProcessAuthenticationResponseWithCodeMismatch() throws Exception {
+
         mockStatic(SMSOTPUtils.class);
+        mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
+
+        Property property = new Property();
+        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
+        property.setValue("true");
+        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+                .thenReturn(new Property[]{property});
+
+        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -535,9 +575,10 @@ public class SMSOTPAuthenticatorTest {
                 context,"1234",user);
     }
 
-    @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testCheckWithInvalidBackUpCodes() throws Exception {
+
         mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
