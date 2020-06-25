@@ -24,12 +24,20 @@ import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
 import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
+import org.wso2.carbon.identity.governance.IdentityGovernanceService;
+import org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService;
 import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.Hashtable;
 
 /**
  * @scr.component name="identity.application.authenticator.SMSOTP.component" immediate="true"
+ * @scr.reference name="IdentityGovernanceService"
+ * interface="org.wso2.carbon.identity.governance.IdentityGovernanceService" cardinality="1..1"
+ * policy="dynamic" bind="setIdentityGovernanceService" unbind="unsetIdentityGovernanceService"
+ * @scr.reference name="AccountLockService"
+ * interface="org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService"
+ * cardinality="1..1" policy="dynamic" bind="setAccountLockService" unbind="unsetAccountLockService
  */
 public class SMSOTPAuthenticatorServiceComponent {
 
@@ -72,4 +80,23 @@ public class SMSOTPAuthenticatorServiceComponent {
         SMSOTPAuthenticatorServiceComponent.realmService = null;
     }
 
+    protected void setIdentityGovernanceService(IdentityGovernanceService idpManager) {
+
+        SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(idpManager);
+    }
+
+    protected void unsetIdentityGovernanceService(IdentityGovernanceService idpManager) {
+
+        SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(null);
+    }
+
+    protected void setAccountLockService(AccountLockService accountLockService) {
+
+        SMSOTPServiceDataHolder.getInstance().setAccountLockService(accountLockService);
+    }
+
+    protected void unsetAccountLockService(AccountLockService accountLockService) {
+
+        SMSOTPServiceDataHolder.getInstance().setAccountLockService(null);
+    }
 }
