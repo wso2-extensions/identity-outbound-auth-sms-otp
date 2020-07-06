@@ -632,16 +632,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         boolean isRetryEnabled = SMSOTPUtils.isRetryEnabled(context);
         String loginPage = getLoginPage(context);
+        AuthenticatedUser authenticatedUser =
+                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         String url = getURL(loginPage, queryParams);
         if (StringUtils.isNotEmpty(getScreenValue(context))) {
             url = url + SMSOTPConstants.SCREEN_VALUE + getScreenValue(context);
         }
         try {
-            if (Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.ACCOUNT_LOCKED))) &&
-                    SMSOTPUtils.isShowAuthFailureReason(context)) {
-                response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
-                        + SMSOTPUtils.isEnableResendCode(context) + SMSOTPConstants.ERROR_MESSAGE + SMSOTPConstants
-                        .ACCOUNT_LOCKED_ERROR);
+            if (SMSOTPUtils.isLocalUser(context) && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
+                boolean showAuthFailureReason = SMSOTPUtils.isShowAuthFailureReason(context);
+                String retryParam;
+                if (showAuthFailureReason) {
+                    String unlockTime = getUnlockTime(authenticatedUser);
+                    if (StringUtils.isNotBlank(unlockTime)) {
+                        long timeToUnlock = Long.parseLong(unlockTime) - System.currentTimeMillis();
+                        if (timeToUnlock > 0) {
+                            queryParams += "&unlockTime=" + Math.round((double) timeToUnlock / 1000 / 60);
+                        }
+                    }
+                    retryParam = SMSOTPConstants.ERROR_USER_ACCOUNT_LOCKED;
+                } else {
+                    retryParam = SMSOTPConstants.RETRY_PARAMS;
+                }
+                redirectToErrorPage(response, context, queryParams, retryParam);
             } else if (isRetryEnabled) {
                 if (StringUtils.isNotEmpty((String) context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + SMSOTPConstants.RESEND_CODE
@@ -1521,5 +1534,30 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
             throw new AuthenticationFailedException(errorMessage, e);
         }
+    }
+
+    private String getUnlockTime(AuthenticatedUser authenticatedUser)
+            throws AuthenticationFailedException {
+
+        String username = authenticatedUser.toFullQualifiedUsername();
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        String unlockTime = null;
+        try {
+            UserRealm userRealm = getUserRealm(username);
+            if (userRealm == null) {
+                throw new AuthenticationFailedException("UserRealm is null for user : " + username);
+            }
+            UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+            if (userStoreManager != null) {
+                Map<String, String> claimValues = userStoreManager
+                        .getUserClaimValues(tenantAwareUsername,
+                                new String[]{SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM}, null);
+                unlockTime = claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM);
+            }
+        } catch (UserStoreException e) {
+            throw new AuthenticationFailedException("Cannot find the user claim for unlock time for user : " +
+                    username, e);
+        }
+        return unlockTime;
     }
 }
