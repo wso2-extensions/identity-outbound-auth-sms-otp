@@ -643,17 +643,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 boolean showAuthFailureReason = SMSOTPUtils.isShowAuthFailureReason(context);
                 String retryParam;
                 if (showAuthFailureReason) {
-                    String unlockTime = getUnlockTimeInMilliSeconds(authenticatedUser);
-                    if (unlockTime == null) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("No value configured for claim: " + SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM);
-                        }
-                    }
-                    if (StringUtils.isNotBlank(unlockTime)) {
-                        long timeToUnlock = Long.parseLong(unlockTime) - System.currentTimeMillis();
-                        if (timeToUnlock > 0) {
-                            queryParams += "&unlockTime=" + Math.round((double) timeToUnlock / 1000 / 60);
-                        }
+                    long unlockTime = getUnlockTimeInMilliSeconds(authenticatedUser);
+                    long timeToUnlock = unlockTime - System.currentTimeMillis();
+                    if (timeToUnlock > 0) {
+                        queryParams += "&unlockTime=" + Math.round((double) timeToUnlock / 1000 / 60);
                     }
                     retryParam = SMSOTPConstants.ERROR_USER_ACCOUNT_LOCKED;
                 } else {
@@ -1541,12 +1534,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
     }
 
-    private String getUnlockTimeInMilliSeconds(AuthenticatedUser authenticatedUser)
-            throws AuthenticationFailedException {
+    private long getUnlockTimeInMilliSeconds(AuthenticatedUser authenticatedUser) throws AuthenticationFailedException {
 
         String username = authenticatedUser.toFullQualifiedUsername();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
-        String unlockTime;
         try {
             UserRealm userRealm = getUserRealm(username);
             if (userRealm == null) {
@@ -1562,11 +1553,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             Map<String, String> claimValues = userStoreManager
                     .getUserClaimValues(tenantAwareUsername,
                             new String[]{SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM}, null);
-            unlockTime = claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM);
+            if (claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM) == null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("No value configured for claim: " + SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM);
+                }
+                return 0;
+            }
+            return Long.parseLong(claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM));
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Cannot find the user claim for unlock time for user : " +
                     username, e);
         }
-        return unlockTime;
     }
 }
