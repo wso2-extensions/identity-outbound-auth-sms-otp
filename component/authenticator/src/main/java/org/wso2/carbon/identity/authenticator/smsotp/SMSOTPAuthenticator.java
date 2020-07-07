@@ -1558,8 +1558,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 throw new AuthenticationFailedException("userStoreManager is null for user realm: " + userRealm);
             }
             Map<String, String> claimValues = userStoreManager
-                    .getUserClaimValues(tenantAwareUsername,
-                            new String[]{SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM}, null);
+                    .getUserClaimValues(tenantAwareUsername, new String[]{SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM},
+                            null);
             if (claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM) == null) {
                 if (log.isDebugEnabled()) {
                     log.debug(String.format("No value configured for claim: %s, of user: %s",
