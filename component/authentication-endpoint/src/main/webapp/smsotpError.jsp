@@ -55,6 +55,12 @@
                     errorMessage = "The code entered is expired. Authentication Failed!";
                 } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE_MSG)) {
                     errorMessage = "User not found in the directory. Cannot proceed further without SMS OTP authentication.";
+                } else if (errorMessage.equalsIgnoreCase(SMSOTPConstants.ACCOUNT_LOCKED_ERROR)) {
+                    errorMessage = "User account is locked. Please retry later.";
+                    String unlockTime = request.getParameter("unlockTime");
+                    if (unlockTime != null) {
+                      errorMessage = String.format("User account is locked. Please retry after %s minutes.", unlockTime);
+                    }
                 }
             }
         }
