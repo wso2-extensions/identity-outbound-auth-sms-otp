@@ -1266,7 +1266,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
             }
             String contentType = (String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE);
-            if (StringUtils.isNotBlank(contentType) && httpMethod.equals(SMSOTPConstants.POST_METHOD) &&
+            if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
                     (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType.trim())) {
                 receivedMobileNumber = mobile;
             }
