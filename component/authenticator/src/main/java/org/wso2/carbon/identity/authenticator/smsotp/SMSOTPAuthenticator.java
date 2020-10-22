@@ -1248,8 +1248,36 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
-        String encodedMobileNo = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
-        smsUrl = smsUrl.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
+        String[] headerArray;
+        String receivedMobileNumber = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
+        HashMap<String, Object> headerElementProperties = new HashMap<>();
+        if (StringUtils.isNotEmpty(headerString)) {
+            if (log.isDebugEnabled()) {
+                log.debug("Processing HTTP headers since header string is available");
+            }
+            headerArray = headerString.split(",");
+            for (String header : headerArray) {
+                String[] headerElements = header.split(":");
+                if (headerElements.length > 1) {
+                    headerElementProperties.put(headerElements[0], headerElements[1]);
+                } else {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Either header name or value not found. Hence not adding header which contains " +
+                                headerElements[0]);
+                    }
+                }
+            }
+            String contentType = (String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE);
+            if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
+                    (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType.trim())) {
+                receivedMobileNumber = mobile;
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("No configured headers found. Header string is empty");
+            }
+        }
+        smsUrl = smsUrl.replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll("\\$ctx.msg",
                 smsMessage.replaceAll("\\s", "+") + otpToken);
         URL smsProviderUrl = null;
         try {
@@ -1266,12 +1294,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String subUrl = smsProviderUrl.getProtocol();
         if (subUrl.equals(SMSOTPConstants.HTTPS)) {
             httpConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
-            connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
-                    smsMessage, otpToken, httpMethod);
+            connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
+                    receivedMobileNumber, smsMessage, otpToken, httpMethod);
         } else {
             httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
-            connection = getConnection(httpConnection, context, headerString, payload, httpResponse, encodedMobileNo,
-                    smsMessage, otpToken, httpMethod);
+            connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
+                    receivedMobileNumber, smsMessage, otpToken, httpMethod);
         }
         return connection;
     }
