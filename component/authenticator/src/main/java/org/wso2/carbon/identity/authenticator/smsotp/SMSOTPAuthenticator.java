@@ -1261,8 +1261,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (headerElements.length > 1) {
                     headerElementProperties.put(headerElements[0], headerElements[1]);
                 } else {
-                    log.info("Either header name or value not found. Hence not adding header which contains " +
-                            headerElements[0]);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Either header name or value not found. Hence not adding header which contains " +
+                                headerElements[0]);
+                    }
                 }
             }
             String contentType = (String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE);
