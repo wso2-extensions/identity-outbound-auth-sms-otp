@@ -71,6 +71,9 @@ public class SMSOTPConstants {
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
 
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String JSON_CONTENT_TYPE = "application/json";
+
     public static final String SMSOTP_AUTHENTICATION_ENDPOINT_URL = "SMSOTPAuthenticationEndpointURL";
     public static final String SMSOTP_AUTHENTICATION_ERROR_PAGE_URL = "SMSOTPAuthenticationEndpointErrorPage";
 
