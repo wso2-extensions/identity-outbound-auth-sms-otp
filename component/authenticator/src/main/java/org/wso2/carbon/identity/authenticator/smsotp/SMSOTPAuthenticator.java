@@ -484,27 +484,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
                 try {
                     String url = getURL(loginPage, queryParams);
-                    String mobileNumberPatternViolationError = SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
-                    String mobileNumberPattern =
-                            context.getAuthenticatorProperties().get(SMSOTPConstants.MOBILE_NUMBER_REGEX);
-                    if (StringUtils.isNotEmpty(mobileNumberPattern)) {
-                        // Check for regex is violation error message configured in idp configuration.
-                        if (StringUtils.isNotEmpty(context.getAuthenticatorProperties()
-                                .get(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE))) {
-                            mobileNumberPatternViolationError = context.getAuthenticatorProperties()
-                                    .get(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
-                        }
-                        // Send the response with encoded regex pattern and error message.
-                        response.sendRedirect(FrameworkUtils
-                                .appendQueryParamsStringToUrl(url, SMSOTPConstants.MOBILE_NUMBER_REGEX_PATTERN_QUERY +
-                                        getEncoder().encodeToString(context.getAuthenticatorProperties()
-                                                        .get(SMSOTPConstants.MOBILE_NUMBER_REGEX)
-                                                        .getBytes()) +
-                                        SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY +
-                                        getEncoder().encodeToString(mobileNumberPatternViolationError.getBytes())));
-                    } else {
-                        response.sendRedirect(url);
-                    }
+                    response.sendRedirect(url);
                 } catch (IOException e) {
                     throw new AuthenticationFailedException("Authentication failed!. An IOException occurred ", e);
                 }
@@ -744,27 +724,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("Redirecting to mobile number request page : " + url);
                 }
-                String mobileNumberPatternViolationError = SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
-                String mobileNumberPattern =
-                        context.getAuthenticatorProperties().get(SMSOTPConstants.MOBILE_NUMBER_REGEX);
-                if (StringUtils.isNotEmpty(mobileNumberPattern)) {
-                    // Check for regex is violation error message configured in idp configuration.
-                    if (StringUtils.isNotEmpty(context.getAuthenticatorProperties()
-                            .get(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE))) {
-                        mobileNumberPatternViolationError = context.getAuthenticatorProperties()
-                                .get(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
-                    }
-                    // Send the response with encoded regex pattern and error message.
-                    response.sendRedirect(FrameworkUtils
-                            .appendQueryParamsStringToUrl(url, SMSOTPConstants.MOBILE_NUMBER_REGEX_PATTERN_QUERY +
-                                    getEncoder().encodeToString(context.getAuthenticatorProperties()
-                                            .get(SMSOTPConstants.MOBILE_NUMBER_REGEX)
-                                            .getBytes()) +
-                                    SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY +
-                                    getEncoder().encodeToString(mobileNumberPatternViolationError.getBytes())));
-                } else {
-                    response.sendRedirect(url);
-                }
+                response.sendRedirect(url);
             } catch (IOException e) {
                 throw new AuthenticationFailedException("Authentication failed!. An IOException was caught. ", e);
             }
@@ -1042,7 +1002,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         headers.setDisplayOrder(2);
         configProperties.add(headers);
 
-        `Property payload = new Property();
+        Property payload = new Property();
         payload.setName(SMSOTPConstants.PAYLOAD);
         payload.setDisplayName("HTTP Payload");
         payload.setRequired(false);
@@ -1075,23 +1035,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         valuesToBeMasked.setDescription("Enter comma separated Values to be masked by * in the detailed error messages");
         valuesToBeMasked.setDisplayOrder(6);
         configProperties.add(valuesToBeMasked);
-
-        Property mobileNumberRegex = new Property();
-        mobileNumberRegex.setName(SMSOTPConstants.MOBILE_NUMBER_REGEX);
-        mobileNumberRegex.setDisplayName("Mobile Number Regex Pattern");
-        mobileNumberRegex.setRequired(false);
-        mobileNumberRegex.setDescription("Enter regex format to validate mobile number while capture and update " +
-                "mobile number.");
-        mobileNumberRegex.setDisplayOrder(7);
-        configProperties.add(mobileNumberRegex);
-
-        Property RegexFailureErrorMessage = new Property();
-        RegexFailureErrorMessage.setName(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
-        RegexFailureErrorMessage.setDisplayName("Regex Violation Error Message");
-        RegexFailureErrorMessage.setRequired(false);
-        RegexFailureErrorMessage.setDescription("Enter error message for invalid mobile number patterns.");
-        RegexFailureErrorMessage.setDisplayOrder(8);
-        configProperties.add(RegexFailureErrorMessage);
 
         return configProperties;
     }

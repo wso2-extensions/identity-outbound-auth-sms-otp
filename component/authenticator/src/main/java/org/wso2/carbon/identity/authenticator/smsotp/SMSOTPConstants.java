@@ -51,9 +51,6 @@ public class SMSOTPConstants {
     public static final String HEADERS = "headers";
     public static final String PAYLOAD = "payload";
     public static final String HTTP_RESPONSE = "http_response";
-    public static final String MOBILE_NUMBER_REGEX = "mobile_number_regex";
-    public static final String MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE =
-            "mobile_number_pattern_failure_error_message";
     public static final String SHOW_ERROR_INFO = "show_detailed_error_info";
     public static final String VALUES_TO_BE_MASKED_IN_ERROR_INFO = "values_to_be_masked";
     public static final String SMS_MESSAGE = "Verification Code: ";
@@ -90,12 +87,6 @@ public class SMSOTPConstants {
     public static final String RESEND = "resendCode";
     public static final String NAME_OF_AUTHENTICATORS = "authenticators=";
     public static final String RESEND_CODE = "&resendCode=";
-    public static final String MOBILE_NUMBER_REGEX_PATTERN_QUERY = "&mobileNumberRegexPattern=";
-    public static final String MOBILE_NUMBER_REGEX_PATTERN = "mobileNumberRegexPattern";
-    public static final String MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY =
-            "&mobileNumberPatternPolicyFailureErrorMessage=";
-    public static final String MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE =
-            "mobileNumberPatternPolicyFailureErrorMessage";
     public static final String OTP_TOKEN = "otpToken";
     public static final String AUTHENTICATION = "authentication";
     public static final String BASIC = "basic";
@@ -136,8 +127,6 @@ public class SMSOTPConstants {
     public static final String LOCAL_AUTHENTICATOR = "LOCAL";
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
-    public static final String MOBILE_NUMBER_PATTERN_POLICY_VIOLATED =
-            "Mobile number pattern policy violated";
 
     public static final String PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO = "account.lock.handler.login.fail.timeout.ratio";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";

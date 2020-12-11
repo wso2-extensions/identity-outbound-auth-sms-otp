@@ -666,10 +666,6 @@ public class SMSOTPAuthenticatorTest {
         configProperties.add(showErrorInfo);
         Property maskValues = new Property();
         configProperties.add(maskValues);
-        Property mobileNumberRegexPattern = new Property();
-        configProperties.add(mobileNumberRegexPattern);
-        Property mobileNumberPatternFailureErrorMessage = new Property();
-        configProperties.add(mobileNumberPatternFailureErrorMessage);
         Assert.assertEquals(configProperties.size(), smsotpAuthenticator.getConfigurationProperties().size());
     }
 
