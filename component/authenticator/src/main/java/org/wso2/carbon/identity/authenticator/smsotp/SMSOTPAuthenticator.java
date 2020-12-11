@@ -1042,7 +1042,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         headers.setDisplayOrder(2);
         configProperties.add(headers);
 
-        `Property payload = new Property();
+        Property payload = new Property();
         payload.setName(SMSOTPConstants.PAYLOAD);
         payload.setDisplayName("HTTP Payload");
         payload.setRequired(false);
