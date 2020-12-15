@@ -182,7 +182,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
-                    mobileNumber = getMobileNumber(request, response, context, username, tenantDomain, queryParams);
+                    mobileNumber = getMobileNumber(request, response, context, username, queryParams);
                     if (StringUtils.isNotEmpty(mobileNumber)) {
                         proceedWithOTP(response, context, errorPage, mobileNumber, queryParams, username);
                     }
@@ -205,26 +205,26 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @param response     the HttpServletResponse
      * @param context      the AuthenticationContext
      * @param username     the Username
-     * @param tenantDomain the TenantDomain
      * @param queryParams  the queryParams
      * @return the mobile number
      * @throws AuthenticationFailedException
      * @throws SMSOTPException
      */
     private String getMobileNumber(HttpServletRequest request, HttpServletResponse response,
-                                   AuthenticationContext context, String username, String tenantDomain,
+                                   AuthenticationContext context, String username,
                                    String queryParams) throws AuthenticationFailedException, SMSOTPException {
 
         String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
         if (StringUtils.isEmpty(mobileNumber)) {
-            if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
+            String requestMobile = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
+            if (StringUtils.isEmpty(requestMobile)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User has not registered a mobile number: " + username);
                 }
                 redirectToMobileNoReqPage(response, context, queryParams);
             } else {
-                updateMobileNumberForUsername(context, request, username, tenantDomain);
-                mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
+                context.setProperty(SMSOTPConstants.REQUEST_USER_MOBILE, requestMobile);
+                mobileNumber = requestMobile;
             }
         }
         return mobileNumber;
@@ -356,7 +356,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug("Updating mobile number for user : " + username);
             }
             Map<String, String> attributes = new HashMap<>();
-            attributes.put(SMSOTPConstants.MOBILE_CLAIM, request.getParameter(SMSOTPConstants.MOBILE_NUMBER));
+            attributes.put(SMSOTPConstants.MOBILE_CLAIM, String.valueOf(context.getProperty(SMSOTPConstants.REQUEST_USER_MOBILE)));
             SMSOTPUtils.updateUserAttribute(MultitenantUtils.getTenantAwareUsername(username), attributes,
                     tenantDomain);
         }
@@ -478,7 +478,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 // that Enable the SMS OTP in user's Profile. Cannot proceed further without SMS OTP authentication.
                 redirectToErrorPage(response, context, queryParams, SMSOTPConstants.ERROR_SMSOTP_DISABLE);
             } else {
-                mobileNumber = getMobileNumber(request, response, context, username, tenantDomain, queryParams);
+                mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             }
         } else if (SMSOTPUtils.isSendOTPDirectlyToMobile(context)) {
             if (log.isDebugEnabled()) {
@@ -830,6 +830,26 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
         }
+
+        if (succeededAttempt && isLocalUser) {
+            String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
+            try {
+                String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
+                if (StringUtils.isEmpty(mobileNumber)) {
+                    String tenantDomain = context.getTenantDomain();
+                    if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
+                        IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, getName(), tenantDomain);
+                    }
+                    Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUEST_USER_MOBILE);
+                    if (verifiedMobileObject != null) {
+                        updateMobileNumberForUsername(context, request, username, tenantDomain);
+                    }
+                }
+            } catch (SMSOTPException e) {
+                throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file. ", e);
+            }
+        }
+
         if (!succeededAttempt) {
             handleSmsOtpVerificationFail(context);
             context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
