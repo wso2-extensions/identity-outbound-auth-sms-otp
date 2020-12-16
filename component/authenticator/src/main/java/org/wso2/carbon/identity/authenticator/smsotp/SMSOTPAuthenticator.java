@@ -837,9 +837,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
                 if (StringUtils.isEmpty(mobileNumber)) {
                     String tenantDomain = context.getTenantDomain();
-                    if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
-                        IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, getName(), tenantDomain);
-                    }
                     Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUEST_USER_MOBILE);
                     if (verifiedMobileObject != null) {
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
