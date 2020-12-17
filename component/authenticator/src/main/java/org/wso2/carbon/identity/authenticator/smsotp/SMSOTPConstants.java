@@ -146,6 +146,13 @@ public class SMSOTPConstants {
     public static final String ERROR_USER_ACCOUNT_LOCKED = "&authFailure=true&authFailureMsg=user.account.locked";
     public static final String ADMIN_INITIATED = "AdminInitiated";
 
+    public static final String USER_AGENT = "user-agent";
+    public static final String X_FORWARDED_FOR = "x-forwarded-for";
+    public static final String STATUS_SUCCESS = "success";
+    public static final String STATUS_OTP_EXPIRED = "otp-expired";
+    public static final String STATUS_CODE_MISMATCH = "code-mismatch";
+    public static final String OTP_GENERATED_TIME = "otp-generated-time";
+
     /**
      * Enums for error messages.
      */

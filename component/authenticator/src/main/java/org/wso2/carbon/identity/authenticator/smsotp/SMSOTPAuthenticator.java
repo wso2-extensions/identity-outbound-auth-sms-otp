@@ -47,6 +47,7 @@ import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataH
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
@@ -119,6 +120,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } else if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE))) {
             // if the request comes with code, it will go through this flow.
             initiateAuthenticationRequest(request, response, context);
+            publishPostSMSOTPGeneratedEvent(request, context);
             if (context.getProperty(SMSOTPConstants.AUTHENTICATION)
                     .equals(SMSOTPConstants.AUTHENTICATOR_NAME)) {
                 // if the request comes with authentication is SMSOTP, it will go through this flow.
@@ -127,8 +129,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 // if the request comes with authentication is basic, complete the flow.
                 return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
             }
+        }  else if (Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
+            AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
+            publishPostSMSOTPGeneratedEvent(request, context);
+            return authenticatorFlowStatus;
         } else {
-            return super.process(request, response, context);
+            AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
+            publishPostSMSOTPValidatedEvent(request, context);
+            return authenticatorFlowStatus;
         }
     }
 
@@ -811,6 +819,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         boolean succeededAttempt = false;
         if (userToken.equals(contextToken)) {
+            context.removeProperty(SMSOTPConstants.CODE_MISMATCH);
             processValidUserToken(context, authenticatedUser);
             succeededAttempt = true;
         } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
@@ -823,6 +832,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         if (!succeededAttempt) {
             handleSmsOtpVerificationFail(context);
+            context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             throw new AuthenticationFailedException("Invalid code. Verification failed.");
         }
         // It reached here means the authentication was successful.
@@ -852,6 +862,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(otpTokenSentTime.get().toString());
 
         if (elapsedTokenTime <= (Long.parseLong(tokenValidityTime.get().toString()) * 1000)) {
+            context.removeProperty(SMSOTPConstants.TOKEN_EXPIRED);
             context.setSubject(authenticatedUser);
         } else {
             context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, SMSOTPConstants.TOKEN_EXPIRED_VALUE);
@@ -1656,6 +1667,116 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Cannot find the user claim for unlock time for user : " +
                     username, e);
+        }
+    }
+
+    private void publishPostSMSOTPGeneratedEvent(HttpServletRequest request, AuthenticationContext context)
+            throws AuthenticationFailedException {
+
+        Map<String, Object> eventProperties = new HashMap<>();
+        eventProperties.put(IdentityEventConstants.EventProperty.CORRELATION_ID, context.getCallerSessionKey());
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants
+                .AUTHENTICATED_USER);
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_NAME, authenticatedUser.getUserName());
+        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, context.getTenantDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, authenticatedUser
+                .getUserStoreDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, context.getServiceProviderName());
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_AGENT, request.getHeader(
+                SMSOTPConstants.USER_AGENT));
+        if (request.getParameter(SMSOTPConstants.RESEND) != null) {
+            eventProperties.put(IdentityEventConstants.EventProperty.RESEND_CODE,
+                    request.getParameter(SMSOTPConstants.RESEND));
+        } else {
+            eventProperties.put(IdentityEventConstants.EventProperty.RESEND_CODE, false);
+        }
+
+        eventProperties.put(IdentityEventConstants.EventProperty.GENERATED_OTP, context.getProperty(
+                SMSOTPConstants.OTP_TOKEN));
+
+        long otpGeneratedTime = (long) context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME);
+        eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME, otpGeneratedTime);
+
+        String otpExpiryDuration = SMSOTPUtils.getTokenExpiryTime(context);
+        if (otpExpiryDuration != null) {
+            long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryDuration);
+            eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
+        }
+
+        if (request.getHeader(SMSOTPConstants.X_FORWARDED_FOR) != null) {
+            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getHeader(
+                    SMSOTPConstants.X_FORWARDED_FOR).split(",")[0]);
+        } else {
+            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getRemoteAddr());
+        }
+
+        Event postOtpGenEvent = new Event(IdentityEventConstants.Event.POST_GENERATE_SMS_OTP, eventProperties);
+        try {
+            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(postOtpGenEvent);
+        } catch (IdentityEventException e) {
+            String errorMsg = "An error occurred while triggering the event. " + e.getMessage();
+            throw new AuthenticationFailedException(errorMsg, e);
+        }
+    }
+
+    private void publishPostSMSOTPValidatedEvent(HttpServletRequest request,
+                                                 AuthenticationContext context) throws AuthenticationFailedException {
+
+        Map<String, Object> eventProperties = new HashMap<>();
+        AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants
+                .AUTHENTICATED_USER);
+        eventProperties.put(IdentityEventConstants.EventProperty.CORRELATION_ID, context.getCallerSessionKey());
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_NAME, authenticatedUser.getUserName());
+        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, context.getTenantDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, authenticatedUser
+                .getUserStoreDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, context.getServiceProviderName());
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_AGENT, request.getHeader(
+                SMSOTPConstants.USER_AGENT));
+
+        if (request.getHeader(SMSOTPConstants.X_FORWARDED_FOR) != null) {
+            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getHeader(
+                    SMSOTPConstants.X_FORWARDED_FOR).split(",")[0]);
+        } else {
+            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getRemoteAddr());
+        }
+
+        eventProperties.put(IdentityEventConstants.EventProperty.GENERATED_OTP, context.getProperty(
+                SMSOTPConstants.OTP_TOKEN));
+        eventProperties.put(IdentityEventConstants.EventProperty.USER_INPUT_OTP, request.getParameter(
+                SMSOTPConstants.CODE));
+        eventProperties.put(IdentityEventConstants.EventProperty.OTP_USED_TIME, System.currentTimeMillis());
+
+        long otpGeneratedTime = (long) context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME);
+        eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME,
+                otpGeneratedTime);
+
+        String otpExpiryTime = SMSOTPUtils.getTokenExpiryTime(context);
+        if (otpExpiryTime != null) {
+            long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryTime);
+            eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
+        }
+
+        String status;
+        if (context.getProperty(SMSOTPConstants.TOKEN_EXPIRED) != null && context.getProperty(
+                SMSOTPConstants.TOKEN_EXPIRED) == SMSOTPConstants.TOKEN_EXPIRED_VALUE) {
+            status = SMSOTPConstants.STATUS_OTP_EXPIRED;
+        } else if (context.getProperty(
+                SMSOTPConstants.CODE_MISMATCH) != null && (boolean) context.getProperty(
+                SMSOTPConstants.CODE_MISMATCH)) {
+            status = SMSOTPConstants.STATUS_CODE_MISMATCH;
+        } else {
+            status = SMSOTPConstants.STATUS_SUCCESS;
+        }
+
+        eventProperties.put(IdentityEventConstants.EventProperty.OTP_STATUS, status);
+        Event postOtpValidateEvent = new Event(IdentityEventConstants.Event.POST_VALIDATE_SMS_OTP, eventProperties);
+
+        try {
+            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(postOtpValidateEvent);
+        } catch (IdentityEventException e) {
+            String errorMsg = "An error occurred while triggering the event. " + e.getMessage();
+            throw new AuthenticationFailedException(errorMsg, e);
         }
     }
 }
