@@ -1765,8 +1765,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
 
         String status;
-        if (context.getProperty(SMSOTPConstants.TOKEN_EXPIRED) != null && context.getProperty(
-                SMSOTPConstants.TOKEN_EXPIRED) == SMSOTPConstants.TOKEN_EXPIRED_VALUE) {
+        if (SMSOTPConstants.TOKEN_EXPIRED_VALUE.equals(context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
             status = SMSOTPConstants.STATUS_OTP_EXPIRED;
         } else if (context.getProperty(SMSOTPConstants.CODE_MISMATCH) != null && (boolean) context.getProperty(
                 SMSOTPConstants.CODE_MISMATCH)) {
