@@ -1671,7 +1671,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Send event after generating SMS OTP.
+     * Trigger event after generating SMS OTP.
      *
      * @param request HttpServletRequest.
      * @param context Authentication context.
@@ -1715,17 +1715,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryDuration);
             eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
         }
-
-        if (StringUtils.isNotEmpty(request.getHeader(SMSOTPConstants.X_FORWARDED_FOR))) {
-            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getHeader(
-                    SMSOTPConstants.X_FORWARDED_FOR).split(",")[0]);
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Getting client-ip from remote address since x-forwarded-for is null.");
-            }
-            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getRemoteAddr());
-        }
-
+        eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, IdentityUtil.getClientIpAddress(request));
         Event postOtpGenEvent = new Event(IdentityEventConstants.Event.POST_GENERATE_SMS_OTP, eventProperties);
         try {
             SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(postOtpGenEvent);
@@ -1736,7 +1726,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Send event after validating SMS OTP.
+     * Trigger event after validating SMS OTP.
      *
      * @param request HttpServletRequest.
      * @param context Authentication context.
@@ -1757,16 +1747,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         eventProperties.put(IdentityEventConstants.EventProperty.USER_AGENT, request.getHeader(
                 SMSOTPConstants.USER_AGENT));
 
-        if (StringUtils.isNotEmpty(request.getHeader(SMSOTPConstants.X_FORWARDED_FOR))) {
-            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getHeader(
-                    SMSOTPConstants.X_FORWARDED_FOR).split(",")[0]);
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Getting client-ip from remote address since x-forwarded-for is null.");
-            }
-            eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, request.getRemoteAddr());
-        }
-
+        eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, IdentityUtil.getClientIpAddress(request));
         eventProperties.put(IdentityEventConstants.EventProperty.GENERATED_OTP, context.getProperty(
                 SMSOTPConstants.OTP_TOKEN));
         eventProperties.put(IdentityEventConstants.EventProperty.USER_INPUT_OTP, request.getParameter(
@@ -1787,8 +1768,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (context.getProperty(SMSOTPConstants.TOKEN_EXPIRED) != null && context.getProperty(
                 SMSOTPConstants.TOKEN_EXPIRED) == SMSOTPConstants.TOKEN_EXPIRED_VALUE) {
             status = SMSOTPConstants.STATUS_OTP_EXPIRED;
-        } else if (context.getProperty(
-                SMSOTPConstants.CODE_MISMATCH) != null && (boolean) context.getProperty(
+        } else if (context.getProperty(SMSOTPConstants.CODE_MISMATCH) != null && (boolean) context.getProperty(
                 SMSOTPConstants.CODE_MISMATCH)) {
             status = SMSOTPConstants.STATUS_CODE_MISMATCH;
         } else {
