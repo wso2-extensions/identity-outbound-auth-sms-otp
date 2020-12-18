@@ -126,6 +126,9 @@
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;
                             version="${identity.extension.utils.import.version.range}",
+                            org.wso2.carbon.identity.event; version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.event.event; version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.event.services; version="${carbon.identity.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.service;
                             version="${carbon.identity.account.lock.handler.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.exception;
