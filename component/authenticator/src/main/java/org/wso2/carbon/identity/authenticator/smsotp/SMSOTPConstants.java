@@ -87,6 +87,8 @@ public class SMSOTPConstants {
     public static final String MOBILE_NUMBER_REQ_PAGE = "MobileNumberRegPage";
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
     public static final String REQUESTED_USER_MOBILE = "requestedUserMobile";
+    public static final String MOBILE_NUMBER_UPDATE_FAILURE = "mobileUpdateFailure";
+    public static final String MOBILE_UPDATE_FAILED_RETRY_PARAMS = "&authFailure=true&authFailureMsg=mobile.number.update.failed";
 
     public static final String RESEND = "resendCode";
     public static final String NAME_OF_AUTHENTICATORS = "authenticators=";

@@ -324,6 +324,7 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
         when(SMSOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class))).thenReturn(true);
+        context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
                 httpServletRequest, httpServletResponse, true, "John@carbon.super", "", "carbon.super", SMSOTPConstants

@@ -105,9 +105,10 @@ public class SMSOTPUtils {
      * @param username  the Username
      * @param attribute the Attribute
      * @throws SMSOTPException
+     * @throws UserStoreException
      */
     public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
-            throws SMSOTPException {
+            throws SMSOTPException, UserStoreException {
 
         try {
             // updating user attributes is independent from tenant association.not tenant association check needed here.
@@ -121,7 +122,7 @@ public class SMSOTPUtils {
             SMSOTPUtils.verifyUserExists(username, tenantDomain);
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             userStoreManager.setUserClaimValues(username, attribute, null);
-        } catch (UserStoreException | AuthenticationFailedException e) {
+        } catch (AuthenticationFailedException e) {
             throw new SMSOTPException("Exception occurred while connecting to User Store: Authentication is failed. ", e);
         }
     }
