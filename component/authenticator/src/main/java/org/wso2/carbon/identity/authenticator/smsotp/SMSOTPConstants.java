@@ -86,7 +86,7 @@ public class SMSOTPConstants {
     public static final String ERROR_PAGE = "smsotpauthenticationendpoint/smsotpError.jsp";
     public static final String MOBILE_NUMBER_REQ_PAGE = "MobileNumberRegPage";
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
-    public static final String REQUEST_USER_MOBILE = "requestUserMobile";
+    public static final String REQUESTED_USER_MOBILE = "requestedUserMobile";
 
     public static final String RESEND = "resendCode";
     public static final String NAME_OF_AUTHENTICATORS = "authenticators=";

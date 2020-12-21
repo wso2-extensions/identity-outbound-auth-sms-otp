@@ -223,7 +223,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 redirectToMobileNoReqPage(response, context, queryParams);
             } else {
-                context.setProperty(SMSOTPConstants.REQUEST_USER_MOBILE, requestMobile);
+                context.setProperty(SMSOTPConstants.REQUESTED_USER_MOBILE, requestMobile);
                 mobileNumber = requestMobile;
             }
         }
@@ -356,7 +356,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug("Updating mobile number for user : " + username);
             }
             Map<String, String> attributes = new HashMap<>();
-            attributes.put(SMSOTPConstants.MOBILE_CLAIM, String.valueOf(context.getProperty(SMSOTPConstants.REQUEST_USER_MOBILE)));
+            attributes.put(SMSOTPConstants.MOBILE_CLAIM, String.valueOf(context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE)));
             SMSOTPUtils.updateUserAttribute(MultitenantUtils.getTenantAwareUsername(username), attributes,
                     tenantDomain);
         }
@@ -837,7 +837,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
                 if (StringUtils.isEmpty(mobileNumber)) {
                     String tenantDomain = context.getTenantDomain();
-                    Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUEST_USER_MOBILE);
+                    Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE);
                     if (verifiedMobileObject != null) {
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     }
