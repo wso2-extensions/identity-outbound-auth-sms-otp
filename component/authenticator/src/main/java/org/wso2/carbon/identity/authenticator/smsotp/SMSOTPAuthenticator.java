@@ -53,6 +53,7 @@ import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UserCoreConstants;
+import org.wso2.carbon.user.core.UserStoreClientException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
@@ -758,7 +759,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String mobileNumberPattern =
                         context.getAuthenticatorProperties().get(SMSOTPConstants.MOBILE_NUMBER_REGEX);
                 if (isMobileNumberUpdateFailed(context)) {
-                    url = url + SMSOTPConstants.MOBILE_UPDATE_FAILED_RETRY_PARAMS;
+                    url = url + SMSOTPConstants.RETRY_PARAMS;
+                    if (context.getProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON) != null) {
+                        String failureReason = String.valueOf(
+                                context.getProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON));
+                        String urlEncodedFailureReason = URLEncoder.encode(failureReason, CHAR_SET_UTF_8);
+                        url = url + SMSOTPConstants.ERROR_MESSAGE_DETAILS +  urlEncodedFailureReason;
+                    }
                 }
                 if (StringUtils.isNotEmpty(mobileNumberPattern)) {
                     // Check for regex is violation error message configured in idp configuration.
@@ -858,9 +865,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     } catch (SMSOTPException e) {
                         throw new AuthenticationFailedException( "Failed accessing the userstore", e.getCause());
-                    } catch (UserStoreException e) {
+                    } catch (UserStoreClientException e) {
                         context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
-                        throw new AuthenticationFailedException( "Mobile number update failed", e.getCause());
+                        throw new AuthenticationFailedException("Mobile Claim Update Failed for user " + username, e.getCause());
+                    } catch (UserStoreException e) {
+                        Throwable ex = e.getCause();
+                        if (ex instanceof UserStoreClientException) {
+                            context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
+                            context.setProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON, ex.getMessage());
+                        }
+                        throw new AuthenticationFailedException("Mobile Claim Update Failed for user " + username, e.getCause());
                     }
                 }
             }
