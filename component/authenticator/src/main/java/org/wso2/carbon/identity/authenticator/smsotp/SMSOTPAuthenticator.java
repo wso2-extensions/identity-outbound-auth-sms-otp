@@ -217,7 +217,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
         if (StringUtils.isEmpty(mobileNumber)) {
             String requestMobile = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
-            if (StringUtils.isEmpty(requestMobile)) {
+            if (StringUtils.isBlank(requestMobile)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User has not registered a mobile number: " + username);
                 }
@@ -843,7 +843,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                 }
             } catch (SMSOTPException e) {
-                throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file. ", e);
+                throw new AuthenticationFailedException("Error in updating user mobile number. ", e);
             }
         }
 
