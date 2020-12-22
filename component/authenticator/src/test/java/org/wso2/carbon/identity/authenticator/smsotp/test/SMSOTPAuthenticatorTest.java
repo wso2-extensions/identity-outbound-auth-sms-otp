@@ -203,7 +203,7 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0775968325");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNumber",
                 httpServletRequest, httpServletResponse, any(AuthenticationContext.class),
-                "Kanapriya", "carbon.super", "queryParams"), "0775968325");
+                "Kanapriya", "queryParams"), "0775968325");
     }
 
     @Test
