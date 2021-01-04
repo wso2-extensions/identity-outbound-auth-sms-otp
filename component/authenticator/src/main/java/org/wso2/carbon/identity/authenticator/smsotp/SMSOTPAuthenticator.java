@@ -221,7 +221,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String requestMobile = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
             if (StringUtils.isBlank(requestMobile) && !isMobileNumberUpdateFailed(context) && isCodeMismatch(context)) {
                 mobileNumber = String.valueOf(context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE));
-            } else if (StringUtils.isEmpty(requestMobile)) {
+            } else if (StringUtils.isBlank(requestMobile)) {
                 if (log.isDebugEnabled()) {
                     log.debug("User has not registered a mobile number: " + username);
                 }
@@ -864,7 +864,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     try {
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     } catch (SMSOTPException e) {
-                        throw new AuthenticationFailedException( "Failed accessing the userstore", e.getCause());
+                        throw new AuthenticationFailedException("Failed accessing the userstore", e.getCause());
                     } catch (UserStoreClientException e) {
                         context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
                         throw new AuthenticationFailedException("Mobile Claim Update Failed for user " + username, e.getCause());
