@@ -182,7 +182,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                         && !isMobileNumberUpdateFailed(context)) {
-                    log.debug("Triggering SMS OTP Retry flow");
+                    if (log.isDebugEnabled()) {
+                        log.debug("Triggering SMS OTP retry flow");
+                    }
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
                     mobileNumber = getMobileNumber(request, response, context, username, queryParams);
@@ -385,7 +387,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                 && !isMobileNumberUpdateFailed(context)) {
-            log.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number update failure");
+            if (log.isDebugEnabled()) {
+                log.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number update failure");
+            }
             checkStatusCode(response, context, queryParams, errorPage);
         } else {
             processSMSOTPFlow(context, request, response, isUserExists, username, queryParams, tenantDomain,
