@@ -1724,14 +1724,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         eventProperties.put(IdentityEventConstants.EventProperty.GENERATED_OTP, context.getProperty(
                 SMSOTPConstants.OTP_TOKEN));
 
-        long otpGeneratedTime = (long) context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME);
-        eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME, otpGeneratedTime);
+        Object otpGeneratedTimeProperty = context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME);
+        if (otpGeneratedTimeProperty != null) {
+            long otpGeneratedTime = (long) otpGeneratedTimeProperty;
+            eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME, otpGeneratedTime);
 
-        String otpExpiryDuration = SMSOTPUtils.getTokenExpiryTime(context);
-        if (StringUtils.isNotEmpty(otpExpiryDuration)) {
-            long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryDuration);
-            eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
+            String otpExpiryDuration = SMSOTPUtils.getTokenExpiryTime(context);
+            if (StringUtils.isNotEmpty(otpExpiryDuration)) {
+                long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryDuration);
+                eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
+            }
         }
+
         eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, IdentityUtil.getClientIpAddress(request));
         Event postOtpGenEvent = new Event(IdentityEventConstants.Event.POST_GENERATE_SMS_OTP, eventProperties);
         try {
