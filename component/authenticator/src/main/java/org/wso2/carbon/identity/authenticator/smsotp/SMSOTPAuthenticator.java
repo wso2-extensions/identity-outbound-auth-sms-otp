@@ -182,6 +182,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                         && !isMobileNumberUpdateFailed(context)) {
+                    log.debug("Triggering SMS OTP Retry flow");
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
                     mobileNumber = getMobileNumber(request, response, context, username, queryParams);
@@ -384,6 +385,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                 && !isMobileNumberUpdateFailed(context)) {
+            log.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number update failure");
             checkStatusCode(response, context, queryParams, errorPage);
         } else {
             processSMSOTPFlow(context, request, response, isUserExists, username, queryParams, tenantDomain,
@@ -759,12 +761,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String mobileNumberPattern =
                         context.getAuthenticatorProperties().get(SMSOTPConstants.MOBILE_NUMBER_REGEX);
                 if (isMobileNumberUpdateFailed(context)) {
-                    url = url + SMSOTPConstants.RETRY_PARAMS;
+                    url = FrameworkUtils.appendQueryParamsStringToUrl(url, SMSOTPConstants.RETRY_PARAMS);
                     if (context.getProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON) != null) {
                         String failureReason = String.valueOf(
                                 context.getProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON));
                         String urlEncodedFailureReason = URLEncoder.encode(failureReason, CHAR_SET_UTF_8);
-                        url = url + SMSOTPConstants.ERROR_MESSAGE_DETAILS +  urlEncodedFailureReason;
+                        String failureQueryParam = SMSOTPConstants.ERROR_MESSAGE_DETAILS +  urlEncodedFailureReason;
+                        url = FrameworkUtils.appendQueryParamsStringToUrl(url, failureQueryParam);
                     }
                 }
                 if (StringUtils.isNotEmpty(mobileNumberPattern)) {
@@ -854,27 +857,28 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             try {
                 mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
             } catch (SMSOTPException e) {
-                throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file. ", e);
+                throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file " +
+                        "for user:  " + username + " for tenant: " + context.getTenantDomain(), e);
             }
 
-            if (StringUtils.isEmpty(mobileNumber)) {
-                String tenantDomain = context.getTenantDomain();
+            if (StringUtils.isBlank(mobileNumber)) {
+                String tenantDomain = MultitenantUtils.getTenantDomain(username);
                 Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE);
                 if (verifiedMobileObject != null) {
                     try {
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     } catch (SMSOTPException e) {
-                        throw new AuthenticationFailedException("Failed accessing the userstore", e.getCause());
+                        throw new AuthenticationFailedException("Failed accessing the userstore for user: " + username, e.getCause());
                     } catch (UserStoreClientException e) {
                         context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
-                        throw new AuthenticationFailedException("Mobile Claim Update Failed for user " + username, e.getCause());
+                        throw new AuthenticationFailedException("Mobile claim update failed for user :" + username, e);
                     } catch (UserStoreException e) {
                         Throwable ex = e.getCause();
                         if (ex instanceof UserStoreClientException) {
                             context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
                             context.setProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON, ex.getMessage());
                         }
-                        throw new AuthenticationFailedException("Mobile Claim Update Failed for user " + username, e.getCause());
+                        throw new AuthenticationFailedException("Mobile claim update failed for user " + username, e);
                     }
                 }
             }
@@ -1840,23 +1844,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /*
-     * This method returns the boolean value of the mobile number update failed context property
+     * This method returns the boolean value of the mobile number update failed context property.
      *
      * @param context
      * @return The status of mobile number update failed parameter
      */
-    private boolean isMobileNumberUpdateFailed (AuthenticationContext context) {
+    private boolean isMobileNumberUpdateFailed(AuthenticationContext context) {
 
         return Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE)));
     }
 
     /**
-     * This method returns the boolean value of the code mismatch context property
+     * This method returns the boolean value of the code mismatch context property.
      *
      * @param context
      * @return The staut of the code mismatch parameter
      */
-    private boolean isCodeMismatch (AuthenticationContext context) {
+    private boolean isCodeMismatch(AuthenticationContext context) {
 
         return Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.CODE_MISMATCH)));
     }
