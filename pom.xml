@@ -401,7 +401,7 @@
     <properties>
         <carbon.identity.version>5.16.0</carbon.identity.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
-        <carbon.identity.version.range>[5.16.0,5.19.0)</carbon.identity.version.range>
+        <carbon.identity.version.range>[5.16.0,6.0.0)</carbon.identity.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.6.1</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>
