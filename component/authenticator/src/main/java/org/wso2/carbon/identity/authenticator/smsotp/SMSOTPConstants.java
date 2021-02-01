@@ -58,7 +58,7 @@ public class SMSOTPConstants {
     public static final String IS_ENABLE_ALPHANUMERIC_TOKEN = "EnableAlphanumericToken";
     public static final String TOKEN_EXPIRY_TIME = "TokenExpiryTime";
     public static final String TOKEN_LENGTH = "TokenLength";
-    public static final String SHOW_AUTH_FAILURE_REASON = "ShowAuthFailureReason";
+    public static final String SHOW_AUTH_FAILURE_REASON = "showAuthFailureReason";
     public static final String ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS = "EnableAccountLockingForFailedAttempts";
 
 
@@ -103,7 +103,7 @@ public class SMSOTPConstants {
     public static final String SCREEN_VALUE = "&screenvalue=";
     public static final String CODE_MISMATCH = "codeMismatch";
     public static final String ACCOUNT_LOCKED = "accountLocked";
-    public static final String ACCOUNT_LOCKED_ERROR = "account.locked";
+    public static final String ACCOUNT_LOCKED_ERROR = "user.account.locked";
     public static final String TOKEN_VALIDITY_TIME = "tokenValidityTime";
     public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
     public static final String TOKEN_EXPIRED = "tokenExpired";
@@ -114,5 +114,6 @@ public class SMSOTPConstants {
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX = "account.lock.handler.On.Failure.Max.Attempts";
     public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
+    public static final String ERROR_USER_ACCOUNT_LOCKED = "&authFailure=true&authFailureMsg=user.account.locked";
     public static final String ADMIN_INITIATED = "AdminInitiated";
 }
