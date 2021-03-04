@@ -152,7 +152,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String username;
             AuthenticatedUser authenticatedUser;
             String mobileNumber;
-            String tenantDomain = context.getTenantDomain();
+            String tenantDomain = getTenantDomainFromContext(context);
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.AUTHENTICATOR_NAME);
             if (!tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
                 IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, getName(), tenantDomain);
@@ -383,7 +383,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                             HttpServletResponse response, String queryParams, String username,
                                             boolean isUserExists) throws AuthenticationFailedException, SMSOTPException {
         //the authentication flow happens with sms otp authentication.
-        String tenantDomain = context.getTenantDomain();
+        String tenantDomain = getTenantDomainFromContext(context);
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                 && !isMobileNumberUpdateFailed(context)) {
@@ -443,7 +443,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         String federatedSMSAttributeKey = null;
         Map<String, String> parametersMap;
-        String tenantDomain = context.getTenantDomain();
+        String tenantDomain = getTenantDomainFromContext(context);
         Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
         if (propertiesFromLocal != null || tenantDomain.equals(SMSOTPConstants.SUPER_TENANT)) {
             parametersMap = FederatedAuthenticatorUtil.getAuthenticatorConfig(authenticatorName);
@@ -568,7 +568,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
         boolean isEnableResendCode = SMSOTPUtils.isEnableResendCode(context);
         String loginPage = getLoginPage(context);
-        String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String tenantDomain = getTenantDomainFromUserName(username);
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
         int tokenLength = SMSOTPConstants.NUMBER_DIGIT;
@@ -605,7 +605,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 //Use the default notification mechanism (CEP) to send SMS.
                 AuthenticatedUser authenticatedUser = (AuthenticatedUser)
                         context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
-                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
+                triggerNotification(authenticatedUser.getUserName(), getTenantDomainFromAuthenticatedUser(authenticatedUser),
                         authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
             }
 
@@ -730,7 +730,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         String screenValue;
         String username = String.valueOf(context.getProperty(SMSOTPConstants.USER_NAME));
-        String tenantDomain = MultitenantUtils.getTenantDomain(username);
+        String tenantDomain = getTenantDomainFromUserName(username);
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
         try {
@@ -862,11 +862,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 mobileNumber = SMSOTPUtils.getMobileNumberForUsername(username);
             } catch (SMSOTPException e) {
                 throw new AuthenticationFailedException("Failed to get the parameters from authentication xml file " +
-                        "for user:  " + username + " for tenant: " + context.getTenantDomain(), e);
+                        "for user:  " + username + " for tenant: " + getTenantDomainFromContext(context), e);
             }
 
             if (StringUtils.isBlank(mobileNumber)) {
-                String tenantDomain = MultitenantUtils.getTenantDomain(username);
+                String tenantDomain = getTenantDomainFromUserName(username);
                 Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE);
                 if (verifiedMobileObject != null) {
                     try {
@@ -1013,7 +1013,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         UserRealm userRealm = null;
         try {
             if (StringUtils.isNotEmpty(username)) {
-                String tenantDomain = MultitenantUtils.getTenantDomain(username);
+                String tenantDomain = getTenantDomainFromUserName(username);
                 int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
                 RealmService realmService = IdentityTenantUtil.getRealmService();
                 userRealm = realmService.getTenantUserRealm(tenantId);
@@ -1036,7 +1036,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         UserRealm userRealm = null;
         try {
             if (authenticatedUser != null) {
-                String tenantDomain = authenticatedUser.getTenantDomain();
+                String tenantDomain = getTenantDomainFromAuthenticatedUser(authenticatedUser);
                 int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
                 RealmService realmService = IdentityTenantUtil.getRealmService();
                 userRealm = realmService.getTenantUserRealm(tenantId);
@@ -1526,7 +1526,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         AuthenticatedUser authenticatedUser =
                 (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
-        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
+        Property[] connectorConfigs =
+                SMSOTPUtils.getAccountLockConnectorConfigs(getTenantDomainFromAuthenticatedUser(authenticatedUser));
 
         // Return if account lock handler is not enabled.
         for (Property connectorConfig : connectorConfigs) {
@@ -1590,7 +1591,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         long unlockTimePropertyValue = 0;
         double unlockTimeRatio = 1;
 
-        Property[] connectorConfigs = SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain());
+        Property[] connectorConfigs =
+                SMSOTPUtils.getAccountLockConnectorConfigs(getTenantDomainFromAuthenticatedUser(authenticatedUser));
         for (Property connectorConfig : connectorConfigs) {
             switch (connectorConfig.getName()) {
                 case SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE:
@@ -1743,7 +1745,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         AuthenticatedUser authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants
                 .AUTHENTICATED_USER);
         eventProperties.put(IdentityEventConstants.EventProperty.USER_NAME, authenticatedUser.getUserName());
-        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, context.getTenantDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, getTenantDomainFromContext(context));
         eventProperties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, authenticatedUser
                 .getUserStoreDomain());
         eventProperties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, context.getServiceProviderName());
@@ -1764,7 +1766,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         eventProperties.put(IdentityEventConstants.EventProperty.GENERATED_OTP, context.getProperty(
                 SMSOTPConstants.OTP_TOKEN));
-
         Object otpGeneratedTimeProperty = context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME);
         if (otpGeneratedTimeProperty != null) {
             long otpGeneratedTime = (long) otpGeneratedTimeProperty;
@@ -1802,7 +1803,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 .AUTHENTICATED_USER);
         eventProperties.put(IdentityEventConstants.EventProperty.CORRELATION_ID, context.getCallerSessionKey());
         eventProperties.put(IdentityEventConstants.EventProperty.USER_NAME, authenticatedUser.getUserName());
-        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, context.getTenantDomain());
+        eventProperties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, getTenantDomainFromContext(context));
         eventProperties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, authenticatedUser
                 .getUserStoreDomain());
         eventProperties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, context.getServiceProviderName());
@@ -1867,5 +1868,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private boolean isCodeMismatch(AuthenticationContext context) {
 
         return Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.CODE_MISMATCH)));
+    }
+
+    private String getTenantDomainFromAuthenticatedUser(AuthenticatedUser authenticatedUser) {
+
+        if (IdentityTenantUtil.isTenantQualifiedUrlsEnabled()) {
+            return IdentityTenantUtil.getTenantDomainFromContext();
+        }
+        return authenticatedUser.getTenantDomain();
+    }
+
+    private String getTenantDomainFromUserName(String username) {
+
+        if (IdentityTenantUtil.isTenantQualifiedUrlsEnabled()) {
+            return IdentityTenantUtil.getTenantDomainFromContext();
+        }
+        return MultitenantUtils.getTenantDomain(username);
+    }
+
+    private String getTenantDomainFromContext(AuthenticationContext context) {
+
+        if (IdentityTenantUtil.isTenantQualifiedUrlsEnabled()) {
+            return IdentityTenantUtil.getTenantDomainFromContext();
+        }
+        return context.getTenantDomain();
     }
 }
