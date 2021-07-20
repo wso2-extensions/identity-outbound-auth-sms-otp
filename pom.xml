@@ -37,6 +37,7 @@
             </activation>
             <modules>
                 <module>component/authenticator</module>
+                <module>component/common</module>
                 <module>feature</module>
             </modules>
         </profile>
@@ -48,6 +49,11 @@
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.idp.mgt</artifactId>
                 <version>${carbon.identity.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.recovery</artifactId>
+                <version>${identity.governance.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
@@ -181,6 +187,11 @@
                 <groupId>org.apache.ws.commons.axiom</groupId>
                 <artifactId>axiom-api</artifactId>
                 <version>${axiom.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                <artifactId>jackson-jaxrs-json-provider</artifactId>
+                <version>${jackson-jaxrs-json-provider.version}</version>
             </dependency>
 
             <dependency>
@@ -331,7 +342,8 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.16.0</carbon.identity.version>
+        <carbon.identity.version>5.16.95</carbon.identity.version>
+        <identity.governance.version>1.4.1</identity.governance.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
         <carbon.identity.version.range>[5.16.0,6.0.0)</carbon.identity.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
@@ -342,6 +354,7 @@
         <wso2.json>3.0.0.wso2v1</wso2.json>
         <javax.servlet-api.version>3.0-alpha-1</javax.servlet-api.version>
         <javax.servelet.jstl.version>1.2</javax.servelet.jstl.version>
+        <jackson-jaxrs-json-provider.version>2.9.9</jackson-jaxrs-json-provider.version>
         <taglibs-standard-impl.version>1.2.5</taglibs-standard-impl.version>
         <commons-codec.version>1.4.0.wso2v1</commons-codec.version>
         <axiom.version>1.2.11-wso2v6</axiom.version>
