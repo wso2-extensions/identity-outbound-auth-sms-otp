@@ -25,9 +25,14 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
+import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPServiceImpl;
+import org.wso2.carbon.identity.smsotp.common.constant.Constants;
+import org.wso2.carbon.identity.smsotp.common.util.Utils;
 import org.wso2.carbon.user.core.service.RealmService;
+
+import java.util.Properties;
 
 /**
  * OSGI service component of the SMS OTP service.
@@ -43,13 +48,17 @@ public class SMSOTPServiceComponent {
     protected void activate(ComponentContext componentContext) {
 
         try {
-            BundleContext bundleContext = componentContext.getBundleContext();
-            bundleContext.registerService(SMSOTPService.class.getName(), new SMSOTPServiceImpl(), null);
-            if (log.isDebugEnabled()) {
-                log.debug("SMS OTP Service component activated successfully.");
+            Properties properties = Utils.readConfigurations();
+            boolean isEnabled = Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_ENABLED_PROPERTY));
+            if (isEnabled) {
+                BundleContext bundleContext = componentContext.getBundleContext();
+                bundleContext.registerService(SMSOTPService.class.getName(), new SMSOTPServiceImpl(), null);
+                if (log.isDebugEnabled()) {
+                    log.debug("SMS OTP Service component activated successfully.");
+                }
             }
         } catch (Throwable e) {
-            log.error("Error while activating the SMS OTP Service.", e);
+            log.error("Error while activating the SMS OTP service.", e);
         }
     }
 
@@ -72,5 +81,24 @@ public class SMSOTPServiceComponent {
             log.debug("Unset the Realm Service.");
         }
         SMSOTPServiceDataHolder.getInstance().setRealmService(null);
+    }
+
+    @Reference(name = "event.service",
+            service = org.wso2.carbon.identity.event.services.IdentityEventService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetEventService")
+    protected void setEventService(IdentityEventService eventService) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the Event Service.");
+        }
+    }
+
+    protected void unsetEventService(IdentityEventService eventService) {
+
+        if (log.isDebugEnabled()) {
+            log.debug("Setting the Event Service.");
+        }
     }
 }

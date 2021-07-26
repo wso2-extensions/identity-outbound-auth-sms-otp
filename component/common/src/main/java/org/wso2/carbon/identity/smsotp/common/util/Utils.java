@@ -17,14 +17,32 @@
 package org.wso2.carbon.identity.smsotp.common.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.wso2.carbon.identity.event.IdentityEventConfigBuilder;
+import org.wso2.carbon.identity.event.IdentityEventException;
+import org.wso2.carbon.identity.event.bean.ModuleConfiguration;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPClientException;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
+
+import java.util.Properties;
 
 /**
  * Util functions for SMS OTP service.
  */
 public class Utils {
+
+    public static Properties readConfigurations() throws SMSOTPServerException {
+
+        try {
+            ModuleConfiguration configs = IdentityEventConfigBuilder.getInstance()
+                    .getModuleConfigurations(Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME);
+            // Work with the default values if configurations couldn't be loaded.
+            return configs != null ? configs.getModuleProperties() : new Properties();
+        } catch (IdentityEventException e) {
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_EVENT_CONFIG_LOADING_ERROR,
+                    Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME, e);
+        }
+    }
 
     public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data) {
 

@@ -32,10 +32,8 @@ import org.wso2.carbon.identity.smsotp.common.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.smsotp.common.util.OneTimePasswordUtils;
 import org.wso2.carbon.identity.smsotp.common.util.Utils;
 import org.wso2.carbon.identity.application.authentication.framework.store.SessionDataStore;
-import org.wso2.carbon.identity.event.IdentityEventConfigBuilder;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
-import org.wso2.carbon.identity.event.bean.ModuleConfiguration;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.governance.service.notification.NotificationChannels;
 import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
@@ -74,7 +72,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (manager instanceof UniqueIDUserStoreManager) {
                 userStoreManager = (UniqueIDUserStoreManager) manager;
             } else {
-                throw Utils.handleClientException(Constants.ErrorMessage.SERVER_INCOMPATIBLE_USER_STORE_MANAGER_ERROR, null);
+                throw Utils.handleClientException(
+                        Constants.ErrorMessage.SERVER_INCOMPATIBLE_USER_STORE_MANAGER_ERROR, null);
             }
             user = userStoreManager.getUserWithID(userId, null, null);
         } catch (UserStoreException e) {
@@ -90,7 +89,14 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_INVALID_USER_ID, userId);
         }
 
-        String mobileNumber = getMobileNumber(user.getUsername(), userStoreManager);
+        // Retrieve mobile number if notifications are managed internally.
+        boolean sendNotification = Boolean.parseBoolean(
+                Utils.readConfigurations().getProperty(Constants.TRIGGER_OTP_NOTIFICATION_PROPERTY));
+        String mobileNumber = sendNotification ? getMobileNumber(user.getUsername(), userStoreManager) : null;
+        if (StringUtils.isBlank(mobileNumber)) {
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER,
+                    user.getFullQualifiedUsername());
+        }
 
         SessionDTO sessionDTO = proceedWithOTP(mobileNumber, user);
 
@@ -109,15 +115,16 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             String missingParam = StringUtils.isBlank(transactionId) ? "transactionId"
                     : StringUtils.isBlank(userId) ? "userId"
                     : "smsOTP";
-            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
+            throw Utils.handleClientException(
+                    Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
         // TODO move to the API layer.
-        transactionId = transactionId.trim();
-        userId = userId.trim();
-        smsOTP = smsOTP.trim();
+//        transactionId = transactionId.trim();
+//        userId = userId.trim();
+//        smsOTP = smsOTP.trim();
 
         // Check if resend same valid OTP is enabled.
-        Properties properties = readConfigurations();
+        Properties properties = Utils.readConfigurations();
         String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.OTP_EXPIRY_TIME_PROPERTY));
         String otpRenewalIntervalValue = StringUtils.trim(properties.getProperty(Constants.OTP_RENEWAL_INTERVAL));
         // If not defined, use the default values.
@@ -145,6 +152,17 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         } catch (IOException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
+
+        ValidationResponseDTO validationResponseDTO = isValid(sessionDTO, smsOTP, userId, transactionId);
+        if (!validationResponseDTO.isValid()) {
+            return validationResponseDTO;
+        }
+        // Valid OTP. Clear OTP session data.
+        SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
+        return new ValidationResponseDTO(userId, true);
+    }
+
+    private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId, String transactionId) {
 
         // Check if the provided OTP is correct.
         if (!StringUtils.equals(smsOTP, sessionDTO.getOtp())) {
@@ -174,16 +192,13 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             }
             return new ValidationResponseDTO(userId, false);
         }
-        // Valid OTP.
-        // Clear OTP session data.
-        SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
         return new ValidationResponseDTO(userId, true);
     }
 
     private SessionDTO proceedWithOTP(String mobileNumber, User user) throws SMSOTPException {
 
         // Read server configurations.
-        Properties properties = readConfigurations();
+        Properties properties = Utils.readConfigurations();
         String otpLengthValue = StringUtils.trim(properties.getProperty(Constants.OTP_LENGTH_PROPERTY));
         String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.OTP_EXPIRY_TIME_PROPERTY));
         String otpRenewIntervalValue = StringUtils.trim(properties.getProperty(Constants.OTP_RENEWAL_INTERVAL));
@@ -230,7 +245,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             try {
                 jsonString = new ObjectMapper().writeValueAsString(sessionDTO);
             } catch (JsonProcessingException e) {
-                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_SESSION_JSON_MAPPER_ERROR, e.getMessage(), e);
+                throw Utils.handleServerException(
+                        Constants.ErrorMessage.SERVER_SESSION_JSON_MAPPER_ERROR, e.getMessage(), e);
             }
             String sessionId = resendSameOtpEnabled ? String.valueOf(user.getUserID().hashCode()) : transactionId;
             SessionDataStore.getInstance().storeSessionData(sessionId, Constants.SESSION_TYPE_OTP, jsonString,
@@ -251,13 +267,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     private void triggerNotification(User user, String mobileNumber, String otp) throws SMSOTPException {
 
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Sending %s notification to : %s.",
-                    IdentityRecoveryConstants.NOTIFICATION_TYPE_VERIFY_MOBILE_ON_UPDATE,
-                    user.getFullQualifiedUsername())
-            );
-        }
-        if (StringUtils.isBlank(mobileNumber)) {
-            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER, user.getFullQualifiedUsername());
+            log.debug(String.format("Sending SMS OTP notification to : %s using the template : %s.",
+                    user.getFullQualifiedUsername(),
+                    Constants.SMS_OTP_NOTIFICATION_TEMPLATE));
         }
 
         HashMap<String, Object> properties = new HashMap<>();
@@ -266,8 +278,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, user.getTenantDomain());
         properties.put(IdentityEventConstants.EventProperty.NOTIFICATION_CHANNEL,
                 NotificationChannels.SMS_CHANNEL.getChannelType());
-        properties.put(IdentityRecoveryConstants.TEMPLATE_TYPE,
-                IdentityRecoveryConstants.NOTIFICATION_TYPE_VERIFY_MOBILE_ON_UPDATE);
+        properties.put(IdentityRecoveryConstants.TEMPLATE_TYPE, Constants.SMS_OTP_NOTIFICATION_TEMPLATE);
         properties.put(IdentityRecoveryConstants.SEND_TO, mobileNumber);
         properties.put(IdentityRecoveryConstants.CONFIRMATION_CODE, otp);
 
@@ -275,7 +286,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         try {
             IdentityRecoveryServiceDataHolder.getInstance().getIdentityEventService().handleEvent(event);
         } catch (IdentityEventException e) {
-            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_NOTIFICATION_SENDING_ERROR, user.getFullQualifiedUsername(), e);
+            throw Utils.handleServerException(
+                    Constants.ErrorMessage.SERVER_NOTIFICATION_SENDING_ERROR, user.getFullQualifiedUsername(), e);
         }
     }
 
@@ -321,19 +333,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         // If the previous OTP is issued within the interval, return the same.
         return (System.currentTimeMillis() - previousSessionDTO.getGeneratedTime() < otpRenewalInterval) ?
                 previousSessionDTO : null;
-    }
-
-    private Properties readConfigurations() throws SMSOTPServerException {
-
-        try {
-            ModuleConfiguration configs = IdentityEventConfigBuilder.getInstance()
-                    .getModuleConfigurations(Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME);
-            // Work with the default values if configurations couldn't be loaded.
-            return configs != null ? configs.getModuleProperties() : new Properties();
-        } catch (IdentityEventException e) {
-            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_EVENT_CONFIG_LOADING_ERROR,
-                    Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME, e);
-        }
     }
 
     private String createTransactionId() {

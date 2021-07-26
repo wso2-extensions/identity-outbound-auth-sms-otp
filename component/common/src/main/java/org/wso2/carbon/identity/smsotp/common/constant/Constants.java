@@ -30,11 +30,11 @@ public class Constants {
 
     public static final int NUMBER_BASE = 2;
     public static final int DEFAULT_OTP_LENGTH = 6;
-
-    public static final int DEFAULT_SMS_OTP_EXPIRY_TIME = 120000;
+    public static final int DEFAULT_SMS_OTP_EXPIRY_TIME = 60000;
+    public static final String SMS_OTP_NOTIFICATION_TEMPLATE = "sendOTP";
 
     public static final String SMS_OTP_IDENTITY_EVENT_MODULE_NAME = "smsOtp";
-    public static final String SMS_OTP_ENABLED = "smsOtp.enabled";
+    public static final String SMS_OTP_ENABLED_PROPERTY = "smsOtp.enabled";
     public static final String OTP_LENGTH_PROPERTY = "smsOtp.tokenLength";
     public static final String OTP_EXPIRY_TIME_PROPERTY = "smsOtp.tokenExpiryTime";
     public static final String ALPHA_NUMERIC_OTP_PROPERTY = "smsOtp.isEnableAlphanumericToken";
@@ -136,7 +136,6 @@ public class Constants {
      * Conflict Error Messages
      */
     public enum ConflictErrorMessages {
-
 
     }
 }
