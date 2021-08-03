@@ -34,12 +34,13 @@ public class Constants {
     public static final String SMS_OTP_NOTIFICATION_TEMPLATE = "sendOTP";
 
     public static final String SMS_OTP_IDENTITY_EVENT_MODULE_NAME = "smsOtp";
-    public static final String SMS_OTP_ENABLED_PROPERTY = "smsOtp.enabled";
-    public static final String OTP_LENGTH_PROPERTY = "smsOtp.tokenLength";
-    public static final String OTP_EXPIRY_TIME_PROPERTY = "smsOtp.tokenExpiryTime";
-    public static final String ALPHA_NUMERIC_OTP_PROPERTY = "smsOtp.isEnableAlphanumericToken";
-    public static final String TRIGGER_OTP_NOTIFICATION_PROPERTY = "smsOtp.triggerNotification";
-    public static final String OTP_RENEWAL_INTERVAL = "smsOtp.tokenRenewInterval";
+    public static final String SMS_OTP_ENABLED = "smsOtp.enabled";
+    public static final String SMS_OTP_TOKEN_LENGTH = "smsOtp.tokenLength";
+    public static final String SMS_OTP_TOKEN_EXPIRY_TIME = "smsOtp.tokenExpiryTime";
+    public static final String SMS_OTP_ALPHANUMERIC_TOKEN_ENABLED = "smsOtp.isEnableAlphanumericToken";
+    public static final String SMS_OTP_TRIGGER_NOTIFICATION = "smsOtp.triggerNotification";
+    public static final String SMS_OTP_TOKEN_RENEW_INTERVAL = "smsOtp.tokenRenewInterval";
+    public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
     /**
      * SMS OTP service error codes.
@@ -53,15 +54,15 @@ public class Constants {
         CLIENT_BLANK_MOBILE_NUMBER("SMS-60004", "Invalid mobile number.",
                 "No valid mobile number for the user : %s."),
         CLIENT_EXPIRED_OTP("SMS-60005", "Expired OTP.",
-                "Expired OTP."),
+                "Expired OTP provided for the user : %s."),
         CLIENT_INVALID_TRANSACTION_ID("SMS-60006", "Invalid transaction Id.",
-                "Invalid transaction Id."),
+                "Invalid transaction Id : %s."),
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
                 "Mandatory parameters not found : %s."),
         CLIENT_OTP_USER_VALIDATION_FAILED("SMS-60007", "OTP user validation failed.",
                 "Provided OTP doesn't belong to the mentioned user : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",
-                "Provided OTP is invalid."),
+                "Provided OTP is invalid. User id : %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",

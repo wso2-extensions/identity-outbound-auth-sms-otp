@@ -19,51 +19,58 @@ package org.wso2.carbon.identity.smsotp.common.exception;
 import org.wso2.carbon.identity.event.IdentityEventException;
 
 /**
- * SMS OTP exception
+ * SMS OTP exception.
  */
 public class SMSOTPException extends IdentityEventException {
 
     private String errorCode;
+    private String message;
     private String description;
 
     public SMSOTPException(String errorCode, String message) {
+
         super(errorCode, message);
         this.errorCode = errorCode;
+        this.message = message;
     }
 
     public SMSOTPException(String errorCode, String message, Throwable throwable) {
+
         super(errorCode, message, throwable);
         this.errorCode = errorCode;
+        this.message = message;
     }
 
-    public SMSOTPException(String message, String description, String errorCode) {
-        super(message);
+    public SMSOTPException(String errorCode, String message, String description) {
+
+        super(errorCode, message);
         this.errorCode = errorCode;
+        this.message = message;
         this.description = description;
     }
 
-    public SMSOTPException(String message, String description, String errorCode, Throwable e) {
-        super(message, e);
+    public SMSOTPException(String errorCode, String message, String description, Throwable e) {
+
+        super(errorCode, message, e);
         this.errorCode = errorCode;
+        this.message = message;
         this.description = description;
     }
 
     @Override
     public String getErrorCode() {
+
         return errorCode;
     }
 
     @Override
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
+    public String getMessage() {
+
+        return message;
     }
 
     public String getDescription() {
+
         return description;
     }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
 }

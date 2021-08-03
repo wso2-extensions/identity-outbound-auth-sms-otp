@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
+import org.wso2.carbon.identity.smsotp.common.dto.ErrorDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.GenerationResponseDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.SessionDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.ValidationResponseDTO;
@@ -85,7 +86,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         // Retrieve mobile number if notifications are managed internally.
         boolean sendNotification = Boolean.parseBoolean(
-                Utils.readConfigurations().getProperty(Constants.TRIGGER_OTP_NOTIFICATION_PROPERTY));
+                Utils.readConfigurations().getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION));
         String mobileNumber = sendNotification ? getMobileNumber(user.getUsername(), userStoreManager) : null;
         if (StringUtils.isBlank(mobileNumber)) {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER,
@@ -112,15 +113,11 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleClientException(
                     Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
-        // TODO move to the API layer.
-//        transactionId = transactionId.trim();
-//        userId = userId.trim();
-//        smsOTP = smsOTP.trim();
 
         // Check if resend same valid OTP is enabled.
         Properties properties = Utils.readConfigurations();
-        String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.OTP_EXPIRY_TIME_PROPERTY));
-        String otpRenewalIntervalValue = StringUtils.trim(properties.getProperty(Constants.OTP_RENEWAL_INTERVAL));
+        String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_EXPIRY_TIME));
+        String otpRenewalIntervalValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_RENEW_INTERVAL));
         // If not defined, use the default values.
         int otpExpiryTime = StringUtils.isNumeric(otpExpiryTimeValue) ?
                 Integer.parseInt(otpExpiryTimeValue) : Constants.DEFAULT_SMS_OTP_EXPIRY_TIME;
@@ -156,35 +153,47 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return new ValidationResponseDTO(userId, true);
     }
 
-    private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId, String transactionId) {
+    private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId, String transactionId)
+            throws SMSOTPServerException {
+
+        boolean showFailureReason = Boolean.parseBoolean(
+                StringUtils.trim(Utils.readConfigurations().getProperty(Constants.SMS_OTP_SHOW_FAILURE_REASON)));
+        ErrorDTO error;
 
         // Check if the provided OTP is correct.
         if (!StringUtils.equals(smsOTP, sessionDTO.getOtp())) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Invalid OTP provided for the user : %s.", userId));
             }
-            return new ValidationResponseDTO(userId, false);
+            error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
+                    : null;
+            return new ValidationResponseDTO(userId, false, error);
         }
         // Check for expired OTPs.
         if (System.currentTimeMillis() - sessionDTO.getGeneratedTime() >= sessionDTO.getExpiryTime()) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Expired OTP provided for the user : %s.", userId));
             }
-            return new ValidationResponseDTO(userId, false);
+            error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_EXPIRED_OTP, userId) : null;
+            return new ValidationResponseDTO(userId, false, error);
         }
         // Check if the OTP belongs to the provided user.
         if (!StringUtils.equals(userId, sessionDTO.getUserId())) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("OTP doesn't belong to the provided user. User : %s.", userId));
             }
-            return new ValidationResponseDTO(userId, false);
+            error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_OTP_USER_VALIDATION_FAILED, userId)
+                    : null;
+            return new ValidationResponseDTO(userId, false, error);
         }
         // Check if the provided transaction Id is correct.
         if (!StringUtils.equals(transactionId, sessionDTO.getTransactionId())) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Provided transaction Id doesn't match. User : %s.", userId));
             }
-            return new ValidationResponseDTO(userId, false);
+            error = showFailureReason ?
+                    new ErrorDTO(Constants.ErrorMessage.CLIENT_INVALID_TRANSACTION_ID, transactionId) : null;
+            return new ValidationResponseDTO(userId, false, error);
         }
         return new ValidationResponseDTO(userId, true);
     }
@@ -193,15 +202,15 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         // Read server configurations.
         Properties properties = Utils.readConfigurations();
-        String otpLengthValue = StringUtils.trim(properties.getProperty(Constants.OTP_LENGTH_PROPERTY));
-        String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.OTP_EXPIRY_TIME_PROPERTY));
-        String otpRenewIntervalValue = StringUtils.trim(properties.getProperty(Constants.OTP_RENEWAL_INTERVAL));
+        String otpLengthValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_LENGTH));
+        String otpExpiryTimeValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_EXPIRY_TIME));
+        String otpRenewIntervalValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_RENEW_INTERVAL));
         boolean isAlphaNumericOtpEnabled = Boolean.parseBoolean(
-                properties.getProperty(Constants.ALPHA_NUMERIC_OTP_PROPERTY));
+                properties.getProperty(Constants.SMS_OTP_ALPHANUMERIC_TOKEN_ENABLED));
         // Notification sending defaults to false.
         boolean triggerNotification =
-                StringUtils.isNotBlank(properties.getProperty(Constants.TRIGGER_OTP_NOTIFICATION_PROPERTY)) &&
-                        Boolean.parseBoolean(properties.getProperty(Constants.TRIGGER_OTP_NOTIFICATION_PROPERTY));
+                StringUtils.isNotBlank(properties.getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION)) &&
+                        Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION));
 
         // If not defined, use the default values.
         int otpExpiryTime = StringUtils.isNumeric(otpExpiryTimeValue) ?

@@ -49,7 +49,7 @@ public class SMSOTPServiceComponent {
 
         try {
             Properties properties = Utils.readConfigurations();
-            boolean isEnabled = Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_ENABLED_PROPERTY));
+            boolean isEnabled = Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_ENABLED));
             if (isEnabled) {
                 BundleContext bundleContext = componentContext.getBundleContext();
                 bundleContext.registerService(SMSOTPService.class.getName(), new SMSOTPServiceImpl(), null);

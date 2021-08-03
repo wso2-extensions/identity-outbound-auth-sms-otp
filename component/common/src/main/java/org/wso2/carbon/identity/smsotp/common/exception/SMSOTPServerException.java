@@ -17,23 +17,27 @@
 package org.wso2.carbon.identity.smsotp.common.exception;
 
 /**
- * SMS OTP server exception
+ * SMS OTP server exception.
  */
 public class SMSOTPServerException extends SMSOTPException {
 
     public SMSOTPServerException(String errorCode, String message) {
+
         super(errorCode, message);
     }
 
     public SMSOTPServerException(String errorCode, String message, Throwable throwable) {
+
         super(errorCode, message, throwable);
     }
 
-    public SMSOTPServerException(String message, String description, String errorCode) {
-        super(message, description, errorCode);
+    public SMSOTPServerException(String errorCode, String message, String description) {
+
+        super(errorCode, message, description);
     }
 
-    public SMSOTPServerException(String message, String description, String errorCode, Throwable e) {
-        super(message, description, errorCode, e);
+    public SMSOTPServerException(String errorCode, String message, String description, Throwable e) {
+
+        super(errorCode, message, description, e);
     }
 }

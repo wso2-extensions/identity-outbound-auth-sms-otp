@@ -25,11 +25,19 @@ public class ValidationResponseDTO {
 
     private boolean isValid;
     private String userId;
+    private ErrorDTO error;
 
     public ValidationResponseDTO(String userId, boolean isValid) {
 
         this.isValid = isValid;
         this.userId = userId;
+    }
+
+    public ValidationResponseDTO(String userId, boolean isValid, ErrorDTO error) {
+
+        this.isValid = isValid;
+        this.userId = userId;
+        this.error = error;
     }
 
     public boolean isValid() {
@@ -46,5 +54,13 @@ public class ValidationResponseDTO {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public ErrorDTO getError() {
+        return error;
+    }
+
+    public void setError(ErrorDTO error) {
+        this.error = error;
     }
 }

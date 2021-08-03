@@ -52,7 +52,7 @@ public class Utils {
         } else {
             description = error.getDescription();
         }
-        return new SMSOTPClientException(error.getMessage(), description, error.getCode());
+        return new SMSOTPClientException(error.getCode(), error.getMessage(), description);
     }
 
     public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data,
@@ -64,29 +64,29 @@ public class Utils {
         } else {
             description = error.getDescription();
         }
-        return new SMSOTPClientException(error.getMessage(), description, error.getCode(), e);
+        return new SMSOTPClientException(error.getCode(), error.getMessage(), description, e);
     }
 
     public static SMSOTPServerException handleServerException(Constants.ErrorMessage error, String data,
             Throwable e) {
 
-        String message;
+        String description;
         if (StringUtils.isNotBlank(data)) {
-            message = String.format(error.getMessage(), data);
+            description = String.format(error.getDescription(), data);
         } else {
-            message = error.getMessage();
+            description = error.getDescription();
         }
-        return new SMSOTPServerException(message, error.getCode(), e);
+        return new SMSOTPServerException(error.getCode(), error.getMessage(), description, e);
     }
 
     public static SMSOTPServerException handleServerException(Constants.ErrorMessage error, String data) {
 
-        String message;
+        String description;
         if (StringUtils.isNotBlank(data)) {
-            message = String.format(error.getMessage(), data);
+            description = String.format(error.getDescription(), data);
         } else {
-            message = error.getMessage();
+            description = error.getDescription();
         }
-        return new SMSOTPServerException(message, error.getCode());
+        return new SMSOTPServerException(error.getCode(), error.getMessage(), description);
     }
 }
