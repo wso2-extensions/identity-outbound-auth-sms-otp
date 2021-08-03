@@ -40,7 +40,7 @@ import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
 import org.wso2.carbon.identity.recovery.internal.IdentityRecoveryServiceDataHolder;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
-import org.wso2.carbon.user.core.UniqueIDUserStoreManager;
+import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.common.User;
 
 import java.io.IOException;
@@ -64,18 +64,12 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_EMPTY_USER_ID, null);
         }
         // Retrieve user by ID.
-        UniqueIDUserStoreManager userStoreManager;
+        AbstractUserStoreManager userStoreManager;
         User user;
         try {
-            UserStoreManager manager = SMSOTPServiceDataHolder.getInstance()
+            userStoreManager = (AbstractUserStoreManager) SMSOTPServiceDataHolder.getInstance()
                     .getRealmService().getTenantUserRealm(getTenantId()).getUserStoreManager();
-            if (manager instanceof UniqueIDUserStoreManager) {
-                userStoreManager = (UniqueIDUserStoreManager) manager;
-            } else {
-                throw Utils.handleClientException(
-                        Constants.ErrorMessage.SERVER_INCOMPATIBLE_USER_STORE_MANAGER_ERROR, null);
-            }
-            user = userStoreManager.getUserWithID(userId, null, null);
+            user = userStoreManager.getUser(userId, null);
         } catch (UserStoreException e) {
             // Handle user not found.
             if ("30007".equals(((org.wso2.carbon.user.core.UserStoreException) e).getErrorCode())) {
@@ -298,7 +292,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         try {
             mobileNumbersMap = userStoreManager.getUserClaimValues(
                     username,
-                    new String[] { IdentityRecoveryConstants.MOBILE_NUMBER_CLAIM },
+                    new String[] { NotificationChannels.SMS_CHANNEL.getClaimUri() },
                     null);
         } catch (UserStoreException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_RETRIEVING_MOBILE_ERROR, username, e);
@@ -309,7 +303,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             }
             return null;
         }
-        return mobileNumbersMap.get(IdentityRecoveryConstants.MOBILE_NUMBER_CLAIM);
+        return mobileNumbersMap.get(NotificationChannels.SMS_CHANNEL.getClaimUri());
     }
 
     private SessionDTO getPreviousValidSession(String userId, int otpRenewalInterval) throws SMSOTPException {
