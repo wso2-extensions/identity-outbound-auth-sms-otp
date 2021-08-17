@@ -31,7 +31,7 @@ import static org.wso2.carbon.identity.smsotp.common.constant.Constants.ErrorMes
 import static org.wso2.carbon.identity.smsotp.common.constant.Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR;
 
 /**
- * OTP Generation
+ * OTP generation utils.
  */
 public class OneTimePasswordUtils {
 

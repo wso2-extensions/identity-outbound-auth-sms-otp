@@ -119,14 +119,14 @@ public class Constants {
     }
 
     /**
-     * Forbidden Error Messages
+     * Forbidden error messages.
      */
     public enum ForbiddenErrorMessages {
 
     }
 
     /**
-     * Not Found Error Messages
+     * Not Found error messages.
      */
     public enum NotFoundErrorMessages {
 
@@ -134,10 +134,9 @@ public class Constants {
     }
 
     /**
-     * Conflict Error Messages
+     * Conflict error messages.
      */
     public enum ConflictErrorMessages {
 
     }
 }
-
