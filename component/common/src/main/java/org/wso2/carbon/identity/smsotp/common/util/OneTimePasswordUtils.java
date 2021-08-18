@@ -1,17 +1,19 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
 package org.wso2.carbon.identity.smsotp.common.util;
@@ -51,16 +53,16 @@ public class OneTimePasswordUtils {
                 generatedToken.append(number.nextInt(9));
             }
         } catch (NoSuchAlgorithmException e) {
-            log.error("Unable to find the Algorithm", e);
+            log.error("Unable to find the Algorithm.", e);
         }
 
         return generatedToken.toString();
     }
 
     /**
-     * @param num    the number to calculate the checksum for
-     * @param digits number of significant places in the number
-     * @return the checksum of num
+     * @param num    The number to calculate the checksum for.
+     * @param digits Number of significant places in the number.
+     * @return       The checksum of num.
      */
     public static int calcChecksum(long num, int digits) {
 
@@ -87,9 +89,9 @@ public class OneTimePasswordUtils {
      * algorithm. HMAC computes a Hashed Message Authentication Code and in this
      * case SHA1 is the hash algorithm used.
      *
-     * @param keyBytes the bytes to use for the HMAC-SHA-1 key
-     * @param text     the message or text to be authenticated.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @param keyBytes                  Bytes to use for the HMAC-SHA-1 key.
+     * @param text                      Message or text to be authenticated.
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
@@ -110,19 +112,19 @@ public class OneTimePasswordUtils {
     /**
      * This method generates an OTP value for the given set of parameters.
      *
-     * @param secret           the shared secret
-     * @param movingFactor     the counter, or other value that changes on a per use
+     * @param secret           The shared secret.
+     * @param movingFactor     The counter, or other value that changes on a per use
      *                         basis.
-     * @param codeDigits       the number of digits in the OTP, not including the checksum,
+     * @param codeDigits       The number of digits in the OTP, not including the checksum,
      *                         if any.
-     * @param addChecksum      a flag that indicates if a checksum digit
+     * @param addChecksum      A flag that indicates if a checksum digit
      *                         should be appended to the OTP.
-     * @param truncationOffset the offset into the MAC result to begin truncation. If this
+     * @param truncationOffset The offset into the MAC result to begin truncation. If this
      *                         value is out of the range of 0 ... 15, then dynamic truncation
      *                         will be used. Dynamic truncation is when the last 4 bits of
      *                         the last byte of the MAC are used to determine the start
      *                         offset.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
@@ -162,19 +164,19 @@ public class OneTimePasswordUtils {
     /**
      * This method generates an alphanumeric OTP value for the given set of parameters.
      *
-     * @param secret           the shared secret
-     * @param movingFactor     the counter, or other value that changes on a per use
+     * @param secret           The shared secret.
+     * @param movingFactor     The counter, or other value that changes on a per use
      *                         basis.
-     * @param codeDigits       the number of digits in the OTP, not including the checksum,
+     * @param codeDigits       The number of digits in the OTP, not including the checksum,
      *                         if any.
-     * @param addChecksum      a flag that indicates if a checksum digit
+     * @param addChecksum      A flag that indicates if a checksum digit
      *                         should be appended to the OTP.
-     * @param truncationOffset the offset into the MAC result to begin truncation. If this
+     * @param truncationOffset The offset into the MAC result to begin truncation. If this
      *                         value is out of the range of 0 ... 15, then dynamic truncation
      *                         will be used. Dynamic truncation is when the last 4 bits of
      *                         the last byte of the MAC are used to determine the start
      *                         offset.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
@@ -212,11 +214,11 @@ public class OneTimePasswordUtils {
     /**
      * Generate the OTP.
      *
-     * @param key                       the key
-     * @param base                      the base
-     * @param length                    OTP length
-     * @param isAlphaNumericOTPEnabled  a flag that indicates the OTP is alphanumeric or not
-     * @return                          generated OTP
+     * @param key                       The key.
+     * @param base                      The base.
+     * @param length                    OTP length.
+     * @param isAlphaNumericOTPEnabled  A flag that indicates the OTP is alphanumeric or not.
+     * @return                          Generated OTP.
      */
     public static String generateOTP(String key, String base, int length, boolean isAlphaNumericOTPEnabled) throws
             SMSOTPServerException {
@@ -227,19 +229,19 @@ public class OneTimePasswordUtils {
                 return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
                 throw Utils.handleServerException(SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
-                        "Unable to find the SHA1 Algorithm to generate OTP", e);
+                        "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
                 throw Utils.handleServerException(SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
-                        "Unable to find the secret key", e);
+                        "Unable to find the secret key.", e);
             }
         } else {
             try {
                 return generateOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
                 throw Utils.handleServerException(SERVER_GENERATE_OTP_ERROR,
-                        "Unable to find the SHA1 Algorithm to generate OTP", e);
+                        "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
-                throw Utils.handleServerException(SERVER_GENERATE_OTP_ERROR, "Unable to find the secret key", e);
+                throw Utils.handleServerException(SERVER_GENERATE_OTP_ERROR, "Unable to find the secret key.", e);
             }
         }
     }

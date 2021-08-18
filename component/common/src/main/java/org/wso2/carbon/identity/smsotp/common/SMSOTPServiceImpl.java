@@ -1,18 +1,21 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.com).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+
 package org.wso2.carbon.identity.smsotp.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,6 +61,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
     private static final Log log = LogFactory.getLog(SMSOTPService.class);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GenerationResponseDTO generateSMSOTP(String userId) throws SMSOTPException {
 
@@ -76,8 +82,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if ("30007".equals(((org.wso2.carbon.user.core.UserStoreException) e).getErrorCode())) {
                 throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_INVALID_USER_ID, userId);
             }
-            throw Utils.handleClientException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
-                    "Error while retrieving user from the Id : " + userId, e);
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
+                    String.format("Error while retrieving user from the Id : %s.", userId), e);
         }
         // Check if the user exist.
         if (user == null) {
@@ -93,7 +99,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     user.getFullQualifiedUsername());
         }
 
-        SessionDTO sessionDTO = proceedWithOTP(mobileNumber, user);
+        SessionDTO sessionDTO = generateOTP(mobileNumber, user);
 
         GenerationResponseDTO otpDto = new GenerationResponseDTO();
         otpDto.setTransactionId(sessionDTO.getTransactionId());
@@ -101,6 +107,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return otpDto;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ValidationResponseDTO validateSMSOTP(String transactionId, String userId, String smsOTP)
             throws SMSOTPException {
@@ -198,7 +207,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return new ValidationResponseDTO(userId, true);
     }
 
-    private SessionDTO proceedWithOTP(String mobileNumber, User user) throws SMSOTPException {
+    private SessionDTO generateOTP(String mobileNumber, User user) throws SMSOTPException {
 
         // Read server configurations.
         Properties properties = Utils.readConfigurations();
@@ -342,7 +351,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         String transactionId = UUID.randomUUID().toString();
         if (log.isDebugEnabled()) {
-            log.debug("Transaction Id: " + transactionId);
+            log.debug(String.format("Transaction Id: %s.", transactionId));
         }
         return transactionId;
     }
