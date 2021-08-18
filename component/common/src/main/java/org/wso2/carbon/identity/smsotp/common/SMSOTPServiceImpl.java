@@ -46,6 +46,7 @@ import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.common.User;
+import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -79,7 +80,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             user = userStoreManager.getUser(userId, null);
         } catch (UserStoreException e) {
             // Handle user not found.
-            if ("30007".equals(((org.wso2.carbon.user.core.UserStoreException) e).getErrorCode())) {
+            String errorCode = ((org.wso2.carbon.user.core.UserStoreException) e).getErrorCode();
+            if (UserCoreErrorConstants.ErrorMessages.ERROR_CODE_NON_EXISTING_USER.getCode().equals(errorCode)) {
                 throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_INVALID_USER_ID, userId);
             }
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
