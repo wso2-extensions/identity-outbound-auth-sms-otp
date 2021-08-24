@@ -31,7 +31,6 @@ public class SessionDTO implements Serializable {
     private String otp;
     private long generatedTime;
     private long expiryTime;
-    private String transactionId;
     private String fullQualifiedUserName;
     private String userId;
 
@@ -63,16 +62,6 @@ public class SessionDTO implements Serializable {
     public void setExpiryTime(long expiryTime) {
 
         this.expiryTime = expiryTime;
-    }
-
-    public String getTransactionId() {
-
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-
-        this.transactionId = transactionId;
     }
 
     public String getFullQualifiedUserName() {
@@ -108,7 +97,6 @@ public class SessionDTO implements Serializable {
         return getGeneratedTime() == that.getGeneratedTime() &&
                 getExpiryTime() == that.getExpiryTime() &&
                 getOtp().equals(that.getOtp()) &&
-                getTransactionId().equals(that.getTransactionId()) &&
                 getFullQualifiedUserName().equals(that.getFullQualifiedUserName()) &&
                 getUserId().equals(that.getUserId());
     }
@@ -116,20 +104,19 @@ public class SessionDTO implements Serializable {
     @Override
     public int hashCode() {
 
-        return Objects.hash(getOtp(), getGeneratedTime(), getExpiryTime(), getTransactionId(),
-                getFullQualifiedUserName(), getUserId());
+        return Objects.hash(getOtp(), getGeneratedTime(), getExpiryTime(), getFullQualifiedUserName(), getUserId());
     }
 
     @Override
     public String toString() {
 
-        return "SessionDTO{" +
-                "otpToken='" + otp + '\'' +
-                ", generatedTime=" + generatedTime +
-                ", expiryTime=" + expiryTime +
-                ", transactionId='" + transactionId + '\'' +
-                ", fullQualifiedUserName='" + fullQualifiedUserName + '\'' +
-                ", userId='" + userId + '\'' +
-                '}';
+        StringBuilder sb = new StringBuilder("SessionDTO {");
+        sb.append("\n\totpToken = ").append(otp)
+                .append(",\n\tgeneratedTime = ").append(generatedTime)
+                .append(",\n\texpiryTime = ").append(expiryTime)
+                .append(",\n\tfullQualifiedUserName = ").append(fullQualifiedUserName)
+                .append(",\n\tuserId = ").append(userId)
+                .append("\n}");
+        return sb.toString();
     }
 }

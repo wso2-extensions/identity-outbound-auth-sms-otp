@@ -36,6 +36,7 @@ public interface SMSOTPService {
      * @return {@link ValidationResponseDTO}    OTP validation result.
      * @throws {@link SMSOTPException}          Thrown if any server or client error occurred.
      */
+    // TODO remove transaction Id after testing.
     ValidationResponseDTO validateSMSOTP(String transactionId, String userId, String smsOTP) throws SMSOTPException;
 
     /**

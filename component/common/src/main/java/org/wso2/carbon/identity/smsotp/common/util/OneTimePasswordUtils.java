@@ -26,6 +26,7 @@ import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 

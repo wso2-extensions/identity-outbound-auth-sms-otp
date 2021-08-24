@@ -32,13 +32,13 @@ public class Constants {
 
     public static final int NUMBER_BASE = 2;
     public static final int DEFAULT_OTP_LENGTH = 6;
-    public static final int DEFAULT_SMS_OTP_EXPIRY_TIME = 60000;
+    public static final int DEFAULT_SMS_OTP_VALIDITY_PERIOD = 60000;
     public static final String SMS_OTP_NOTIFICATION_TEMPLATE = "sendOTP";
 
     public static final String SMS_OTP_IDENTITY_EVENT_MODULE_NAME = "smsOtp";
     public static final String SMS_OTP_ENABLED = "smsOtp.enabled";
     public static final String SMS_OTP_TOKEN_LENGTH = "smsOtp.tokenLength";
-    public static final String SMS_OTP_TOKEN_EXPIRY_TIME = "smsOtp.tokenExpiryTime";
+    public static final String SMS_OTP_TOKEN_VALIDITY_PERIOD = "smsOtp.tokenValidityPeriod";
     public static final String SMS_OTP_ALPHANUMERIC_TOKEN_ENABLED = "smsOtp.isEnableAlphanumericToken";
     public static final String SMS_OTP_TRIGGER_NOTIFICATION = "smsOtp.triggerNotification";
     public static final String SMS_OTP_TOKEN_RENEW_INTERVAL = "smsOtp.tokenRenewInterval";
@@ -57,14 +57,12 @@ public class Constants {
                 "No valid mobile number for the user : %s."),
         CLIENT_EXPIRED_OTP("SMS-60005", "Expired OTP.",
                 "Expired OTP provided for the user : %s."),
-        CLIENT_INVALID_TRANSACTION_ID("SMS-60006", "Invalid transaction Id.",
-                "Invalid transaction Id : %s."),
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
                 "Mandatory parameters not found : %s."),
-        CLIENT_OTP_USER_VALIDATION_FAILED("SMS-60007", "OTP user validation failed.",
-                "Provided OTP doesn't belong to the mentioned user : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",
                 "Provided OTP is invalid. User id : %s."),
+        CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
+                "No OTP found for the user Id : %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",
@@ -83,8 +81,6 @@ public class Constants {
                 "Error parsing to SessionDTO."),
         SERVER_EVENT_CONFIG_LOADING_ERROR("SMS-65008", "Error while loading SMS OTP event configs.",
                 "Error while loading SMS OTP event configs : %s"),
-        SERVER_INCOMPATIBLE_USER_STORE_MANAGER_ERROR("SMS-65009", "Incompatible user store manager.",
-                "user store manager doesn't support unique Ids."),
         SERVER_UNEXPECTED_ERROR("SMS-65010", "An unexpected server error occurred.",
                 "An unexpected server error occurred.");
 
