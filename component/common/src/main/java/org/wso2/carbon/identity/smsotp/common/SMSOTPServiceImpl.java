@@ -20,7 +20,6 @@ package org.wso2.carbon.identity.smsotp.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +50,6 @@ import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 import java.io.IOException;
 import java.util.HashMap;
 
-import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -287,22 +285,22 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     private String getMobileNumber(String username, UserStoreManager userStoreManager)
             throws SMSOTPServerException {
 
-        Map<String, String> mobileNumbersMap;
+        String mobileNumber;
         try {
-            mobileNumbersMap = userStoreManager.getUserClaimValues(
+            mobileNumber = userStoreManager.getUserClaimValue(
                     username,
-                    new String[] { NotificationChannels.SMS_CHANNEL.getClaimUri() },
+                    NotificationChannels.SMS_CHANNEL.getClaimUri(),
                     null);
         } catch (UserStoreException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_RETRIEVING_MOBILE_ERROR, username, e);
         }
-        if (MapUtils.isEmpty(mobileNumbersMap)) {
+        if (StringUtils.isBlank(mobileNumber)) {
             if (log.isDebugEnabled()) {
-                log.debug(String.format("No mobile numbers found for the user : %s.", username));
+                log.debug(String.format("No mobile number found for the user: %s.", username));
             }
             return null;
         }
-        return mobileNumbersMap.get(NotificationChannels.SMS_CHANNEL.getClaimUri());
+        return mobileNumber;
     }
 
     private SessionDTO getPreviousValidSession(User user, int otpRenewalInterval) throws SMSOTPException {
