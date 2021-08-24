@@ -96,7 +96,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         boolean sendNotification = Boolean.parseBoolean(
                 Utils.readConfigurations().getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION));
         String mobileNumber = sendNotification ? getMobileNumber(user.getUsername(), userStoreManager) : null;
-        if (StringUtils.isBlank(mobileNumber)) {
+        if (sendNotification && StringUtils.isBlank(mobileNumber)) {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER,
                     user.getFullQualifiedUsername());
         }
