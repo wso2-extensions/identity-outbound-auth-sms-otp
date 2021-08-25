@@ -26,7 +26,6 @@ import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -133,7 +132,6 @@ public class OneTimePasswordUtils {
                                      int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
 
         // put movingFactor value into text byte array
-        String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
         for (int i = text.length - 1; i >= 0; i--) {
@@ -155,11 +153,11 @@ public class OneTimePasswordUtils {
         if (addChecksum) {
             otp = (otp * 10) + calcChecksum(otp, codeDigits);
         }
-        result = Integer.toString(otp);
+        StringBuilder result = new StringBuilder(Integer.toString(otp));
         while (result.length() < digits) {
-            result = "0" + result;
+            result.insert(0, "0");
         }
-        return result;
+        return result.toString();
     }
 
     /**
@@ -186,7 +184,6 @@ public class OneTimePasswordUtils {
             throws NoSuchAlgorithmException, InvalidKeyException {
 
         // put movingFactor value into text byte array
-        String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
         for (int i = text.length - 1; i >= 0; i--) {
@@ -204,12 +201,13 @@ public class OneTimePasswordUtils {
                 | ((hash[offset + 2] & 0xff) << 8) | ((hash[offset + 3] & 0xff));
         int secondBinary = ((hash[offset + 4] & 0x7f) << 24) | ((hash[offset + 5] & 0xff) << 16)
                 | ((hash[offset + 6] & 0xff) << 8) | ((hash[offset + 7] & 0xff));
-        result = Integer.toString(firstBinary, 36).concat(Integer.toString(secondBinary, 36)).toUpperCase();
+        StringBuilder result = new StringBuilder(
+                Integer.toString(firstBinary, 36).concat(Integer.toString(secondBinary, 36)).toUpperCase());
         while (result.length() < digits) {
-            result = "A" + result;
+            result.insert(0, "A");
         }
-        result = result.substring(result.length() - digits, result.length());
-        return result;
+        result = new StringBuilder(result.substring(result.length() - digits, result.length()));
+        return result.toString();
     }
 
     /**

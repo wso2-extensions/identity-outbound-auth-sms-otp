@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.smsotp.common.internal;
 
+import org.wso2.carbon.identity.smsotp.common.dto.ConfigsDTO;
 import org.wso2.carbon.user.core.service.RealmService;
 
 /**
@@ -27,6 +28,7 @@ public class SMSOTPServiceDataHolder {
 
     private static final SMSOTPServiceDataHolder dataHolder = new SMSOTPServiceDataHolder();
     private RealmService realmService;
+    private static final ConfigsDTO configs = new ConfigsDTO();
 
     public static SMSOTPServiceDataHolder getInstance() {
 
@@ -40,5 +42,10 @@ public class SMSOTPServiceDataHolder {
     public void setRealmService(RealmService realmService) {
 
         this.realmService = realmService;
+    }
+
+    public static ConfigsDTO getConfigs() {
+
+        return configs;
     }
 }

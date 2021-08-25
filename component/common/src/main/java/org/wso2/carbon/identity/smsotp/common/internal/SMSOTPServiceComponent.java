@@ -30,11 +30,8 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPServiceImpl;
-import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.util.Utils;
 import org.wso2.carbon.user.core.service.RealmService;
-
-import java.util.Properties;
 
 /**
  * OSGI service component of the SMS OTP service.
@@ -50,14 +47,12 @@ public class SMSOTPServiceComponent {
     protected void activate(ComponentContext componentContext) {
 
         try {
-            Properties properties = Utils.readConfigurations();
-            boolean isEnabled = Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_ENABLED));
+            Utils.readConfigurations();
+            boolean isEnabled = SMSOTPServiceDataHolder.getConfigs().isEnabled();
             if (isEnabled) {
                 BundleContext bundleContext = componentContext.getBundleContext();
                 bundleContext.registerService(SMSOTPService.class.getName(), new SMSOTPServiceImpl(), null);
-                if (log.isDebugEnabled()) {
-                    log.debug("SMS OTP Service component activated successfully.");
-                }
+                log.debug("SMS OTP Service component activated successfully.");
             }
         } catch (Throwable e) {
             log.error("Error while activating the SMS OTP service.", e);

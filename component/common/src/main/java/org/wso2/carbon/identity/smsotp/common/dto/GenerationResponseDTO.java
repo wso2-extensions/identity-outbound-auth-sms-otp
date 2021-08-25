@@ -24,7 +24,6 @@ package org.wso2.carbon.identity.smsotp.common.dto;
 public class GenerationResponseDTO {
 
     private String smsOTP;
-    private String transactionId;
 
     public String getSmsOTP() {
 
@@ -34,15 +33,5 @@ public class GenerationResponseDTO {
     public void setSmsOTP(String smsOTP) {
 
         this.smsOTP = smsOTP;
-    }
-
-    public String getTransactionId() {
-
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-
-        this.transactionId = transactionId;
     }
 }
