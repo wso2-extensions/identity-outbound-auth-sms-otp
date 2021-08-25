@@ -49,8 +49,6 @@ import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 
 import java.io.IOException;
 import java.util.HashMap;
-
-import java.util.Properties;
 import java.util.UUID;
 
 /**
@@ -90,9 +88,14 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_INVALID_USER_ID, userId);
         }
 
+        // If throttling is enabled, check if the resend request has sent too early.
+        boolean resendThrottlingEnabled = SMSOTPServiceDataHolder.getConfigs().isResendThrottlingEnabled();
+        if (resendThrottlingEnabled) {
+            shouldThrottle(userId);
+        }
+
         // Retrieve mobile number if notifications are managed internally.
-        boolean sendNotification = Boolean.parseBoolean(
-                Utils.readConfigurations().getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION));
+        boolean sendNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
         String mobileNumber = null;
         if (sendNotification) {
             mobileNumber = getMobileNumber(user.getUsername(), userStoreManager);
@@ -123,9 +126,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
 
-        // Should the reason be exposed upon a failed OTP validation.
-        boolean showFailureReason = Boolean.parseBoolean(
-                StringUtils.trim(Utils.readConfigurations().getProperty(Constants.SMS_OTP_SHOW_FAILURE_REASON)));
+        boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
 
         // Retrieve session from the database.
         String sessionId = String.valueOf(userId.hashCode());
@@ -181,33 +182,18 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
     private SessionDTO issueOTP(String mobileNumber, User user) throws SMSOTPException {
 
-        // Read server configurations.
-        Properties properties = Utils.readConfigurations();
-        String otpValidityPeriodValue =
-                StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_VALIDITY_PERIOD));
-        String otpRenewIntervalValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_RENEW_INTERVAL));
-        // Notification sending, defaults to false.
-        boolean triggerNotification =
-                StringUtils.isNotBlank(properties.getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION)) &&
-                        Boolean.parseBoolean(properties.getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION));
-        // If not defined, use the default values.
-        int otpValidityPeriod = StringUtils.isNumeric(otpValidityPeriodValue) ?
-                Integer.parseInt(otpValidityPeriodValue) : Constants.DEFAULT_SMS_OTP_VALIDITY_PERIOD;
-        // If not defined, defaults to zero to renew always.
-        int otpRenewalInterval = StringUtils.isNumeric(otpRenewIntervalValue) ?
-                Integer.parseInt(otpRenewIntervalValue) : 0;
-        // Should we send the same OTP when asked to resend.
-        boolean resendSameOtpEnabled = otpRenewalInterval > 0 && otpRenewalInterval < otpValidityPeriod;
+        boolean triggerNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
+        boolean resendSameOtp = SMSOTPServiceDataHolder.getConfigs().isResendSameOtp();
 
-        // If 'resending same OTP' is enabled, check if such exists.
+        // If 'Resend same OTP' is enabled, check if such OTP exists.
         SessionDTO sessionDTO = null;
-        if (resendSameOtpEnabled) {
-            sessionDTO = getPreviousValidSession(user, otpRenewalInterval);
+        if (resendSameOtp) {
+            sessionDTO = getPreviousValidSession(user);
         }
 
         // If no such valid OTPs exist, generate a new OTP and proceed.
         if (sessionDTO == null) {
-            sessionDTO = generateNewOTP(user, otpValidityPeriod);
+            sessionDTO = generateNewOTP(user);
         }
 
         // Sending SMS notifications.
@@ -217,16 +203,11 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return sessionDTO;
     }
 
-    private SessionDTO generateNewOTP(User user, int otpExpiryTime) throws SMSOTPServerException {
+    private SessionDTO generateNewOTP(User user) throws SMSOTPServerException {
 
-        // Read server configs.
-        Properties properties = Utils.readConfigurations();
-        boolean isAlphaNumericOtpEnabled = Boolean.parseBoolean(
-                properties.getProperty(Constants.SMS_OTP_ALPHANUMERIC_TOKEN_ENABLED));
-        String otpLengthValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_LENGTH));
-
-        int otpLength = StringUtils.isNumeric(otpLengthValue) ?
-                Integer.parseInt(otpLengthValue) : Constants.DEFAULT_OTP_LENGTH;
+        boolean isAlphaNumericOtpEnabled = SMSOTPServiceDataHolder.getConfigs().isAlphaNumericOTP();
+        int otpLength = SMSOTPServiceDataHolder.getConfigs().getOtpLength();
+        int otpValidityPeriod = SMSOTPServiceDataHolder.getConfigs().getOtpValidityPeriod();
 
         // Generate OTP.
         String otp = OneTimePasswordUtils.generateOTP(
@@ -234,11 +215,12 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                 String.valueOf(Constants.NUMBER_BASE),
                 otpLength,
                 isAlphaNumericOtpEnabled);
+
         // Save the otp in the 'IDN_AUTH_SESSION_STORE' table.
         SessionDTO sessionDTO = new SessionDTO();
         sessionDTO.setOtp(otp);
         sessionDTO.setGeneratedTime(System.currentTimeMillis());
-        sessionDTO.setExpiryTime(otpExpiryTime);
+        sessionDTO.setExpiryTime(otpValidityPeriod);
         sessionDTO.setFullQualifiedUserName(user.getFullQualifiedUsername());
         sessionDTO.setUserId(user.getUserID());
         String jsonString;
@@ -303,7 +285,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return mobileNumber;
     }
 
-    private SessionDTO getPreviousValidSession(User user, int otpRenewalInterval) throws SMSOTPException {
+    private SessionDTO getPreviousValidSession(User user) throws SMSOTPException {
 
         // Search previous session object.
         String sessionId = String.valueOf(user.getUserID().hashCode());
@@ -315,15 +297,41 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             }
             return null;
         }
-        SessionDTO previousSessionDTO;
+        SessionDTO previousOTPSessionDTO;
         try {
-            previousSessionDTO = new ObjectMapper().readValue(jsonString, SessionDTO.class);
+            previousOTPSessionDTO = new ObjectMapper().readValue(jsonString, SessionDTO.class);
         } catch (IOException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
         // If the previous OTP is issued within the interval, return the same.
-        return (System.currentTimeMillis() - previousSessionDTO.getGeneratedTime() < otpRenewalInterval) ?
-                previousSessionDTO : null;
+        int otpRenewalInterval = SMSOTPServiceDataHolder.getConfigs().getOtpRenewalInterval();
+        return (System.currentTimeMillis() - previousOTPSessionDTO.getGeneratedTime() < otpRenewalInterval) ?
+                previousOTPSessionDTO : null;
+    }
+
+    private void shouldThrottle(String userId) throws SMSOTPException {
+
+        String sessionId = String.valueOf(userId.hashCode());
+        String jsonString = (String) SessionDataStore.getInstance().
+                getSessionData(sessionId, Constants.SESSION_TYPE_OTP);
+        if (StringUtils.isBlank(jsonString)) {
+            return;
+        }
+
+        SessionDTO previousOTPSessionDTO;
+        try {
+            previousOTPSessionDTO = new ObjectMapper().readValue(jsonString, SessionDTO.class);
+        } catch (IOException e) {
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
+        }
+
+        long elapsedTimeSinceLastOtp = System.currentTimeMillis() - previousOTPSessionDTO.getGeneratedTime();
+        int resendThrottleInterval = SMSOTPServiceDataHolder.getConfigs().getResendThrottleInterval();
+        if (elapsedTimeSinceLastOtp < resendThrottleInterval) {
+            long waitingPeriod = (resendThrottleInterval - elapsedTimeSinceLastOtp) / 1000;
+            throw Utils.handleClientException(
+                    Constants.ErrorMessage.CLIENT_SLOW_DOWN_RESEND, String.valueOf(waitingPeriod));
+        }
     }
 
     private int getTenantId() {

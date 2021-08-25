@@ -33,15 +33,17 @@ public class Constants {
     public static final int NUMBER_BASE = 2;
     public static final int DEFAULT_OTP_LENGTH = 6;
     public static final int DEFAULT_SMS_OTP_VALIDITY_PERIOD = 60000;
+    public static final int DEFAULT_RESEND_THROTTLE_INTERVAL = 1800000;
     public static final String SMS_OTP_NOTIFICATION_TEMPLATE = "sendOTP";
 
     public static final String SMS_OTP_IDENTITY_EVENT_MODULE_NAME = "smsOtp";
     public static final String SMS_OTP_ENABLED = "smsOtp.enabled";
     public static final String SMS_OTP_TOKEN_LENGTH = "smsOtp.tokenLength";
     public static final String SMS_OTP_TOKEN_VALIDITY_PERIOD = "smsOtp.tokenValidityPeriod";
-    public static final String SMS_OTP_ALPHANUMERIC_TOKEN_ENABLED = "smsOtp.isEnableAlphanumericToken";
+    public static final String SMS_OTP_ALPHANUMERIC_TOKEN = "smsOtp.alphanumericToken";
     public static final String SMS_OTP_TRIGGER_NOTIFICATION = "smsOtp.triggerNotification";
-    public static final String SMS_OTP_TOKEN_RENEW_INTERVAL = "smsOtp.tokenRenewInterval";
+    public static final String SMS_OTP_TOKEN_RENEWAL_INTERVAL = "smsOtp.tokenRenewalInterval";
+    public static final String SMS_OTP_RESEND_THROTTLE_INTERVAL = "smsOtp.resendThrottleInterval";
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
     /**
@@ -63,6 +65,8 @@ public class Constants {
                 "Provided OTP is invalid. User id : %s."),
         CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
                 "No OTP found for the user Id : %s."),
+        CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
+                "Please wait %s seconds before resend."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",

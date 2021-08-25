@@ -18,13 +18,17 @@
 
 package org.wso2.carbon.identity.smsotp.common.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.event.IdentityEventConfigBuilder;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.bean.ModuleConfiguration;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
+import org.wso2.carbon.identity.smsotp.common.dto.ConfigsDTO;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPClientException;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
+import org.wso2.carbon.identity.smsotp.common.internal.SMSOTPServiceDataHolder;
 
 import java.util.Properties;
 
@@ -33,17 +37,81 @@ import java.util.Properties;
  */
 public class Utils {
 
-    public static Properties readConfigurations() throws SMSOTPServerException {
+    private static final Log log = LogFactory.getLog(Utils.class);
 
+    /**
+     * Read configurations and populate {@link ConfigsDTO} object.
+     *
+     * @throws SMSOTPServerException Throws upon an issue on while reading configs.
+     */
+    public static void readConfigurations() throws SMSOTPServerException {
+
+        Properties properties;
         try {
             ModuleConfiguration configs = IdentityEventConfigBuilder.getInstance()
                     .getModuleConfigurations(Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME);
-            // Work with the default values if configurations couldn't be loaded.
-            return configs != null ? configs.getModuleProperties() : new Properties();
+            properties = (configs != null) ? configs.getModuleProperties() : new Properties();
+            sanitizeAndPopulateConfigs(properties);
         } catch (IdentityEventException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_EVENT_CONFIG_LOADING_ERROR,
                     Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME, e);
         }
+        log.debug(String.format("SMS OTP service configurations : %s.",
+                SMSOTPServiceDataHolder.getConfigs().toString()));
+    }
+
+    private static void sanitizeAndPopulateConfigs(Properties properties) {
+
+        ConfigsDTO configs = SMSOTPServiceDataHolder.getConfigs();
+
+        boolean isEnabled = Boolean.parseBoolean(StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_ENABLED)));
+        configs.setEnabled(isEnabled);
+
+        // Defaults to 'false'.
+        boolean triggerNotification = Boolean.parseBoolean(StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_TRIGGER_NOTIFICATION)));
+        configs.setTriggerNotification(triggerNotification);
+
+        boolean showFailureReason = Boolean.parseBoolean(StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_SHOW_FAILURE_REASON)));
+        configs.setShowFailureReason(showFailureReason);
+
+        boolean isAlphaNumericOtp = Boolean.parseBoolean(StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_ALPHANUMERIC_TOKEN)));
+        configs.setAlphaNumericOTP(isAlphaNumericOtp);
+
+        String otpLengthValue = StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_LENGTH));
+        int otpLength = StringUtils.isNumeric(otpLengthValue) ?
+                Integer.parseInt(otpLengthValue) : Constants.DEFAULT_OTP_LENGTH;
+        configs.setOtpLength(otpLength);
+
+        String otpValidityPeriodValue =
+                StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_VALIDITY_PERIOD));
+        int otpValidityPeriod = StringUtils.isNumeric(otpValidityPeriodValue) ?
+                Integer.parseInt(otpValidityPeriodValue) : Constants.DEFAULT_SMS_OTP_VALIDITY_PERIOD;
+        configs.setOtpValidityPeriod(otpValidityPeriod);
+
+        // If not defined, defaults to 'zero' to renew always.
+        String otpRenewIntervalValue = StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_TOKEN_RENEWAL_INTERVAL));
+        int otpRenewalInterval = StringUtils.isNumeric(otpRenewIntervalValue) ?
+                Integer.parseInt(otpRenewIntervalValue) : 0;
+        configs.setOtpRenewalInterval(otpRenewalInterval);
+
+        String otpResendThrottleIntervalValue = StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_RESEND_THROTTLE_INTERVAL));
+        int resendThrottleInterval = StringUtils.isNumeric(otpResendThrottleIntervalValue) ?
+                Integer.parseInt(otpResendThrottleIntervalValue) : Constants.DEFAULT_RESEND_THROTTLE_INTERVAL;
+        configs.setResendThrottleInterval(resendThrottleInterval);
+
+        // Should we send the same OTP upon the next generation request. Defaults to 'false'.
+        boolean resendSameOtp = (otpRenewalInterval > 0) && (otpRenewalInterval < otpValidityPeriod);
+        configs.setResendSameOtp(resendSameOtp);
+
+        // Defaults to 'true' with an interval of 30 seconds.
+        boolean resendThrottlingEnabled = resendThrottleInterval > 0;
+        configs.setResendThrottlingEnabled(resendThrottlingEnabled);
     }
 
     public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data) {
