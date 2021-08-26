@@ -42,13 +42,14 @@ import org.wso2.carbon.identity.governance.service.notification.NotificationChan
 import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
 import org.wso2.carbon.identity.recovery.internal.IdentityRecoveryServiceDataHolder;
 import org.wso2.carbon.user.api.UserStoreException;
-import org.wso2.carbon.user.api.UserStoreManager;
+import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
 import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class implements the {@link SMSOTPService} interface.
@@ -66,13 +67,20 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         if (StringUtils.isBlank(userId)) {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_EMPTY_USER_ID, null);
         }
+
+        // Retrieve mobile number only if notifications the are managed internally.
+        boolean sendNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
+        String[] requestedClaims = sendNotification
+                ? new String[]{ NotificationChannels.SMS_CHANNEL.getClaimUri() }
+                : null;
+
         // Retrieve user by ID.
         AbstractUserStoreManager userStoreManager;
         User user;
         try {
             userStoreManager = (AbstractUserStoreManager) SMSOTPServiceDataHolder.getInstance()
                     .getRealmService().getTenantUserRealm(getTenantId()).getUserStoreManager();
-            user = userStoreManager.getUser(userId, null);
+            user = userStoreManager.getUserWithID(userId, requestedClaims, UserCoreConstants.DEFAULT_PROFILE);
         } catch (UserStoreException e) {
             // Handle user not found.
             String errorCode = ((org.wso2.carbon.user.core.UserStoreException) e).getErrorCode();
@@ -82,10 +90,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
                     String.format("Error while retrieving user for the Id : %s.", userId), e);
         }
-        // Check if the user exist.
-        if (user == null) {
-            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_INVALID_USER_ID, userId);
-        }
 
         // If throttling is enabled, check if the resend request has sent too early.
         boolean resendThrottlingEnabled = SMSOTPServiceDataHolder.getConfigs().isResendThrottlingEnabled();
@@ -93,18 +97,12 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             shouldThrottle(userId);
         }
 
-        // Retrieve mobile number if notifications are managed internally.
-        boolean sendNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
-        String mobileNumber = null;
-        if (sendNotification) {
-            mobileNumber = getMobileNumber(user.getUsername(), userStoreManager);
-        }
+        String mobileNumber = getMobileNumber(user);
         if (sendNotification && StringUtils.isBlank(mobileNumber)) {
-            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER,
-                    user.getFullQualifiedUsername());
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER, user.getUserID());
         }
 
-        SessionDTO sessionDTO = issueOTP(mobileNumber, user);
+        SessionDTO sessionDTO = issueOTP(user);
 
         GenerationResponseDTO responseDTO = new GenerationResponseDTO();
         responseDTO.setSmsOTP(sessionDTO.getOtp());
@@ -191,7 +189,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return new ValidationResponseDTO(userId, true);
     }
 
-    private SessionDTO issueOTP(String mobileNumber, User user) throws SMSOTPException {
+    private SessionDTO issueOTP(User user) throws SMSOTPException {
 
         boolean triggerNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
         boolean resendSameOtp = SMSOTPServiceDataHolder.getConfigs().isResendSameOtp();
@@ -214,7 +212,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         // Sending SMS notifications.
         if (triggerNotification) {
-            triggerNotification(user, mobileNumber, sessionDTO.getOtp());
+            triggerNotification(user, sessionDTO.getOtp());
         }
         return sessionDTO;
     }
@@ -263,7 +261,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         }
     }
 
-    private void triggerNotification(User user, String mobileNumber, String otp) throws SMSOTPException {
+    private void triggerNotification(User user, String otp) throws SMSOTPException {
 
         if (log.isDebugEnabled()) {
             log.debug(String.format("Sending SMS OTP notification to user Id: %s.", user.getUserID()));
@@ -276,7 +274,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         properties.put(IdentityEventConstants.EventProperty.NOTIFICATION_CHANNEL,
                 NotificationChannels.SMS_CHANNEL.getChannelType());
         properties.put(IdentityRecoveryConstants.TEMPLATE_TYPE, Constants.SMS_OTP_NOTIFICATION_TEMPLATE);
-        properties.put(IdentityRecoveryConstants.SEND_TO, mobileNumber);
+        properties.put(IdentityRecoveryConstants.SEND_TO, getMobileNumber(user));
         properties.put(IdentityRecoveryConstants.CONFIRMATION_CODE, otp);
 
         Event event = new Event(IdentityEventConstants.Event.TRIGGER_SMS_NOTIFICATION, properties);
@@ -286,27 +284,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(
                     Constants.ErrorMessage.SERVER_NOTIFICATION_SENDING_ERROR, user.getFullQualifiedUsername(), e);
         }
-    }
-
-    private String getMobileNumber(String username, UserStoreManager userStoreManager)
-            throws SMSOTPServerException {
-
-        String mobileNumber;
-        try {
-            mobileNumber = userStoreManager.getUserClaimValue(
-                    username,
-                    NotificationChannels.SMS_CHANNEL.getClaimUri(),
-                    null);
-        } catch (UserStoreException e) {
-            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_RETRIEVING_MOBILE_ERROR, username, e);
-        }
-        if (StringUtils.isBlank(mobileNumber)) {
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("No mobile number found for the user: %s.", username));
-            }
-            return null;
-        }
-        return mobileNumber;
     }
 
     private SessionDTO getPreviousValidOTPSession(User user) throws SMSOTPException {
@@ -362,6 +339,12 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleClientException(
                     Constants.ErrorMessage.CLIENT_SLOW_DOWN_RESEND, String.valueOf(waitingPeriod));
         }
+    }
+
+    private String getMobileNumber(User user) {
+
+        Map<String, String> userAttributes = user.getAttributes();
+        return userAttributes.get(NotificationChannels.SMS_CHANNEL.getClaimUri());
     }
 
     private int getTenantId() {
