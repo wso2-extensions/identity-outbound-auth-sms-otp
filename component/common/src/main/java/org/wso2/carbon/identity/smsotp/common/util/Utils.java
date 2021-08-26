@@ -31,6 +31,7 @@ import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import org.wso2.carbon.identity.smsotp.common.internal.SMSOTPServiceDataHolder;
 
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  * Util functions for SMS OTP service.
@@ -112,6 +113,15 @@ public class Utils {
         // Defaults to 'true' with an interval of 30 seconds.
         boolean resendThrottlingEnabled = resendThrottleInterval > 0;
         configs.setResendThrottlingEnabled(resendThrottlingEnabled);
+    }
+
+    public static String createTransactionId() {
+
+        String transactionId = UUID.randomUUID().toString();
+        if (log.isDebugEnabled()) {
+            log.debug(String.format("Transaction Id: %s.", transactionId));
+        }
+        return transactionId;
     }
 
     public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data) {

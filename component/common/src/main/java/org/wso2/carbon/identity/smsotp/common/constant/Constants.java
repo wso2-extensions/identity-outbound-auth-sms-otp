@@ -59,6 +59,8 @@ public class Constants {
                 "No valid mobile number for the user : %s."),
         CLIENT_EXPIRED_OTP("SMS-60005", "Expired OTP.",
                 "Expired OTP provided for the user : %s."),
+        CLIENT_INVALID_TRANSACTION_ID("SMS-60006", "Invalid transaction Id.",
+                "Invalid transaction Id : %s."),
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
                 "Mandatory parameters not found : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",

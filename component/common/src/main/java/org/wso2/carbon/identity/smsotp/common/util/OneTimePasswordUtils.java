@@ -29,9 +29,6 @@ import java.security.SecureRandom;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import static org.wso2.carbon.identity.smsotp.common.constant.Constants.ErrorMessage.SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR;
-import static org.wso2.carbon.identity.smsotp.common.constant.Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR;
-
 /**
  * OTP generation utils.
  */
@@ -227,20 +224,21 @@ public class OneTimePasswordUtils {
             try {
                 return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                throw Utils.handleServerException(SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
                         "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
-                throw Utils.handleServerException(SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
                         "Unable to find the secret key.", e);
             }
         } else {
             try {
                 return generateOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                throw Utils.handleServerException(SERVER_GENERATE_OTP_ERROR,
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR,
                         "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
-                throw Utils.handleServerException(SERVER_GENERATE_OTP_ERROR, "Unable to find the secret key.", e);
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR,
+                        "Unable to find the secret key.", e);
             }
         }
     }

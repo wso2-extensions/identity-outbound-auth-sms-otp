@@ -49,7 +49,6 @@ import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.UUID;
 
 /**
  * This class implements the {@link SMSOTPService} interface.
@@ -107,9 +106,10 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         SessionDTO sessionDTO = issueOTP(mobileNumber, user);
 
-        GenerationResponseDTO otpDto = new GenerationResponseDTO();
-        otpDto.setSmsOTP(sessionDTO.getOtp());
-        return otpDto;
+        GenerationResponseDTO responseDTO = new GenerationResponseDTO();
+        responseDTO.setSmsOTP(sessionDTO.getOtp());
+        responseDTO.setTransactionId(sessionDTO.getTransactionId());
+        return responseDTO;
     }
 
     /**
@@ -120,8 +120,10 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throws SMSOTPException {
 
         // Sanitize inputs.
-        if (StringUtils.isBlank(userId) || StringUtils.isBlank(smsOTP)) {
-            String missingParam = StringUtils.isBlank(userId) ? "userId" : "smsOTP";
+        if (StringUtils.isBlank(transactionId) || StringUtils.isBlank(userId) || StringUtils.isBlank(smsOTP)) {
+            String missingParam = StringUtils.isBlank(transactionId) ? "transactionId"
+                    : StringUtils.isBlank(userId) ? "userId"
+                    : "smsOTP";
             throw Utils.handleClientException(
                     Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
@@ -147,9 +149,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
 
-        ValidationResponseDTO validationResponseDTO = isValid(sessionDTO, smsOTP, userId, showFailureReason);
-        if (!validationResponseDTO.isValid()) {
-            return validationResponseDTO;
+        ValidationResponseDTO responseDTO = isValid(sessionDTO, smsOTP, userId, transactionId, showFailureReason);
+        if (!responseDTO.isValid()) {
+            return responseDTO;
         }
         // Valid OTP. Clear OTP session data.
         SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
@@ -157,7 +159,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     }
 
     private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId,
-                                          boolean showFailureReason) {
+                                          String transactionId, boolean showFailureReason) {
 
         ErrorDTO error;
         // Check if the provided OTP is correct.
@@ -175,6 +177,15 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                 log.debug(String.format("Expired OTP provided for the user : %s.", userId));
             }
             error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_EXPIRED_OTP, userId) : null;
+            return new ValidationResponseDTO(userId, false, error);
+        }
+        // Check if the provided transaction Id is correct.
+        if (!StringUtils.equals(transactionId, sessionDTO.getTransactionId())) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("Provided transaction Id doesn't match. User : %s.", userId));
+            }
+            error = showFailureReason ?
+                    new ErrorDTO(Constants.ErrorMessage.CLIENT_INVALID_TRANSACTION_ID, transactionId) : null;
             return new ValidationResponseDTO(userId, false, error);
         }
         return new ValidationResponseDTO(userId, true);
@@ -210,8 +221,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         int otpValidityPeriod = SMSOTPServiceDataHolder.getConfigs().getOtpValidityPeriod();
 
         // Generate OTP.
+        String transactionId = Utils.createTransactionId();
         String otp = OneTimePasswordUtils.generateOTP(
-                UUID.randomUUID().toString(),
+                transactionId,
                 String.valueOf(Constants.NUMBER_BASE),
                 otpLength,
                 isAlphaNumericOtpEnabled);
@@ -221,6 +233,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         sessionDTO.setOtp(otp);
         sessionDTO.setGeneratedTime(System.currentTimeMillis());
         sessionDTO.setExpiryTime(otpValidityPeriod);
+        sessionDTO.setTransactionId(transactionId);
         sessionDTO.setFullQualifiedUserName(user.getFullQualifiedUsername());
         sessionDTO.setUserId(user.getUserID());
         String jsonString;

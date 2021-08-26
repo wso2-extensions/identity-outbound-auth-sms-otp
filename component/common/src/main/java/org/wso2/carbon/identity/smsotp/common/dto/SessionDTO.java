@@ -31,6 +31,7 @@ public class SessionDTO implements Serializable {
     private String otp;
     private long generatedTime;
     private long expiryTime;
+    private String transactionId;
     private String fullQualifiedUserName;
     private String userId;
 
@@ -62,6 +63,16 @@ public class SessionDTO implements Serializable {
     public void setExpiryTime(long expiryTime) {
 
         this.expiryTime = expiryTime;
+    }
+
+    public String getTransactionId() {
+
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+
+        this.transactionId = transactionId;
     }
 
     public String getFullQualifiedUserName() {
@@ -114,6 +125,7 @@ public class SessionDTO implements Serializable {
         sb.append("\n\totpToken = ").append(otp)
                 .append(",\n\tgeneratedTime = ").append(generatedTime)
                 .append(",\n\texpiryTime = ").append(expiryTime)
+                .append(",\n\ttransactionId = ").append(transactionId)
                 .append(",\n\tfullQualifiedUserName = ").append(fullQualifiedUserName)
                 .append(",\n\tuserId = ").append(userId)
                 .append("\n}");
