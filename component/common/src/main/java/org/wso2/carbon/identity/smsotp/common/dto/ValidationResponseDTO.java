@@ -19,13 +19,13 @@
 package org.wso2.carbon.identity.smsotp.common.dto;
 
 /**
- * This class represents a model of the validate SMS OTP request.
+ * This class represents a model of the validate SMS OTP response.
  */
 public class ValidationResponseDTO {
 
     private boolean isValid;
     private String userId;
-    private ErrorDTO error;
+    private FailureReasonDTO failureReason;
 
     public ValidationResponseDTO(String userId, boolean isValid) {
 
@@ -33,11 +33,11 @@ public class ValidationResponseDTO {
         this.userId = userId;
     }
 
-    public ValidationResponseDTO(String userId, boolean isValid, ErrorDTO error) {
+    public ValidationResponseDTO(String userId, boolean isValid, FailureReasonDTO failureReason) {
 
         this.isValid = isValid;
         this.userId = userId;
-        this.error = error;
+        this.failureReason = failureReason;
     }
 
     public boolean isValid() {
@@ -60,13 +60,13 @@ public class ValidationResponseDTO {
         this.userId = userId;
     }
 
-    public ErrorDTO getError() {
+    public FailureReasonDTO getFailureReason() {
 
-        return error;
+        return failureReason;
     }
 
-    public void setError(ErrorDTO error) {
+    public void setFailureReason(FailureReasonDTO failureReason) {
 
-        this.error = error;
+        this.failureReason = failureReason;
     }
 }

@@ -30,7 +30,7 @@ properties.tokenValidityPeriod=120
 # Set '0' to always send a new OTP.
 # Should be less than the 'tokenValidityPeriod' value.
 properties.tokenRenewalInterval=60
-# Throttle OTP generation requests for the same user Id.
+# Throttle OTP generation requests from the same user Id.
 # Set '0' for no throttling.
 properties.resendThrottleInterval=30
 ```

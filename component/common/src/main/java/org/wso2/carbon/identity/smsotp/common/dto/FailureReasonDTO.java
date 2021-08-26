@@ -22,22 +22,23 @@ import org.apache.commons.lang.StringUtils;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 
 /**
- * This class represents the model of the service error object, if any.
+ * This class represents the model of the OTP validation
+ * failure reason message, if any.
  */
-public class ErrorDTO {
+public class FailureReasonDTO {
 
     String code;
     String message;
     String description;
 
-    public ErrorDTO(String code, String message, String description) {
+    public FailureReasonDTO(String code, String message, String description) {
 
         this.code = code;
         this.message = message;
         this.description = description;
     }
 
-    public ErrorDTO(Constants.ErrorMessage error, String data) {
+    public FailureReasonDTO(Constants.ErrorMessage error, String data) {
 
         this.code = error.getCode();
         this.message = error.getMessage();

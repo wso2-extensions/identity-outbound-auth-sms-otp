@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
-import org.wso2.carbon.identity.smsotp.common.dto.ErrorDTO;
+import org.wso2.carbon.identity.smsotp.common.dto.FailureReasonDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.GenerationResponseDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.SessionDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.ValidationResponseDTO;
@@ -97,7 +97,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             shouldThrottle(userId);
         }
 
-        String mobileNumber = getMobileNumber(user);
+        String mobileNumber = sendNotification ? getMobileNumber(user) : null;
         if (sendNotification && StringUtils.isBlank(mobileNumber)) {
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_BLANK_MOBILE_NUMBER, user.getUserID());
         }
@@ -136,7 +136,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("No OTP session found for the user : %s.", userId));
             }
-            ErrorDTO error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_NO_OTP_FOR_USER, userId)
+            FailureReasonDTO error = showFailureReason ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_NO_OTP_FOR_USER, userId)
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
@@ -159,13 +159,13 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId,
                                           String transactionId, boolean showFailureReason) {
 
-        ErrorDTO error;
+        FailureReasonDTO error;
         // Check if the provided OTP is correct.
         if (!StringUtils.equals(smsOTP, sessionDTO.getOtp())) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Invalid OTP provided for the user : %s.", userId));
             }
-            error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
+            error = showFailureReason ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
@@ -174,7 +174,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Expired OTP provided for the user : %s.", userId));
             }
-            error = showFailureReason ? new ErrorDTO(Constants.ErrorMessage.CLIENT_EXPIRED_OTP, userId) : null;
+            error = showFailureReason ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_EXPIRED_OTP, userId) : null;
             return new ValidationResponseDTO(userId, false, error);
         }
         // Check if the provided transaction Id is correct.
@@ -183,7 +183,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                 log.debug(String.format("Provided transaction Id doesn't match. User : %s.", userId));
             }
             error = showFailureReason ?
-                    new ErrorDTO(Constants.ErrorMessage.CLIENT_INVALID_TRANSACTION_ID, transactionId) : null;
+                    new FailureReasonDTO(Constants.ErrorMessage.CLIENT_INVALID_TRANSACTION_ID, transactionId) : null;
             return new ValidationResponseDTO(userId, false, error);
         }
         return new ValidationResponseDTO(userId, true);
@@ -282,7 +282,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             IdentityRecoveryServiceDataHolder.getInstance().getIdentityEventService().handleEvent(event);
         } catch (IdentityEventException e) {
             throw Utils.handleServerException(
-                    Constants.ErrorMessage.SERVER_NOTIFICATION_SENDING_ERROR, user.getFullQualifiedUsername(), e);
+                    Constants.ErrorMessage.SERVER_NOTIFICATION_SENDING_ERROR, user.getUserID(), e);
         }
     }
 

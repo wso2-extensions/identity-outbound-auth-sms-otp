@@ -23,8 +23,6 @@ package org.wso2.carbon.identity.smsotp.common.constant;
  */
 public class Constants {
 
-    public static final String CORRELATION_ID_MDC = "Correlation-ID";
-
     public static final String ALGORITHM_NAME = "SHA1PRNG";
     public static final String ALGORITHM_HMAC = "HmacSHA1";
     public static final String ALGORITHM_HMAC_SHA = "HMAC-SHA-1";
@@ -56,9 +54,9 @@ public class Constants {
         CLIENT_EMPTY_USER_ID("SMS-60002", "Provided user ID is empty.", "Provided user ID is empty."),
         CLIENT_INVALID_USER_ID("SMS-60003", "Invalid user Id.", "Provided user ID is invalid : %s."),
         CLIENT_BLANK_MOBILE_NUMBER("SMS-60004", "Invalid mobile number.",
-                "No valid mobile number for the user : %s."),
+                "No valid mobile number found for the user Id: %s."),
         CLIENT_EXPIRED_OTP("SMS-60005", "Expired OTP.",
-                "Expired OTP provided for the user : %s."),
+                "Expired OTP provided for the user Id: %s."),
         CLIENT_INVALID_TRANSACTION_ID("SMS-60006", "Invalid transaction Id.",
                 "Invalid transaction Id : %s."),
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
@@ -68,7 +66,7 @@ public class Constants {
         CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
                 "No OTP found for the user Id : %s."),
         CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
-                "Please wait %s seconds before resend."),
+                "Please wait %s seconds before retrying."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",
@@ -82,7 +80,7 @@ public class Constants {
         SERVER_SESSION_JSON_MAPPER_ERROR("SMS-65005", "Error parsing to JSON.",
                 "Error parsing to JSON : %s."),
         SERVER_NOTIFICATION_SENDING_ERROR("SMS-65006", "Error while sending the notification.",
-                "Error while sending the SMS notification to the user : %s."),
+                "Error while sending the SMS notification to the user Id : %s."),
         SERVER_JSON_SESSION_MAPPER_ERROR("SMS-65007", "Error parsing to sessionDTO.",
                 "Error parsing to SessionDTO."),
         SERVER_EVENT_CONFIG_LOADING_ERROR("SMS-65008", "Error while loading SMS OTP event configs.",
