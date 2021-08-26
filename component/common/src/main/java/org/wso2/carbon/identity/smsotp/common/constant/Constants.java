@@ -87,6 +87,8 @@ public class Constants {
                 "Error parsing to SessionDTO."),
         SERVER_EVENT_CONFIG_LOADING_ERROR("SMS-65008", "Error while loading SMS OTP event configs.",
                 "Error while loading SMS OTP event configs : %s"),
+        SERVER_INVALID_RENEWAL_INTERVAL_ERROR("SMS-65009", "Invalid renewal interval value.",
+                "Renewal interval should be smaller than the OTP validity period. Renewal interval: %s."),
         SERVER_UNEXPECTED_ERROR("SMS-65010", "An unexpected server error occurred.",
                 "An unexpected server error occurred.");
 

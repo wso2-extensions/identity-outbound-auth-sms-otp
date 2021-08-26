@@ -172,7 +172,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             return new ValidationResponseDTO(userId, false, error);
         }
         // Check for expired OTPs.
-        if (System.currentTimeMillis() - sessionDTO.getGeneratedTime() >= sessionDTO.getExpiryTime()) {
+        if (System.currentTimeMillis() > sessionDTO.getExpiryTime()) {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Expired OTP provided for the user : %s.", userId));
             }
@@ -199,7 +199,12 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         // If 'Resend same OTP' is enabled, check if such OTP exists.
         SessionDTO sessionDTO = null;
         if (resendSameOtp) {
-            sessionDTO = getPreviousValidSession(user);
+            sessionDTO = getPreviousValidOTPSession(user);
+            if (sessionDTO != null) {
+                String sessionId = String.valueOf(user.getUserID().hashCode());
+                // Re-persisting as we changed the 'generated time' of the OTP session.
+                persistOTPSession(sessionDTO, sessionId);
+            }
         }
 
         // If no such valid OTPs exist, generate a new OTP and proceed.
@@ -232,10 +237,18 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         SessionDTO sessionDTO = new SessionDTO();
         sessionDTO.setOtp(otp);
         sessionDTO.setGeneratedTime(System.currentTimeMillis());
-        sessionDTO.setExpiryTime(otpValidityPeriod);
+        sessionDTO.setExpiryTime(sessionDTO.getGeneratedTime() + otpValidityPeriod);
         sessionDTO.setTransactionId(transactionId);
         sessionDTO.setFullQualifiedUserName(user.getFullQualifiedUsername());
         sessionDTO.setUserId(user.getUserID());
+
+        String sessionId = String.valueOf(user.getUserID().hashCode());
+        persistOTPSession(sessionDTO, sessionId);
+        return sessionDTO;
+    }
+
+    private void persistOTPSession(SessionDTO sessionDTO, String sessionId) throws SMSOTPServerException {
+
         String jsonString;
         try {
             jsonString = new ObjectMapper().writeValueAsString(sessionDTO);
@@ -243,13 +256,11 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(
                     Constants.ErrorMessage.SERVER_SESSION_JSON_MAPPER_ERROR, e.getMessage(), e);
         }
-        String sessionId = String.valueOf(user.getUserID().hashCode());
         SessionDataStore.getInstance().storeSessionData(sessionId, Constants.SESSION_TYPE_OTP, jsonString,
                 getTenantId());
         if (log.isDebugEnabled()) {
             log.debug(String.format("Successfully persisted the OTP for the user Id: %s.", sessionDTO.getUserId()));
         }
-        return sessionDTO;
     }
 
     private void triggerNotification(User user, String mobileNumber, String otp) throws SMSOTPException {
@@ -298,7 +309,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         return mobileNumber;
     }
 
-    private SessionDTO getPreviousValidSession(User user) throws SMSOTPException {
+    private SessionDTO getPreviousValidOTPSession(User user) throws SMSOTPException {
 
         // Search previous session object.
         String sessionId = String.valueOf(user.getUserID().hashCode());
@@ -318,8 +329,14 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         }
         // If the previous OTP is issued within the interval, return the same.
         int otpRenewalInterval = SMSOTPServiceDataHolder.getConfigs().getOtpRenewalInterval();
-        return (System.currentTimeMillis() - previousOTPSessionDTO.getGeneratedTime() < otpRenewalInterval) ?
-                previousOTPSessionDTO : null;
+        long elapsedTime = System.currentTimeMillis() - previousOTPSessionDTO.getGeneratedTime();
+        boolean isValidToResend = elapsedTime < otpRenewalInterval;
+        if (isValidToResend) {
+            // This is done in order to support 'resend throttling'.
+            previousOTPSessionDTO.setGeneratedTime(System.currentTimeMillis());
+            return previousOTPSessionDTO;
+        }
+        return null;
     }
 
     private void shouldThrottle(String userId) throws SMSOTPException {

@@ -61,7 +61,7 @@ public class Utils {
                 SMSOTPServiceDataHolder.getConfigs().toString()));
     }
 
-    private static void sanitizeAndPopulateConfigs(Properties properties) {
+    private static void sanitizeAndPopulateConfigs(Properties properties) throws SMSOTPServerException {
 
         ConfigsDTO configs = SMSOTPServiceDataHolder.getConfigs();
 
@@ -100,6 +100,11 @@ public class Utils {
                 Integer.parseInt(otpRenewIntervalValue) * 1000 : 0;
         configs.setOtpRenewalInterval(otpRenewalInterval);
 
+        if (otpRenewalInterval >= otpValidityPeriod) {
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_INVALID_RENEWAL_INTERVAL_ERROR,
+                    String.valueOf(otpRenewalInterval));
+        }
+
         String otpResendThrottleIntervalValue = StringUtils.trim(
                 properties.getProperty(Constants.SMS_OTP_RESEND_THROTTLE_INTERVAL));
         int resendThrottleInterval = StringUtils.isNumeric(otpResendThrottleIntervalValue) ?
@@ -119,7 +124,7 @@ public class Utils {
 
         String transactionId = UUID.randomUUID().toString();
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Transaction Id: %s.", transactionId));
+            log.debug(String.format("Transaction Id hash: %s.", transactionId.hashCode()));
         }
         return transactionId;
     }
