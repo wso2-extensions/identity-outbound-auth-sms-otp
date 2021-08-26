@@ -25,13 +25,13 @@ properties.triggerNotification=true
 properties.alphanumericToken=true
 # OTP validation failure reason will be sent in the response.
 properties.showValidationFailureReason=false
-properties.tokenValidityPeriod=120000
+properties.tokenValidityPeriod=120
 # Same valid OTP will be resent, if issued within the interval.
 # Set '0' to always send a new OTP.
-properties.tokenRenewalInterval=60000
+properties.tokenRenewalInterval=60
 # Throttle OTP generation requests for the same user Id.
 # Set '0' for no throttling.
-properties.resendThrottleInterval=1800000
+properties.resendThrottleInterval=30
 ```
 4. If notifications are managed by the Identity Server, configure the **SMS template** by appending below at the end of
    the `<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file.

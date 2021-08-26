@@ -90,20 +90,20 @@ public class Utils {
         String otpValidityPeriodValue =
                 StringUtils.trim(properties.getProperty(Constants.SMS_OTP_TOKEN_VALIDITY_PERIOD));
         int otpValidityPeriod = StringUtils.isNumeric(otpValidityPeriodValue) ?
-                Integer.parseInt(otpValidityPeriodValue) : Constants.DEFAULT_SMS_OTP_VALIDITY_PERIOD;
+                Integer.parseInt(otpValidityPeriodValue) * 1000 : Constants.DEFAULT_SMS_OTP_VALIDITY_PERIOD;
         configs.setOtpValidityPeriod(otpValidityPeriod);
 
         // If not defined, defaults to 'zero' to renew always.
         String otpRenewIntervalValue = StringUtils.trim(
                 properties.getProperty(Constants.SMS_OTP_TOKEN_RENEWAL_INTERVAL));
         int otpRenewalInterval = StringUtils.isNumeric(otpRenewIntervalValue) ?
-                Integer.parseInt(otpRenewIntervalValue) : 0;
+                Integer.parseInt(otpRenewIntervalValue) * 1000 : 0;
         configs.setOtpRenewalInterval(otpRenewalInterval);
 
         String otpResendThrottleIntervalValue = StringUtils.trim(
                 properties.getProperty(Constants.SMS_OTP_RESEND_THROTTLE_INTERVAL));
         int resendThrottleInterval = StringUtils.isNumeric(otpResendThrottleIntervalValue) ?
-                Integer.parseInt(otpResendThrottleIntervalValue) : Constants.DEFAULT_RESEND_THROTTLE_INTERVAL;
+                Integer.parseInt(otpResendThrottleIntervalValue) * 1000 : Constants.DEFAULT_RESEND_THROTTLE_INTERVAL;
         configs.setResendThrottleInterval(resendThrottleInterval);
 
         // Should we send the same OTP upon the next generation request. Defaults to 'false'.
