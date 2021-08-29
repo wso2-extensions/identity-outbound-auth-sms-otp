@@ -51,7 +51,12 @@ public class Utils {
         try {
             ModuleConfiguration configs = IdentityEventConfigBuilder.getInstance()
                     .getModuleConfigurations(Constants.SMS_OTP_IDENTITY_EVENT_MODULE_NAME);
-            properties = (configs != null) ? configs.getModuleProperties() : new Properties();
+            if (configs != null) {
+                properties = configs.getModuleProperties();
+            } else {
+                properties = new Properties();
+                log.debug("Couldn't find SMS OTP handler configurations.");
+            }
             sanitizeAndPopulateConfigs(properties);
         } catch (IdentityEventException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_EVENT_CONFIG_LOADING_ERROR,

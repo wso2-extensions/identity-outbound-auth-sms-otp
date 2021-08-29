@@ -34,9 +34,8 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class OneTimePasswordUtils {
 
-    // These are used to calculate the check-sum digits.
-    // 0 1 2 3 4 5 6 7 8 9
-    private static final int[] doubleDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
+    // Each OTP digit(0-9) has a corresponding checksum digit as in the below array.
+    private static final int[] CHECKSUM_DIGITS = { 0, 2, 4, 6, 8, 1, 3, 5, 7, 9 };
 
     private static final Log log = LogFactory.getLog(OneTimePasswordUtils.class);
 
@@ -69,7 +68,7 @@ public class OneTimePasswordUtils {
             int digit = (int) (num % 10);
             num /= 10;
             if (doubleDigit) {
-                digit = doubleDigits[digit];
+                digit = CHECKSUM_DIGITS[digit];
             }
             total += digit;
             doubleDigit = !doubleDigit;
