@@ -135,17 +135,17 @@ public class Constants {
             ErrorMessage.CLIENT_INVALID_USER_ID.code
     );
 
-    public boolean isForbiddenError(String errorCode) {
+    public static boolean isForbiddenError(String errorCode) {
 
         return forbiddenErrors.contains(errorCode);
     }
 
-    public boolean isConflictError(String errorCode) {
+    public static boolean isConflictError(String errorCode) {
 
         return conflictErrors.contains(errorCode);
     }
 
-    public boolean isNotFoundError(String errorCode) {
+    public static boolean isNotFoundError(String errorCode) {
 
         return notFoundErrors.contains(errorCode);
     }
