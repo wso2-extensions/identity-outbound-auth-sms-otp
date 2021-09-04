@@ -136,7 +136,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("No OTP session found for the user : %s.", userId));
             }
-            FailureReasonDTO error = showFailureReason ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_NO_OTP_FOR_USER, userId)
+            FailureReasonDTO error = showFailureReason
+                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_NO_OTP_FOR_USER, userId)
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
@@ -165,7 +166,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Invalid OTP provided for the user : %s.", userId));
             }
-            error = showFailureReason ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
+            error = showFailureReason
+                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
@@ -198,9 +200,13 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         SessionDTO sessionDTO = null;
         if (resendSameOtp) {
             sessionDTO = getPreviousValidOTPSession(user);
+            // This is done in order to support 'resend throttling'.
             if (sessionDTO != null) {
                 String sessionId = String.valueOf(user.getUserID().hashCode());
-                // Re-persisting as we changed the 'generated time' of the OTP session.
+                // Remove previous OTP session.
+                SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
+                // Re-persisting after changing the 'generated time' of the OTP session.
+                sessionDTO.setGeneratedTime(System.currentTimeMillis());
                 persistOTPSession(sessionDTO, sessionId);
             }
         }
@@ -309,8 +315,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         long elapsedTime = System.currentTimeMillis() - previousOTPSessionDTO.getGeneratedTime();
         boolean isValidToResend = elapsedTime < otpRenewalInterval;
         if (isValidToResend) {
-            // This is done in order to support 'resend throttling'.
-            previousOTPSessionDTO.setGeneratedTime(System.currentTimeMillis());
             return previousOTPSessionDTO;
         }
         return null;

@@ -18,7 +18,7 @@
 
 package org.wso2.carbon.identity.smsotp.common.dto;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 
 /**

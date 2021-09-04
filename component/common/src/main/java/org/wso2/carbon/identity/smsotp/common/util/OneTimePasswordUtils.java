@@ -176,8 +176,7 @@ public class OneTimePasswordUtils {
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
     public static String generateAlphaNumericOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
-                                                 int truncationOffset)
-            throws NoSuchAlgorithmException, InvalidKeyException {
+                                  int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
 
         // put movingFactor value into text byte array
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
