@@ -18,6 +18,10 @@
 
 package org.wso2.carbon.identity.smsotp.common.constant;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * SMS OTP service constants.
  */
@@ -122,25 +126,27 @@ public class Constants {
         }
     }
 
-    /**
-     * Forbidden error messages.
-     */
-    public enum ForbiddenErrorMessages {
+    // Forbidden error codes.
+    private static List<String> forbiddenErrors = new ArrayList<>();
+    // Conflict error codes.
+    private static List<String> conflictErrors = new ArrayList<>();
+    // Not Found error codes.
+    private static List<String> notFoundErrors = Arrays.asList(
+            ErrorMessage.CLIENT_INVALID_USER_ID.code
+    );
 
+    public boolean isForbiddenError(String errorCode) {
+
+        return forbiddenErrors.contains(errorCode);
     }
 
-    /**
-     * Not Found error messages.
-     */
-    public enum NotFoundErrorMessages {
+    public boolean isConflictError(String errorCode) {
 
-        SMS_60003
+        return conflictErrors.contains(errorCode);
     }
 
-    /**
-     * Conflict error messages.
-     */
-    public enum ConflictErrorMessages {
+    public boolean isNotFoundError(String errorCode) {
 
+        return notFoundErrors.contains(errorCode);
     }
 }
