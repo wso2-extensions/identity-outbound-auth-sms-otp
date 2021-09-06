@@ -28,6 +28,13 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+/**
+ * This class contains util methods to generate an OTP.
+ *
+ * Important: These methods are duplicated in the common module's
+ * 'org.wso2.carbon.identity.smsotp.common.util.OneTimePasswordUtils' class as well.
+ * Any fixes here, should be reflected there as well.
+ */
 public class OneTimePassword {
 
     // These are used to calculate the check-sum digits.

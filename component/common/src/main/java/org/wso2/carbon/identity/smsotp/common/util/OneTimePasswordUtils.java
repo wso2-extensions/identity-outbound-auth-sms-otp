@@ -31,6 +31,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * OTP generation utils.
+ *
+ * Important: This class duplicates OTP util methods of the authenticator
+ * module's 'org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword' class.
+ * Any fixes here, should be reflected there as well.
  */
 public class OneTimePasswordUtils {
 
