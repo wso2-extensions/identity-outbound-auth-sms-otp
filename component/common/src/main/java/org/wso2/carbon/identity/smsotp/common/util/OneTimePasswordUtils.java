@@ -1,67 +1,68 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.com).
  *
- *  WSO2 Inc. licenses this file to you under the Apache License,
- *  Version 2.0 (the "License"); you may not use this file except
- *  in compliance with the License.
- *  You may obtain a copy of the License at
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an
- *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *  KIND, either express or implied.  See the License for the
- *  specific language governing permissions and limitations
- *  under the License.
- *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
-package org.wso2.carbon.identity.authenticator.smsotp;
+
+package org.wso2.carbon.identity.smsotp.common.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
+import org.wso2.carbon.identity.smsotp.common.constant.Constants;
+import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
- * This class contains util methods to generate an OTP.
+ * OTP generation utils.
  *
- * Important: These methods are duplicated in the common module's
- * 'org.wso2.carbon.identity.smsotp.common.util.OneTimePasswordUtils' class as well.
+ * Important: This class duplicates OTP util methods of the authenticator
+ * module's 'org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword' class.
  * Any fixes here, should be reflected there as well.
  */
-public class OneTimePassword {
+public class OneTimePasswordUtils {
 
-    // These are used to calculate the check-sum digits.
-    // 0 1 2 3 4 5 6 7 8 9
-    private static final int[] doubleDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
-    private static final Log log = LogFactory.getLog(OneTimePassword.class);
+    // Each OTP digit(0-9) has a corresponding checksum digit as in the below array.
+    private static final int[] CHECKSUM_DIGITS = { 0, 2, 4, 6, 8, 1, 3, 5, 7, 9 };
+
+    private static final Log log = LogFactory.getLog(OneTimePasswordUtils.class);
 
     public static String getRandomNumber(int size) {
 
         StringBuilder generatedToken = new StringBuilder();
         try {
-            SecureRandom number = SecureRandom.getInstance(SMSOTPConstants.ALGORITHM_NAME);
+            SecureRandom number = SecureRandom.getInstance(Constants.ALGORITHM_NAME);
             // Generate 20 integers 0..20
             for (int i = 0; i < size; i++) {
                 generatedToken.append(number.nextInt(9));
             }
         } catch (NoSuchAlgorithmException e) {
-            log.error("Unable to find the Algorithm", e);
+            log.error("Unable to find the Algorithm.", e);
         }
 
         return generatedToken.toString();
     }
 
     /**
-     * @param num    the number to calculate the checksum for
-     * @param digits number of significant places in the number
-     * @return the checksum of num
+     * @param num    The number to calculate the checksum for.
+     * @param digits Number of significant places in the number.
+     * @return       The checksum of num.
      */
     public static int calcChecksum(long num, int digits) {
 
@@ -71,7 +72,7 @@ public class OneTimePassword {
             int digit = (int) (num % 10);
             num /= 10;
             if (doubleDigit) {
-                digit = doubleDigits[digit];
+                digit = CHECKSUM_DIGITS[digit];
             }
             total += digit;
             doubleDigit = !doubleDigit;
@@ -88,20 +89,20 @@ public class OneTimePassword {
      * algorithm. HMAC computes a Hashed Message Authentication Code and in this
      * case SHA1 is the hash algorithm used.
      *
-     * @param keyBytes the bytes to use for the HMAC-SHA-1 key
-     * @param text     the message or text to be authenticated.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @param keyBytes                  Bytes to use for the HMAC-SHA-1 key.
+     * @param text                      Message or text to be authenticated.
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
-
-    public static byte[] hmacShaGenerate(byte[] keyBytes, byte[] text) throws NoSuchAlgorithmException, InvalidKeyException {
+    public static byte[] hmacShaGenerate(byte[] keyBytes, byte[] text) throws NoSuchAlgorithmException,
+            InvalidKeyException {
 
         Mac hmacSha;
         try {
-            hmacSha = Mac.getInstance(SMSOTPConstants.ALGORITHM_HMAC);
+            hmacSha = Mac.getInstance(Constants.ALGORITHM_HMAC);
         } catch (NoSuchAlgorithmException nsa) {
-            hmacSha = Mac.getInstance(SMSOTPConstants.ALGORITHM_HMAC_SHA);
+            hmacSha = Mac.getInstance(Constants.ALGORITHM_HMAC_SHA);
         }
         SecretKeySpec macKey = new SecretKeySpec(keyBytes, "RAW");
         hmacSha.init(macKey);
@@ -111,26 +112,26 @@ public class OneTimePassword {
     /**
      * This method generates an OTP value for the given set of parameters.
      *
-     * @param secret           the shared secret
-     * @param movingFactor     the counter, or other value that changes on a per use
+     * @param secret           The shared secret.
+     * @param movingFactor     The counter, or other value that changes on a per use
      *                         basis.
-     * @param codeDigits       the number of digits in the OTP, not including the checksum,
+     * @param codeDigits       The number of digits in the OTP, not including the checksum,
      *                         if any.
-     * @param addChecksum      a flag that indicates if a checksum digit
+     * @param addChecksum      A flag that indicates if a checksum digit
      *                         should be appended to the OTP.
-     * @param truncationOffset the offset into the MAC result to begin truncation. If this
+     * @param truncationOffset The offset into the MAC result to begin truncation. If this
      *                         value is out of the range of 0 ... 15, then dynamic truncation
      *                         will be used. Dynamic truncation is when the last 4 bits of
      *                         the last byte of the MAC are used to determine the start
      *                         offset.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
     public static String generateOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
                                      int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
+
         // put movingFactor value into text byte array
-        String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
         for (int i = text.length - 1; i >= 0; i--) {
@@ -152,36 +153,36 @@ public class OneTimePassword {
         if (addChecksum) {
             otp = (otp * 10) + calcChecksum(otp, codeDigits);
         }
-        result = Integer.toString(otp);
+        StringBuilder result = new StringBuilder(Integer.toString(otp));
         while (result.length() < digits) {
-            result = "0" + result;
+            result.insert(0, "0");
         }
-        return result;
+        return result.toString();
     }
 
     /**
      * This method generates an alphanumeric OTP value for the given set of parameters.
      *
-     * @param secret           the shared secret
-     * @param movingFactor     the counter, or other value that changes on a per use
+     * @param secret           The shared secret.
+     * @param movingFactor     The counter, or other value that changes on a per use
      *                         basis.
-     * @param codeDigits       the number of digits in the OTP, not including the checksum,
+     * @param codeDigits       The number of digits in the OTP, not including the checksum,
      *                         if any.
-     * @param addChecksum      a flag that indicates if a checksum digit
+     * @param addChecksum      A flag that indicates if a checksum digit
      *                         should be appended to the OTP.
-     * @param truncationOffset the offset into the MAC result to begin truncation. If this
+     * @param truncationOffset The offset into the MAC result to begin truncation. If this
      *                         value is out of the range of 0 ... 15, then dynamic truncation
      *                         will be used. Dynamic truncation is when the last 4 bits of
      *                         the last byte of the MAC are used to determine the start
      *                         offset.
-     * @throws NoSuchAlgorithmException if no provider makes either HmacSHA1 or HMAC-SHA-1 digest
+     * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
     public static String generateAlphaNumericOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
-                                                 int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
+                                  int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
+
         // put movingFactor value into text byte array
-        String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
         for (int i = text.length - 1; i >= 0; i--) {
@@ -199,41 +200,47 @@ public class OneTimePassword {
                 | ((hash[offset + 2] & 0xff) << 8) | ((hash[offset + 3] & 0xff));
         int secondBinary = ((hash[offset + 4] & 0x7f) << 24) | ((hash[offset + 5] & 0xff) << 16)
                 | ((hash[offset + 6] & 0xff) << 8) | ((hash[offset + 7] & 0xff));
-        result = Integer.toString(firstBinary, 36).concat(Integer.toString(secondBinary, 36)).toUpperCase();
+        StringBuilder result = new StringBuilder(
+                Integer.toString(firstBinary, 36).concat(Integer.toString(secondBinary, 36)).toUpperCase());
         while (result.length() < digits) {
-            result = "A" + result;
+            result.insert(0, "A");
         }
-        result = result.substring(result.length() - digits, result.length());
-        return result;
+        result = new StringBuilder(result.substring(result.length() - digits, result.length()));
+        return result.toString();
     }
 
     /**
-     * Generate the token.
+     * Generate the OTP.
      *
-     * @param key                       the key
-     * @param base                      the base
-     * @param digits                    the number of digits
-     * @param isEnableAlphanumericToken a flag that indicates the token is alphanumeric or not
-     * @return the generated token
+     * @param key                       The key.
+     * @param base                      The base.
+     * @param length                    OTP length.
+     * @param isAlphaNumericOTPEnabled  A flag that indicates the OTP is alphanumeric or not.
+     * @return                          Generated OTP.
      */
-    public String generateToken(String key, String base, int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
+    public static String generateOTP(String key, String base, int length, boolean isAlphaNumericOTPEnabled) throws
+            SMSOTPServerException {
 
         int truncOffset = 0;
-        if (isEnableAlphanumericToken) {
+        if (isAlphaNumericOTPEnabled) {
             try {
-                return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
+                return generateAlphaNumericOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                throw new AuthenticationFailedException(" Unable to find the SHA1 Algorithm to generate OTP ", e);
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
+                        "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
-                throw new AuthenticationFailedException(" Unable to find the secret key ", e);
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_ALPHA_NUMERIC_OTP_ERROR,
+                        "Unable to find the secret key.", e);
             }
         } else {
             try {
-                return generateOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
+                return generateOTP(key.getBytes(), Long.parseLong(base), length, false, truncOffset);
             } catch (NoSuchAlgorithmException e) {
-                throw new AuthenticationFailedException(" Unable to find the SHA1 Algorithm to generate OTP ", e);
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR,
+                        "Unable to find the SHA1 Algorithm to generate OTP.", e);
             } catch (InvalidKeyException e) {
-                throw new AuthenticationFailedException(" Unable to find the secret key ", e);
+                throw Utils.handleServerException(Constants.ErrorMessage.SERVER_GENERATE_OTP_ERROR,
+                        "Unable to find the secret key.", e);
             }
         }
     }
