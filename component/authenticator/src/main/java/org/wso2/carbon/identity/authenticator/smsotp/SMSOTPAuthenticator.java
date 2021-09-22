@@ -1090,7 +1090,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         smsUrl.setDisplayName("SMS URL");
         smsUrl.setRequired(false);
         smsUrl.setDescription("Enter client sms url value. If the phone number and text message are in URL, " +
-                "specify them as $ctx.num and $ctx.msg");
+                "specify them as $ctx.num and $ctx.msg or $ctx.otp");
         smsUrl.setDisplayOrder(0);
         configProperties.add(smsUrl);
 
@@ -1107,7 +1107,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         headers.setDisplayName("HTTP Headers");
         headers.setRequired(false);
         headers.setDescription("Enter the headers used by the API separated by comma, with the Header name and value " +
-                "separated by \":\". If the phone number and text message are in Headers, specify them as $ctx.num and $ctx.msg");
+                "separated by \":\". If the phone number and text message are in Headers, specify them as $ctx.num " +
+                "and $ctx.msg or $ctx.otp");
         headers.setDisplayOrder(2);
         configProperties.add(headers);
 
@@ -1116,7 +1117,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         payload.setDisplayName("HTTP Payload");
         payload.setRequired(false);
         payload.setDescription("Enter the HTTP Payload used by the SMS API. If the phone number and text message are " +
-                "in Payload, specify them as $ctx.num and $ctx.msg");
+                "in Payload, specify them as $ctx.num and $ctx.msg or $ctx.otp");
         payload.setDisplayOrder(3);
         configProperties.add(payload);
 
@@ -1192,8 +1193,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("Processing HTTP headers since header string is available");
                 }
-                headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                        smsMessage + otpToken);
+                headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo)
+                        .replaceAll("\\$ctx.msg", smsMessage + otpToken)
+                        .replaceAll("\\$ctx.otp", otpToken);
                 headerArray = headerString.split(",");
                 for (String header : headerArray) {
                     String[] headerElements = header.split(":");
@@ -1221,8 +1223,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (SMSOTPConstants.POST_METHOD.equalsIgnoreCase(httpMethod)) {
                 httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                 if (StringUtils.isNotEmpty(payload)) {
-                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg", smsMessage +
-                            otpToken);
+                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo)
+                            .replaceAll("\\$ctx.msg", smsMessage + otpToken)
+                            .replaceAll("\\$ctx.otp", otpToken);
 
                     OutputStreamWriter writer = null;
                     try {
@@ -1388,8 +1391,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug("No configured headers found. Header string is empty");
             }
         }
-        smsUrl = smsUrl.replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll("\\$ctx.msg",
-                smsMessage.replaceAll("\\s", "+") + otpToken);
+
+        String encodedSmsMessage = smsMessage.replaceAll("\\s", "+");
+        smsUrl = smsUrl.replaceAll("\\$ctx.num", receivedMobileNumber)
+                .replaceAll("\\$ctx.msg", encodedSmsMessage + otpToken)
+                .replaceAll("\\$ctx.otp", otpToken);
         URL smsProviderUrl = null;
         try {
             smsProviderUrl = new URL(smsUrl);
