@@ -105,7 +105,10 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         SessionDTO sessionDTO = issueOTP(user);
 
         GenerationResponseDTO responseDTO = new GenerationResponseDTO();
-        responseDTO.setSmsOTP(sessionDTO.getOtp());
+        // If IS is handling the notifications, don't send the OTP in the response.
+        if (!sendNotification) {
+            responseDTO.setSmsOTP(sessionDTO.getOtp());
+        }
         responseDTO.setTransactionId(sessionDTO.getTransactionId());
         return responseDTO;
     }
@@ -129,7 +132,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
 
         // Retrieve session from the database.
-        String sessionId = String.valueOf(userId.hashCode());
+        String sessionId = Utils.getHash(userId);
         String jsonString = (String) SessionDataStore.getInstance()
                 .getSessionData(sessionId, Constants.SESSION_TYPE_OTP);
         if (StringUtils.isBlank(jsonString)) {
@@ -202,7 +205,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             sessionDTO = getPreviousValidOTPSession(user);
             // This is done in order to support 'resend throttling'.
             if (sessionDTO != null) {
-                String sessionId = String.valueOf(user.getUserID().hashCode());
+                String sessionId = Utils.getHash(user.getUserID());
                 // Remove previous OTP session.
                 SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
                 // Re-persisting after changing the 'generated time' of the OTP session.
@@ -246,7 +249,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         sessionDTO.setFullQualifiedUserName(user.getFullQualifiedUsername());
         sessionDTO.setUserId(user.getUserID());
 
-        String sessionId = String.valueOf(user.getUserID().hashCode());
+        String sessionId = Utils.getHash(user.getUserID());
         persistOTPSession(sessionDTO, sessionId);
         return sessionDTO;
     }
@@ -295,7 +298,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     private SessionDTO getPreviousValidOTPSession(User user) throws SMSOTPException {
 
         // Search previous session object.
-        String sessionId = String.valueOf(user.getUserID().hashCode());
+        String sessionId = Utils.getHash(user.getUserID());
         String jsonString = (String) SessionDataStore.getInstance().
                 getSessionData(sessionId, Constants.SESSION_TYPE_OTP);
         if (StringUtils.isBlank(jsonString)) {
@@ -322,7 +325,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
     private void shouldThrottle(String userId) throws SMSOTPException {
 
-        String sessionId = String.valueOf(userId.hashCode());
+        String sessionId = Utils.getHash(userId);
         String jsonString = (String) SessionDataStore.getInstance().
                 getSessionData(sessionId, Constants.SESSION_TYPE_OTP);
         if (StringUtils.isBlank(jsonString)) {

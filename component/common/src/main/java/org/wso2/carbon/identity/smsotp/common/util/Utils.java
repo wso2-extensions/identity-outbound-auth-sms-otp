@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.identity.smsotp.common.util;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,6 +65,17 @@ public class Utils {
         }
         log.debug(String.format("SMS OTP service configurations : %s.",
                 SMSOTPServiceDataHolder.getConfigs().toString()));
+    }
+
+    /**
+     * This method returns the SHA-256 hash of a given string.
+     *
+     * @param text  plain text.
+     * @return      SHA-256 hash value of the given plain text.
+     */
+    public static String getHash(String text) {
+
+        return DigestUtils.sha256Hex(text);
     }
 
     private static void sanitizeAndPopulateConfigs(Properties properties) throws SMSOTPServerException {
@@ -129,7 +141,7 @@ public class Utils {
 
         String transactionId = UUID.randomUUID().toString();
         if (log.isDebugEnabled()) {
-            log.debug(String.format("Transaction Id hash: %s.", transactionId.hashCode()));
+            log.debug(String.format("Transaction Id hash: %s.", Utils.getHash(transactionId)));
         }
         return transactionId;
     }
