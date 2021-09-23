@@ -37,7 +37,7 @@ import org.wso2.carbon.user.core.service.RealmService;
  * OSGI service component of the SMS OTP service.
  */
 @Component(name = "org.wso2.carbon.identity.api.server.smsotp.commons",
-           immediate = true
+        immediate = true
 )
 public class SMSOTPServiceComponent {
 
@@ -60,10 +60,10 @@ public class SMSOTPServiceComponent {
     }
 
     @Reference(name = "realm.service",
-               service = org.wso2.carbon.user.core.service.RealmService.class,
-               cardinality = ReferenceCardinality.MANDATORY,
-               policy = ReferencePolicy.DYNAMIC,
-               unbind = "unsetRealmService")
+            service = org.wso2.carbon.user.core.service.RealmService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetRealmService")
     protected void setRealmService(RealmService realmService) {
 
         if (log.isDebugEnabled()) {

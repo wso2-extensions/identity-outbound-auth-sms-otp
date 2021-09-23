@@ -30,20 +30,20 @@ public interface SMSOTPService {
     /**
      * This method validates a provided OTP.
      *
-     * @param transactionId                     UUID to track the flow.
-     * @param userId                            SCIM Id.
-     * @param smsOTP                            OTP to be validated.
-     * @return {@link ValidationResponseDTO}    OTP validation result.
-     * @throws {@link SMSOTPException}          Thrown if any server or client error occurred.
+     * @param transactionId UUID to track the flow.
+     * @param userId        SCIM Id.
+     * @param smsOTP        OTP to be validated.
+     * @return OTP validation result.
+     * @throws SMSOTPException if any server or client error occurred.
      */
     ValidationResponseDTO validateSMSOTP(String transactionId, String userId, String smsOTP) throws SMSOTPException;
 
     /**
      * This method will generate an OTP and send an SMS notification.
      *
-     * @param userId                            SCIM Id.
-     * @return {@link GenerationResponseDTO}    OTP generation response.
-     * @throws SMSOTPException                  Thrown if any server or client error occurred.
+     * @param userId SCIM Id.
+     * @return OTP generation response.
+     * @throws SMSOTPException Thrown if any server or client error occurred.
      */
     GenerationResponseDTO generateSMSOTP(String userId) throws SMSOTPException;
 }

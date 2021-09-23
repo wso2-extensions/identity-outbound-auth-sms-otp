@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.smsotp.common.exception;
 import org.wso2.carbon.identity.event.IdentityEventException;
 
 /**
- * SMS OTP exception extends from {@link IdentityEventException}.
+ * This class is to handle SMS OTP exception.
  */
 public class SMSOTPException extends IdentityEventException {
 

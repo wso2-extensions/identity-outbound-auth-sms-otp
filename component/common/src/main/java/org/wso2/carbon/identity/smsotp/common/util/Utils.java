@@ -42,7 +42,7 @@ public class Utils {
     private static final Log log = LogFactory.getLog(Utils.class);
 
     /**
-     * Read configurations and populate {@link ConfigsDTO} object.
+     * Read configurations and populate ConfigDTO object.
      *
      * @throws SMSOTPServerException Throws upon an issue on while reading configs.
      */
@@ -70,8 +70,8 @@ public class Utils {
     /**
      * This method returns the SHA-256 hash of a given string.
      *
-     * @param text  plain text.
-     * @return      SHA-256 hash value of the given plain text.
+     * @param text plain text.
+     * @return SHA-256 hash value of the given plain text.
      */
     public static String getHash(String text) {
 
@@ -158,7 +158,7 @@ public class Utils {
     }
 
     public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data,
-            Throwable e) {
+                                                              Throwable e) {
 
         String description;
         if (StringUtils.isNotBlank(data)) {
@@ -170,7 +170,7 @@ public class Utils {
     }
 
     public static SMSOTPServerException handleServerException(Constants.ErrorMessage error, String data,
-            Throwable e) {
+                                                              Throwable e) {
 
         String description;
         if (StringUtils.isNotBlank(data)) {
