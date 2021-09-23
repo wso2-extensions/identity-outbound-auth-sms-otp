@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.smsotp.common.dto;
 
 /**
- * This class represents a model of the generate SMS OTP request.
+ * This class represents a model of to generate SMS OTP request.
  */
 public class GenerationResponseDTO {
 

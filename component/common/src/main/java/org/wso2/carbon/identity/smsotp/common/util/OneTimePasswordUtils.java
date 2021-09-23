@@ -26,12 +26,13 @@ import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
  * OTP generation utils.
- *
+ * <p>
  * Important: This class duplicates OTP util methods of the authenticator
  * module's 'org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword' class.
  * Any fixes here, should be reflected there as well.
@@ -39,7 +40,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class OneTimePasswordUtils {
 
     // Each OTP digit(0-9) has a corresponding checksum digit as in the below array.
-    private static final int[] CHECKSUM_DIGITS = { 0, 2, 4, 6, 8, 1, 3, 5, 7, 9 };
+    private static final int[] CHECKSUM_DIGITS = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
 
     private static final Log log = LogFactory.getLog(OneTimePasswordUtils.class);
 
@@ -62,7 +63,7 @@ public class OneTimePasswordUtils {
     /**
      * @param num    The number to calculate the checksum for.
      * @param digits Number of significant places in the number.
-     * @return       The checksum of num.
+     * @return The checksum of num.
      */
     public static int calcChecksum(long num, int digits) {
 
@@ -89,8 +90,8 @@ public class OneTimePasswordUtils {
      * algorithm. HMAC computes a Hashed Message Authentication Code and in this
      * case SHA1 is the hash algorithm used.
      *
-     * @param keyBytes                  Bytes to use for the HMAC-SHA-1 key.
-     * @param text                      Message or text to be authenticated.
+     * @param keyBytes Bytes to use for the HMAC-SHA-1 key.
+     * @param text     Message or text to be authenticated.
      * @throws NoSuchAlgorithmException If no provider makes either HmacSHA1 or HMAC-SHA-1 digest
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
@@ -180,7 +181,8 @@ public class OneTimePasswordUtils {
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
     public static String generateAlphaNumericOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
-                                  int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
+                                                 int truncationOffset)
+            throws NoSuchAlgorithmException, InvalidKeyException {
 
         // put movingFactor value into text byte array
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
@@ -212,11 +214,11 @@ public class OneTimePasswordUtils {
     /**
      * Generate the OTP.
      *
-     * @param key                       The key.
-     * @param base                      The base.
-     * @param length                    OTP length.
-     * @param isAlphaNumericOTPEnabled  A flag that indicates the OTP is alphanumeric or not.
-     * @return                          Generated OTP.
+     * @param key                      The key.
+     * @param base                     The base.
+     * @param length                   OTP length.
+     * @param isAlphaNumericOTPEnabled A flag that indicates the OTP is alphanumeric or not.
+     * @return Generated OTP.
      */
     public static String generateOTP(String key, String base, int length, boolean isAlphaNumericOTPEnabled) throws
             SMSOTPServerException {

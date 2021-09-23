@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *  Session object model.
+ * Session object model.
  */
 public class SessionDTO implements Serializable {
 

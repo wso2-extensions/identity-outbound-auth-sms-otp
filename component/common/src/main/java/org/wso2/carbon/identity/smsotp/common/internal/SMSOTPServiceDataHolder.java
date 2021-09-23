@@ -34,6 +34,7 @@ public class SMSOTPServiceDataHolder {
 
         return dataHolder;
     }
+
     public RealmService getRealmService() {
 
         return realmService;

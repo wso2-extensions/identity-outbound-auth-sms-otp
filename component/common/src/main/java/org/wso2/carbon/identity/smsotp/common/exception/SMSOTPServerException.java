@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.smsotp.common.exception;
 
 /**
- * SMS OTP server exception extends from {@link SMSOTPException}.
+ * SMS OTP server exception.
  */
 public class SMSOTPServerException extends SMSOTPException {
 

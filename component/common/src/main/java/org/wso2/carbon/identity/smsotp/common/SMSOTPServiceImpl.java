@@ -24,6 +24,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.identity.application.authentication.framework.store.SessionDataStore;
+import org.wso2.carbon.identity.event.IdentityEventConstants;
+import org.wso2.carbon.identity.event.IdentityEventException;
+import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.governance.service.notification.NotificationChannels;
+import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
+import org.wso2.carbon.identity.recovery.internal.IdentityRecoveryServiceDataHolder;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.dto.FailureReasonDTO;
 import org.wso2.carbon.identity.smsotp.common.dto.GenerationResponseDTO;
@@ -34,13 +41,6 @@ import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import org.wso2.carbon.identity.smsotp.common.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.smsotp.common.util.OneTimePasswordUtils;
 import org.wso2.carbon.identity.smsotp.common.util.Utils;
-import org.wso2.carbon.identity.application.authentication.framework.store.SessionDataStore;
-import org.wso2.carbon.identity.event.IdentityEventConstants;
-import org.wso2.carbon.identity.event.IdentityEventException;
-import org.wso2.carbon.identity.event.event.Event;
-import org.wso2.carbon.identity.governance.service.notification.NotificationChannels;
-import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
-import org.wso2.carbon.identity.recovery.internal.IdentityRecoveryServiceDataHolder;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
@@ -52,7 +52,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class implements the {@link SMSOTPService} interface.
+ * This class implements the SMSOTPService interface.
  */
 public class SMSOTPServiceImpl implements SMSOTPService {
 
@@ -70,9 +70,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         // Retrieve mobile number only if notifications the are managed internally.
         boolean sendNotification = SMSOTPServiceDataHolder.getConfigs().isTriggerNotification();
-        String[] requestedClaims = sendNotification
-                ? new String[]{ NotificationChannels.SMS_CHANNEL.getClaimUri() }
-                : null;
+        String[] requestedClaims =
+                sendNotification ? new String[]{NotificationChannels.SMS_CHANNEL.getClaimUri()} : null;
 
         // Retrieve user by ID.
         AbstractUserStoreManager userStoreManager;
@@ -105,7 +104,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         SessionDTO sessionDTO = issueOTP(user);
 
         GenerationResponseDTO responseDTO = new GenerationResponseDTO();
-        // If IS is handling the notifications, don't send the OTP in the response.
+        // If WSO2IS is handling the notifications, don't send the OTP in the response.
         if (!sendNotification) {
             responseDTO.setSmsOTP(sessionDTO.getOtp());
         }
