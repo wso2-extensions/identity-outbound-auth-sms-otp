@@ -67,6 +67,12 @@ public class Utils {
                 SMSOTPServiceDataHolder.getConfigs().toString()));
     }
 
+    /**
+     * This method returns the SHA-256 hash of a given string.
+     *
+     * @param text  plain text.
+     * @return      SHA-256 hash value of the given plain text.
+     */
     public static String getHash(String text) {
 
         return DigestUtils.sha256Hex(text);
