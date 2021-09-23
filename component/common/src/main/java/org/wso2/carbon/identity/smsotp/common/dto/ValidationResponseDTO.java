@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.smsotp.common.dto;
 
 /**
- * This class represents a model of to validate SMS OTP response.
+ * This class represents a model to validate SMS OTP response.
  */
 public class ValidationResponseDTO {
 
