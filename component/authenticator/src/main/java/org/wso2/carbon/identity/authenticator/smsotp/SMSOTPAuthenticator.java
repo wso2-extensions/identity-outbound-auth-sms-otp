@@ -59,6 +59,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -1256,11 +1257,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else {
                     context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
                             httpConnection.getResponseMessage());
-                    String content = getSanitizedErrorInfo(httpConnection, context, encodedMobileNo);
+                    if (httpConnection.getErrorStream() != null) {
+                        String content = getSanitizedErrorInfo(httpConnection.getErrorStream(), context, encodedMobileNo);
 
-                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
-                            + " and error message is " + httpConnection.getResponseMessage());
-                    context.setProperty(SMSOTPConstants.ERROR_INFO, content);
+                        log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                                + " and error message is " + httpConnection.getResponseMessage());
+                        context.setProperty(SMSOTPConstants.ERROR_INFO, content);
+                    }
                     return false;
                 }
             }
@@ -1279,10 +1282,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
 
-    private String getSanitizedErrorInfo(HttpURLConnection httpConnection, AuthenticationContext context, String
+    private String getSanitizedErrorInfo(InputStream errorStream, AuthenticationContext context, String
             encodedMobileNo) throws IOException, AuthenticationFailedException {
 
-        String contentRaw = readContent(httpConnection);
+        String contentRaw = readContent(errorStream);
 
         String screenValue = getScreenValue(context);
         if (StringUtils.isEmpty(screenValue)) {
@@ -1323,9 +1326,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         return content;
     }
 
-    private String readContent(HttpURLConnection httpConnection) throws IOException {
+    private String readContent(InputStream errorStream) throws IOException {
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(httpConnection.getErrorStream()));
+        BufferedReader br = new BufferedReader(new InputStreamReader(errorStream));
         StringBuilder sb = new StringBuilder();
         String output;
         while ((output = br.readLine()) != null) {
