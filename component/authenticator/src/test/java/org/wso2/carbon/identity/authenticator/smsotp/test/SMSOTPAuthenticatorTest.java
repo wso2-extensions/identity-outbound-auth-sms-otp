@@ -84,6 +84,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.*;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
@@ -662,6 +663,29 @@ public class SMSOTPAuthenticatorTest {
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
         Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******5231");
+    }
+
+    @Test
+    public void testGetScreenAttributeWhenMobileRequest() throws UserStoreException {
+        mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
+        when(SMSOTPUtils.getScreenUserAttribute(context)).thenReturn
+                ("http://wso2.org/claims/mobile");
+        when(context.getProperty(REQUESTED_USER_MOBILE)).thenReturn("0778899889");
+        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        when(userRealm.getUserStoreManager()
+                .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null)).thenReturn(null);
+        when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
+
+        // with forward order
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778******");
+
+        // with backward order
+        when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******9889");
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})

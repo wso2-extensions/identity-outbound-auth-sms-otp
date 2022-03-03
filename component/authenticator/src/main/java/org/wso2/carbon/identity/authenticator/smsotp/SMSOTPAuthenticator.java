@@ -82,6 +82,7 @@ import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 
 import static java.util.Base64.getEncoder;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
 
 /**
  * Authenticator of SMS OTP
@@ -1434,7 +1435,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @throws UserStoreException
      */
     public String getScreenAttribute(AuthenticationContext context, UserRealm userRealm, String username)
-            throws UserStoreException, AuthenticationFailedException {
+            throws UserStoreException {
 
         String screenUserAttributeParam;
         String screenUserAttributeValue = null;
@@ -1445,9 +1446,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (screenUserAttributeParam != null) {
             screenUserAttributeValue = userRealm.getUserStoreManager()
                     .getUserClaimValue(username, screenUserAttributeParam, null);
+
+            if (StringUtils.isBlank(screenUserAttributeValue)) {
+                screenUserAttributeValue = String.valueOf(context.getProperty(REQUESTED_USER_MOBILE));
+            }
         }
 
-        if (screenUserAttributeValue != null) {
+        if (StringUtils.isNotBlank(screenUserAttributeValue)) {
             if ((SMSOTPUtils.getNoOfDigits(context)) != null) {
                 noOfDigits = Integer.parseInt(SMSOTPUtils.getNoOfDigits(context));
             }
