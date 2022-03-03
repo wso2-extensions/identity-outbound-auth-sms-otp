@@ -369,14 +369,14 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      * @return correlation-id
      */
     public static String getCorrelationId() {
-        String ref;
+        String correlationId;
         if (isCorrelationIDPresent()) {
-            ref = MDC.get(Constants.CORRELATION_ID_MDC).toString();
+            correlationId = MDC.get(Constants.CORRELATION_ID_MDC).toString();
         } else {
-            ref = UUID.randomUUID().toString();
+            correlationId = UUID.randomUUID().toString();
 
         }
-        return ref;
+        return correlationId;
     }
 
     /**
