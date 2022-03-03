@@ -252,6 +252,12 @@
                 <version>${powermock.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.logging</groupId>
+                <artifactId>pax-logging-api</artifactId>
+                <version>${pax.logging.api.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -412,6 +418,7 @@
         <carbon.identity.account.lock.handler.version>1.1.12</carbon.identity.account.lock.handler.version>
         <carbon.identity.account.lock.handler.imp.pkg.version.range>[1.1.12, 2.0.0)
         </carbon.identity.account.lock.handler.imp.pkg.version.range>
+        <pax.logging.api.version>1.11.3</pax.logging.api.version>
         <maven.scr.plugin.version>1.26.0</maven.scr.plugin.version>
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
         <osgi.service.import.version.range>[1.2.0,2.0.0)</osgi.service.import.version.range>
