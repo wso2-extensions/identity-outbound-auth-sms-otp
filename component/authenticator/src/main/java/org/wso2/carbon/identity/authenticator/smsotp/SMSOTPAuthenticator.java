@@ -1202,7 +1202,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         .replaceAll("\\$ctx.otp", otpToken);
                 headerArray = headerString.split(",");
                 for (String header : headerArray) {
-                    String[] headerElements = header.split(":");
+                    String[] headerElements = header.split(":", 2);
                     if (headerElements.length > 1) {
                         httpConnection.setRequestProperty(headerElements[0], headerElements[1]);
                     } else {
@@ -1377,7 +1377,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             headerArray = headerString.split(",");
             for (String header : headerArray) {
-                String[] headerElements = header.split(":");
+                String[] headerElements = header.split(":", 2);
                 if (headerElements.length > 1) {
                     headerElementProperties.put(headerElements[0], headerElements[1]);
                 } else {
