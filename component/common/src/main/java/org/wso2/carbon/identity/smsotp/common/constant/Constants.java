@@ -48,6 +48,9 @@ public class Constants {
     public static final String SMS_OTP_RESEND_THROTTLE_INTERVAL = "smsOtp.resendThrottleInterval";
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
+    public static final String CORRELATION_ID_MDC = "Correlation-ID";
+    public static final String UNIQUE_ID = "uniqueId";
+
     /**
      * SMS OTP service error codes.
      */

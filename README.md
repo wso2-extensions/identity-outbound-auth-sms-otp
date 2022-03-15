@@ -59,6 +59,18 @@ properties.resendThrottleInterval=30
 ```
 6. Restart the server.
 
+**NOTE::** To include a **unique identification** in the **SMS template**, use the `uniqueId` variable in the following syntax,
+
+`{{uniqueId}}`
+
+Following is a sample which includes the `uniqueId` in the SMS Template located available `<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file,
+```xml
+    <configuration type="sendOTP" display="sendOTP" locale="en_US">
+        <body>Your One Time Password is : {{confirmation-code}}. 
+        Reference Id: {{uniqueId}}</body>
+    </configuration>
+```
+
 ## REST API support
 REst API support for this OSGI service can be found in the below git repository.
 
