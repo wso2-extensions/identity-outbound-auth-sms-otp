@@ -277,7 +277,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             log.debug(String.format("Sending SMS OTP notification to user Id: %s.", user.getUserID()));
         }
 
-        HashMap<String, Object> properties = new HashMap<>();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(Constants.CORRELATION_ID, getCorrelationId());
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, user.getUsername());
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, user.getUserStoreDomain());
