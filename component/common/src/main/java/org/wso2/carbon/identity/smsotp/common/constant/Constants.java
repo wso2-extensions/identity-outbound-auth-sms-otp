@@ -49,7 +49,7 @@ public class Constants {
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
-    public static final String UNIQUE_ID = "uniqueId";
+    public static final String CORRELATION_ID = "correlation-id";
 
     /**
      * SMS OTP service error codes.
