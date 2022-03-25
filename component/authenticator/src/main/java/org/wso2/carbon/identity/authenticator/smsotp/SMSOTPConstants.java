@@ -67,7 +67,7 @@ public class SMSOTPConstants {
     public static final String USE_INTERNAL_ERROR_CODES = "UseInternalErrorCodes";
     public static final String SHOW_AUTH_FAILURE_REASON = "showAuthFailureReason";
     public static final String ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS = "EnableAccountLockingForFailedAttempts";
-    public static final String ENABLE_PAYLOAD_ENCODING_FOR_SMS_OTP = "EnablePayloadEncodingForSMSOTP";
+    public static final String ENABLE_PAYLOAD_ENCODING_FOR_SMS_OTP = "enable_payload_encoding_for_sms_otp";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
