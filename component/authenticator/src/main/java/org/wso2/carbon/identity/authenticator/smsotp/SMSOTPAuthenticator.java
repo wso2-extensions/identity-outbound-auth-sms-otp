@@ -19,11 +19,13 @@
 
 package org.wso2.carbon.identity.authenticator.smsotp;
 
+import com.google.gson.Gson;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.owasp.encoder.Encode;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -1171,38 +1173,41 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Get the connection and proceed with SMS API's rest call.
      *
-     * @param httpConnection  the connection
-     * @param context         the authenticationContext
-     * @param headerString    the header string
-     * @param payload         the payload
-     * @param httpResponse    the http response
-     * @param encodedMobileNo the encoded mobileNo
-     * @param smsMessage      the sms message
-     * @param otpToken        the token
-     * @param httpMethod      the http method
+     * @param httpConnection        The connection.
+     * @param context               The authenticationContext.
+     * @param headerString          The header string.
+     * @param payload               The payload.
+     * @param httpResponse          The http response.
+     * @param receivedMobileNumber  The encoded mobileNo.
+     * @param smsMessage            The sms message.
+     * @param otpToken              The token.
+     * @param httpMethod            The http method.
      * @return true or false
      * @throws AuthenticationFailedException
      */
     private boolean getConnection(HttpURLConnection httpConnection, AuthenticationContext context, String headerString,
-                                  String payload, String httpResponse, String encodedMobileNo, String smsMessage,
+                                  String payload, String httpResponse, String receivedMobileNumber, String smsMessage,
                                   String otpToken, String httpMethod) throws AuthenticationFailedException {
 
         try {
             httpConnection.setDoInput(true);
             httpConnection.setDoOutput(true);
+            String encodedMobileNo = URLEncoder.encode(receivedMobileNumber, CHAR_SET_UTF_8);
+            String encodedSMSMessage;
             String[] headerArray;
+            HashMap<String, Object> headerElementProperties = new HashMap<>();
             if (StringUtils.isNotEmpty(headerString)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Processing HTTP headers since header string is available");
                 }
-                headerString = headerString.trim().replaceAll("\\$ctx.num", encodedMobileNo)
-                        .replaceAll("\\$ctx.msg", smsMessage + otpToken)
-                        .replaceAll("\\$ctx.otp", otpToken);
+                headerString = headerString.trim().replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll(
+                        "\\$ctx.msg", smsMessage + otpToken);
                 headerArray = headerString.split(",");
                 for (String header : headerArray) {
                     String[] headerElements = header.split(":", 2);
                     if (headerElements.length > 1) {
                         httpConnection.setRequestProperty(headerElements[0], headerElements[1]);
+                        headerElementProperties.put(headerElements[0], headerElements[1]);
                     } else {
                         log.info("Either header name or value not found. Hence not adding header which contains " +
                                 headerElements[0]);
@@ -1225,10 +1230,20 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (SMSOTPConstants.POST_METHOD.equalsIgnoreCase(httpMethod)) {
                 httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                 if (StringUtils.isNotEmpty(payload)) {
-                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo)
-                            .replaceAll("\\$ctx.msg", smsMessage + otpToken)
-                            .replaceAll("\\$ctx.otp", otpToken);
-
+                    String contentType = ((String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE)).trim();
+                    if (!SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)){
+                        encodedSMSMessage = smsMessage;
+                        if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
+                                (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType)) {
+                            encodedMobileNo = receivedMobileNumber;
+                        }
+                    }
+                    else{
+                        encodedMobileNo = getEncodedValue(contentType,receivedMobileNumber);
+                        encodedSMSMessage = getEncodedValue(contentType,smsMessage);
+                    }
+                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
+                            encodedSMSMessage + otpToken);
                     OutputStreamWriter writer = null;
                     try {
                         writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET_UTF_8);
@@ -1245,7 +1260,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (StringUtils.isNotEmpty(httpResponse)) {
                 if (httpResponse.trim().equals(String.valueOf(httpConnection.getResponseCode()))) {
                     if (log.isDebugEnabled()) {
-                        log.debug("Code is successfully sent to the mobile and recieved expected response code : " +
+                        log.debug("Code is successfully sent to the mobile and received expected response code : " +
                                 httpResponse);
                     }
                     return true;
@@ -1366,35 +1381,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
-        String[] headerArray;
         String receivedMobileNumber = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
-        HashMap<String, Object> headerElementProperties = new HashMap<>();
-        if (StringUtils.isNotEmpty(headerString)) {
-            if (log.isDebugEnabled()) {
-                log.debug("Processing HTTP headers since header string is available");
-            }
-            headerArray = headerString.split(",");
-            for (String header : headerArray) {
-                String[] headerElements = header.split(":", 2);
-                if (headerElements.length > 1) {
-                    headerElementProperties.put(headerElements[0], headerElements[1]);
-                } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Either header name or value not found. Hence not adding header which contains " +
-                                headerElements[0]);
-                    }
-                }
-            }
-            String contentType = (String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE);
-            if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
-                    (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType.trim())) {
-                receivedMobileNumber = mobile;
-            }
-        } else {
-            if (log.isDebugEnabled()) {
-                log.debug("No configured headers found. Header string is empty");
-            }
-        }
 
         String encodedSmsMessage = smsMessage.replaceAll("\\s", "+");
         smsUrl = smsUrl.replaceAll("\\$ctx.num", receivedMobileNumber)
@@ -1415,14 +1402,37 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String subUrl = smsProviderUrl.getProtocol();
         if (subUrl.equals(SMSOTPConstants.HTTPS)) {
             httpConnection = (HttpsURLConnection) smsProviderUrl.openConnection();
-            connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
-                    receivedMobileNumber, smsMessage, otpToken, httpMethod);
         } else {
             httpConnection = (HttpURLConnection) smsProviderUrl.openConnection();
-            connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
-                    receivedMobileNumber, smsMessage, otpToken, httpMethod);
         }
+        connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
+                mobile, smsMessage, otpToken, httpMethod);
         return connection;
+    }
+
+    /**
+     * Get the corresponding encoded value based on the provided content-type.
+     *
+     * @param contentType   The content type.
+     * @param value         String that needed to be encoded.
+     * @return The encoded value.
+     * @throws IOException
+     */
+    private String getEncodedValue(String contentType, String value) throws IOException{
+
+        String encodedValue;
+        switch (contentType){
+            case SMSOTPConstants.XML_CONTENT_TYPE:
+                encodedValue = Encode.forXml(value);
+                break;
+            case SMSOTPConstants.JSON_CONTENT_TYPE:
+                Gson gson = new Gson();
+                encodedValue = gson.toJson(value);
+                break;
+            default:
+                encodedValue = URLEncoder.encode(value, CHAR_SET_UTF_8);
+        }
+        return encodedValue;
     }
 
     /**
