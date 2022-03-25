@@ -67,12 +67,14 @@ public class SMSOTPConstants {
     public static final String USE_INTERNAL_ERROR_CODES = "UseInternalErrorCodes";
     public static final String SHOW_AUTH_FAILURE_REASON = "showAuthFailureReason";
     public static final String ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS = "EnableAccountLockingForFailedAttempts";
+    public static final String ENABLE_PAYLOAD_ENCODING_FOR_SMS_OTP = "EnablePayloadEncodingForSMSOTP";
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
 
     public static final String CONTENT_TYPE = "Content-Type";
     public static final String JSON_CONTENT_TYPE = "application/json";
+    public static final String XML_CONTENT_TYPE = "text/xml;charset=UTF-8";
 
     public static final String SMSOTP_AUTHENTICATION_ENDPOINT_URL = "SMSOTPAuthenticationEndpointURL";
     public static final String SMSOTP_AUTHENTICATION_ERROR_PAGE_URL = "SMSOTPAuthenticationEndpointErrorPage";
