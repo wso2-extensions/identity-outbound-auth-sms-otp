@@ -36,6 +36,7 @@ public class Constants {
     public static final int DEFAULT_OTP_LENGTH = 6;
     public static final int DEFAULT_SMS_OTP_VALIDITY_PERIOD = 60000;
     public static final int DEFAULT_RESEND_THROTTLE_INTERVAL = 30000;
+    public static final int DEFAULT_MAX_VALIDATION_ATTEMPTS_ALLOWED = 5;
     public static final String SMS_OTP_NOTIFICATION_TEMPLATE = "sendOTP";
 
     public static final String SMS_OTP_IDENTITY_EVENT_MODULE_NAME = "smsOtp";
@@ -46,6 +47,7 @@ public class Constants {
     public static final String SMS_OTP_TRIGGER_NOTIFICATION = "smsOtp.triggerNotification";
     public static final String SMS_OTP_TOKEN_RENEWAL_INTERVAL = "smsOtp.tokenRenewalInterval";
     public static final String SMS_OTP_RESEND_THROTTLE_INTERVAL = "smsOtp.resendThrottleInterval";
+    public static final String SMS_OTP_MAX_VALIDATION_ATTEMPTS_ALLOWED = "smsOtp.maxValidationAttemptsAllowed";
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
@@ -74,6 +76,8 @@ public class Constants {
                 "No OTP found for the user Id : %s."),
         CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
                 "Please wait %s seconds before retrying."),
+        CLIENT_OTP_VALIDATION_BLOCKED("SMS-60011", "Maximum no of failed validation attempted exceeded.",
+                "Maximum no of failed validation attempted exceeded. User id : %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",

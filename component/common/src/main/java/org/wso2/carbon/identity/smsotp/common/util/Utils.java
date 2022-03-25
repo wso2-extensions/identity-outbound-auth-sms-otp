@@ -128,6 +128,13 @@ public class Utils {
                 Integer.parseInt(otpResendThrottleIntervalValue) * 1000 : Constants.DEFAULT_RESEND_THROTTLE_INTERVAL;
         configs.setResendThrottleInterval(resendThrottleInterval);
 
+        String otpmaxValidationAttemptsAllowedValue = StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_MAX_VALIDATION_ATTEMPTS_ALLOWED));
+        int maxValidationAttemptsAllowed = StringUtils.isNumeric(otpmaxValidationAttemptsAllowedValue) ?
+                Integer.parseInt(otpmaxValidationAttemptsAllowedValue) :
+                Constants.DEFAULT_MAX_VALIDATION_ATTEMPTS_ALLOWED;
+        configs.setMaxValidationAttemptsAllowed(maxValidationAttemptsAllowed);
+
         // Should we send the same OTP upon the next generation request. Defaults to 'false'.
         boolean resendSameOtp = (otpRenewalInterval > 0) && (otpRenewalInterval < otpValidityPeriod);
         configs.setResendSameOtp(resendSameOtp);
