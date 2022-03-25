@@ -1102,16 +1102,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                 if (StringUtils.isNotEmpty(payload)) {
                     String contentType = ((String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE)).trim();
-                    if (!SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)){
+//                  If the enable_payload_encoding_for_sms_otp configuration is disabled, mobile number in the
+//                  payload will be URL encoded for all the content-types except for application/json content type
+//                  preserving the previous implementation to support backward compatibility.
+                    if (SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)) {
+                        encodedMobileNo = getEncodedValue(contentType, receivedMobileNumber);
+                        encodedSMSMessage = getEncodedValue(contentType, smsMessage);
+                    } else {
                         encodedSMSMessage = smsMessage;
                         if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
                                 (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType)) {
                             encodedMobileNo = receivedMobileNumber;
                         }
-                    }
-                    else{
-                        encodedMobileNo = getEncodedValue(contentType,receivedMobileNumber);
-                        encodedSMSMessage = getEncodedValue(contentType,smsMessage);
                     }
                     payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
                             encodedSMSMessage + otpToken);
@@ -1279,15 +1281,15 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Get the corresponding encoded value based on the provided content-type.
      *
-     * @param contentType   The content type.
-     * @param value         String that needed to be encoded.
-     * @return The encoded value.
+     * @param contentType The content type in the request header.
+     * @param value       String value that needed to be encoded.
+     * @return The encoded value based on the content-type.
      * @throws IOException
      */
-    private String getEncodedValue(String contentType, String value) throws IOException{
+    private String getEncodedValue(String contentType, String value) throws IOException {
 
         String encodedValue;
-        switch (contentType){
+        switch (contentType) {
             case SMSOTPConstants.XML_CONTENT_TYPE:
                 encodedValue = Encode.forXml(value);
                 break;
