@@ -1044,15 +1044,15 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Get the connection and proceed with SMS API's rest call.
      *
-     * @param httpConnection        the connection
-     * @param context               the authenticationContext
-     * @param headerString          the header string
-     * @param payload               the payload
-     * @param httpResponse          the http response
-     * @param receivedMobileNumber  the encoded mobileNo
-     * @param smsMessage            the sms message
-     * @param otpToken              the token
-     * @param httpMethod            the http method
+     * @param httpConnection        The connection.
+     * @param context               The authenticationContext.
+     * @param headerString          The header string.
+     * @param payload               The payload.
+     * @param httpResponse          The http response.
+     * @param receivedMobileNumber  The encoded mobileNo.
+     * @param smsMessage            The sms message.
+     * @param otpToken              The token.
+     * @param httpMethod            The http method.
      * @return true or false
      * @throws AuthenticationFailedException
      */
