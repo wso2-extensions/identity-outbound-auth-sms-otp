@@ -146,6 +146,20 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         SessionDTO sessionDTO;
         try {
             sessionDTO = new ObjectMapper().readValue(jsonString, SessionDTO.class);
+            int validateAttempt = sessionDTO.getValidationAttempts();
+            FailureReasonDTO error;
+            if (validateAttempt >= SMSOTPServiceDataHolder.getConfigs().getMaxValidationAttemptsAllowed()) {
+                SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
+                error = showFailureReason
+                        ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_BLOCKED, userId)
+                        : null;
+                return new ValidationResponseDTO(userId, false, error);
+            }
+            else {
+                validateAttempt++;
+                sessionDTO.setValidationAttempts(validateAttempt);
+                persistOTPSession(sessionDTO, sessionId);
+            }
         } catch (IOException e) {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
@@ -247,6 +261,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         sessionDTO.setTransactionId(transactionId);
         sessionDTO.setFullQualifiedUserName(user.getFullQualifiedUsername());
         sessionDTO.setUserId(user.getUserID());
+        sessionDTO.setValidationAttempts(0);
 
         String sessionId = Utils.getHash(user.getUserID());
         persistOTPSession(sessionDTO, sessionId);
