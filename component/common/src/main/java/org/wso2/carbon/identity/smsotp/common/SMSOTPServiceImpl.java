@@ -382,5 +382,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      *
      * @return whether the correlation id is present.
      */
-    public static boolean isCorrelationIDPresent() { return MDC.get(Constants.CORRELATION_ID_MDC) != null; }
+    public static boolean isCorrelationIDPresent() {
+
+        return MDC.get(Constants.CORRELATION_ID_MDC) != null;
+    }
 }
