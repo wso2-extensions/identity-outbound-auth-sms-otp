@@ -539,4 +539,16 @@ public class SMSOTPUtils {
         }
         return false;
     }
+
+    /**
+     * Checks whether the payload encoding for sms otp is enabled.
+     *
+     * @param context Authentication context.
+     * @return True if encoding is enabled.
+     */
+    public static boolean isPayloadEncodingForSMSOTPEnabled(AuthenticationContext context) {
+
+        return Boolean
+                .parseBoolean(getConfiguration(context, SMSOTPConstants.ENABLE_PAYLOAD_ENCODING_FOR_SMS_OTP));
+    }
 }
