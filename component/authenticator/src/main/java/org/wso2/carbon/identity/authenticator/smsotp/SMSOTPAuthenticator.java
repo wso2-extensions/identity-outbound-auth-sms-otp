@@ -1106,6 +1106,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 //                  payload will be URL encoded for all the content-types except for application/json content type
 //                  preserving the previous implementation to support backward compatibility.
                     if (SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)) {
+//                      here only the mobile number and SMS message will be encoded, assuming the rest of the content is
+//                      in correct format.
                         encodedMobileNo = getEncodedValue(contentType, receivedMobileNumber);
                         encodedSMSMessage = getEncodedValue(contentType, smsMessage);
                     } else {
