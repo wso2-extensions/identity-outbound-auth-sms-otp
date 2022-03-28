@@ -210,11 +210,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * Get the mobile number from user's profile to send an otp.
      *
-     * @param request     the HttpServletRequest
-     * @param response    the HttpServletResponse
-     * @param context     the AuthenticationContext
-     * @param username    the Username
-     * @param queryParams the queryParams
+     * @param request     The HttpServletRequest.
+     * @param response    The HttpServletResponse.
+     * @param context     The AuthenticationContext.
+     * @param username    The Username.
+     * @param queryParams The queryParams.
      * @return the mobile number
      * @throws AuthenticationFailedException
      * @throws SMSOTPException
@@ -1235,8 +1235,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     payload will be URL encoded for all the content-types except for application/json content type
                     preserving the previous implementation to support backward compatibility.*/
                     if (SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)) {
-//                      here only the mobile number and SMS message will be encoded, assuming the rest of the content is
-//                      in correct format.
+/*                      here only the mobile number and SMS message will be encoded, assuming the rest of the content is
+                        in correct format.*/
                         encodedMobileNo = getEncodedValue(contentType, receivedMobileNumber);
                         encodedSMSMessage = getEncodedValue(contentType, smsMessage);
                     } else {
