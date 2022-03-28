@@ -71,13 +71,13 @@ public class Constants {
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
                 "Mandatory parameters not found : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",
-                "Provided OTP is invalid. User id : %s."),
+                "Provided OTP is invalid. User id : %s. Remaining validation attempts : %s"),
         CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
                 "No OTP found for the user Id : %s."),
         CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
                 "Please wait %s seconds before retrying."),
-        CLIENT_OTP_VALIDATION_BLOCKED("SMS-60011", "Maximum no of failed validation attempted exceeded.",
-                "Maximum no of failed validation attempted exceeded. User id : %s."),
+        CLIENT_OTP_VALIDATION_BLOCKED("SMS-60011", "Maximum allowed failed validation attempts exceeded.",
+                "Maximum allowed failed validation attempts exceeded for user id : %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",

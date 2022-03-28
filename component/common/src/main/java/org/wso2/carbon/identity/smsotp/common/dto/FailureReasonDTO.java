@@ -46,6 +46,21 @@ public class FailureReasonDTO {
                 : error.getDescription();
     }
 
+    /**
+     * This method composes the error message for failed sms-otp validation attempts.
+     *
+     * @param error                     Error message.
+     * @param data                      Data passed for the string argument in error message.
+     * @param remainingFailedAttempts   No of remaining validation attempts.
+     */
+    public FailureReasonDTO(Constants.ErrorMessage error, String data, int remainingFailedAttempts) {
+
+        this.code = error.getCode();
+        this.message = error.getMessage();
+        description = StringUtils.isNotBlank(data) ? String.format(error.getDescription(), data, remainingFailedAttempts)
+                : error.getDescription();
+    }
+
     public String getCode() {
 
         return code;
