@@ -136,10 +136,12 @@ public class ConfigsDTO {
     }
 
     public int getMaxValidationAttemptsAllowed() {
+
         return maxValidationAttemptsAllowed;
     }
 
     public void setMaxValidationAttemptsAllowed(int maxValidationAttemptsAllowed) {
+
         this.maxValidationAttemptsAllowed = maxValidationAttemptsAllowed;
     }
 

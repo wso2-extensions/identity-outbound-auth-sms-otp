@@ -128,10 +128,11 @@ public class Utils {
                 Integer.parseInt(otpResendThrottleIntervalValue) * 1000 : Constants.DEFAULT_RESEND_THROTTLE_INTERVAL;
         configs.setResendThrottleInterval(resendThrottleInterval);
 
-        String otpmaxValidationAttemptsAllowedValue = StringUtils.trim(
+        // Maximum allowed validation attempts defaults to 5 if its not specified as a property in deployment.toml file.
+        String otpMaxValidationAttemptsAllowedValue = StringUtils.trim(
                 properties.getProperty(Constants.SMS_OTP_MAX_VALIDATION_ATTEMPTS_ALLOWED));
-        int maxValidationAttemptsAllowed = StringUtils.isNumeric(otpmaxValidationAttemptsAllowedValue) ?
-                Integer.parseInt(otpmaxValidationAttemptsAllowedValue) :
+        int maxValidationAttemptsAllowed = StringUtils.isNumeric(otpMaxValidationAttemptsAllowedValue) ?
+                Integer.parseInt(otpMaxValidationAttemptsAllowedValue) :
                 Constants.DEFAULT_MAX_VALIDATION_ATTEMPTS_ALLOWED;
         configs.setMaxValidationAttemptsAllowed(maxValidationAttemptsAllowed);
 
@@ -172,6 +173,21 @@ public class Utils {
             description = String.format(error.getDescription(), data);
         } else {
             description = error.getDescription();
+        }
+        return new SMSOTPClientException(error.getCode(), error.getMessage(), description, e);
+    }
+
+    public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data,
+                                                              int remainingFailedAttempts, Throwable e) {
+
+        String description;
+        if (StringUtils.isNotBlank(data)) {
+            description = String.format(error.getDescription(), data, remainingFailedAttempts);
+        } else {
+            description = error.getDescription();
+        }
+        if (e == null) {
+            return new SMSOTPClientException(error.getCode(), error.getMessage(), description);
         }
         return new SMSOTPClientException(error.getCode(), error.getMessage(), description, e);
     }

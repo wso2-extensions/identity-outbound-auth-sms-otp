@@ -144,9 +144,10 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             return new ValidationResponseDTO(userId, false, error);
         }
         SessionDTO sessionDTO;
+        int validateAttempt;
         try {
             sessionDTO = new ObjectMapper().readValue(jsonString, SessionDTO.class);
-            int validateAttempt = sessionDTO.getValidationAttempts();
+            validateAttempt = sessionDTO.getValidationAttempts();
             FailureReasonDTO error;
             if (validateAttempt >= SMSOTPServiceDataHolder.getConfigs().getMaxValidationAttemptsAllowed()) {
                 SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
@@ -154,8 +155,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                         ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_BLOCKED, userId)
                         : null;
                 return new ValidationResponseDTO(userId, false, error);
-            }
-            else {
+            } else {
                 validateAttempt++;
                 sessionDTO.setValidationAttempts(validateAttempt);
                 persistOTPSession(sessionDTO, sessionId);
@@ -164,7 +164,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
 
-        ValidationResponseDTO responseDTO = isValid(sessionDTO, smsOTP, userId, transactionId, showFailureReason);
+        ValidationResponseDTO responseDTO = isValid(sessionDTO, smsOTP, userId, transactionId, validateAttempt, showFailureReason);
         if (!responseDTO.isValid()) {
             return responseDTO;
         }
@@ -174,7 +174,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     }
 
     private ValidationResponseDTO isValid(SessionDTO sessionDTO, String smsOTP, String userId,
-                                          String transactionId, boolean showFailureReason) {
+                                          String transactionId, int validateAttempt, boolean showFailureReason) {
 
         FailureReasonDTO error;
         // Check if the provided OTP is correct.
@@ -182,9 +182,11 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("Invalid OTP provided for the user : %s.", userId));
             }
+            int remainingFailedAttempts =
+                    SMSOTPServiceDataHolder.getConfigs().getMaxValidationAttemptsAllowed() - validateAttempt;
             error = showFailureReason
-                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId)
-                    : null;
+                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, userId,
+                    remainingFailedAttempts) : null;
             return new ValidationResponseDTO(userId, false, error);
         }
         // Check for expired OTPs.
