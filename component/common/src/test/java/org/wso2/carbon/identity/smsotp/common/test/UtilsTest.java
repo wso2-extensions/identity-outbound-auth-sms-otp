@@ -57,32 +57,26 @@ public class UtilsTest {
     public void testHandleClientException() {
 
         String data = "sample data";
-        int remainingFailedAttempts = 3;
-        Exception e = null;
         SMSOTPClientException exception =
-                Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, data,
-                        remainingFailedAttempts, e);
+                Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, data);
         Assert.assertEquals(exception.getErrorCode(), Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getCode());
         Assert.assertEquals(exception.getMessage(), Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getMessage());
-        Assert.assertEquals(exception.getDescription(), String.format(
-                Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getDescription(), data, remainingFailedAttempts));
+        Assert.assertEquals(exception.getDescription(),
+                String.format(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getDescription(), data));
     }
 
     @Test
     public void testHandleClientExceptionWithThrowable() {
 
         String data = "sample data";
-        int remainingFailedAttempts = 3;
         Exception e = new Exception();
         SMSOTPClientException exception =
-                Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, data,
-                        remainingFailedAttempts, e);
+                Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED, data, e);
         Assert.assertEquals(exception.getErrorCode(), Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getCode());
         Assert.assertEquals(exception.getMessage(), Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getMessage());
         Assert.assertEquals(exception.getCause(), e);
         Assert.assertEquals(exception.getDescription(),
-                String.format(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getDescription(), data,
-                        remainingFailedAttempts));
+                String.format(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_FAILED.getDescription(), data));
     }
 
     @Test
