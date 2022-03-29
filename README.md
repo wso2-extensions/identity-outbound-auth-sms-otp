@@ -59,15 +59,17 @@ properties.resendThrottleInterval=30
 ```
 6. Restart the server.
 
-**NOTE::** To include a **unique identification** in the **SMS template**, use the `uniqueId` variable in the following syntax,
+**NOTE::** To include a **unique identification** in the **SMS template**, use the `correlation-id` variable in the 
+following syntax,
 
-`{{uniqueId}}`
+`{{correlation-id}}`
 
-Following is a sample which includes the `uniqueId` in the SMS Template located available `<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file,
+Following is a sample which includes the `correlation-id` in the SMS Template located available 
+`<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file,
 ```xml
     <configuration type="sendOTP" display="sendOTP" locale="en_US">
         <body>Your One Time Password is : {{confirmation-code}}. 
-        Reference Id: {{uniqueId}}</body>
+        Reference Id: {{correlation-id}}</body>
     </configuration>
 ```
 

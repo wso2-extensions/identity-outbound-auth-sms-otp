@@ -53,6 +53,10 @@
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.logging</groupId>
+            <artifactId>pax-logging-api</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.jacoco</groupId>
@@ -78,10 +82,7 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-testng</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.logging</groupId>
-            <artifactId>pax-logging-api</artifactId>
-        </dependency>
+
     </dependencies>
 
     <build>
@@ -100,7 +101,7 @@
                             javax.crypto.spec,
                             com.fasterxml.jackson.core,
                             com.fasterxml.jackson.databind,
-                            org.apache.log4j.*,
+                            org.apache.log4j,
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.import.version.range}",
                             org.apache.commons.lang3; version="${commons-lang.version.range}",

@@ -53,7 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-
 /**
  * This class implements the SMSOTPService interface.
  */
@@ -278,9 +277,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             log.debug(String.format("Sending SMS OTP notification to user Id: %s.", user.getUserID()));
         }
 
-        HashMap<String, Object> properties = new HashMap<>();
-        String uniqueId = getCorrelationId();
-        properties.put(Constants.UNIQUE_ID, uniqueId);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(Constants.CORRELATION_ID, getCorrelationId());
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, user.getUsername());
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, user.getUserStoreDomain());
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, user.getTenantDomain());
@@ -364,27 +362,28 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     }
 
     /**
-     * Get correlation id of current thread
+     * Get correlation id of current thread.
      *
-     * @return correlation-id
+     * @return correlation-id.
      */
     public static String getCorrelationId() {
+
         String correlationId;
         if (isCorrelationIDPresent()) {
             correlationId = MDC.get(Constants.CORRELATION_ID_MDC).toString();
         } else {
             correlationId = UUID.randomUUID().toString();
-
         }
         return correlationId;
     }
 
     /**
-     * Check whether correlation id present in the log MDC
+     * Check whether correlation id is present in the log MDC.
      *
-     * @return whether the correlation id is present
+     * @return whether the correlation id is present.
      */
     public static boolean isCorrelationIDPresent() {
+
         return MDC.get(Constants.CORRELATION_ID_MDC) != null;
     }
 }
