@@ -177,21 +177,6 @@ public class Utils {
         return new SMSOTPClientException(error.getCode(), error.getMessage(), description, e);
     }
 
-    public static SMSOTPClientException handleClientException(Constants.ErrorMessage error, String data,
-                                                              int remainingFailedAttempts, Throwable e) {
-
-        String description;
-        if (StringUtils.isNotBlank(data)) {
-            description = String.format(error.getDescription(), data, remainingFailedAttempts);
-        } else {
-            description = error.getDescription();
-        }
-        if (e == null) {
-            return new SMSOTPClientException(error.getCode(), error.getMessage(), description);
-        }
-        return new SMSOTPClientException(error.getCode(), error.getMessage(), description, e);
-    }
-
     public static SMSOTPServerException handleServerException(Constants.ErrorMessage error, String data,
                                                               Throwable e) {
 

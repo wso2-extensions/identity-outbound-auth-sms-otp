@@ -68,7 +68,7 @@ public class Constants {
         CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY("SMS-60007", "Mandatory parameters not found.",
                 "Mandatory parameters not found : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",
-                "Provided OTP is invalid. User id : %s. Remaining validation attempts : %s"),
+                "Provided OTP is invalid. User id : %s."),
         CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
                 "No OTP found for the user Id : %s."),
         CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
