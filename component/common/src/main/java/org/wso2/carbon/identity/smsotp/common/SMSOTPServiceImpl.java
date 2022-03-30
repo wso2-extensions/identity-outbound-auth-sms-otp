@@ -278,7 +278,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         }
 
         Map<String, Object> properties = new HashMap<>();
-        properties.put(Constants.CORRELATION_ID, getCorrelationId());
+        properties.put(Constants.CORRELATION_ID, getCorrelation());
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, user.getUsername());
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, user.getUserStoreDomain());
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, user.getTenantDomain());
@@ -366,7 +366,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      *
      * @return correlation-id.
      */
-    public static String getCorrelationId() {
+    private static String getCorrelation() {
 
         String correlationId;
         if (isCorrelationIDPresent()) {
@@ -382,7 +382,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      *
      * @return whether the correlation id is present.
      */
-    public static boolean isCorrelationIDPresent() {
+    private static boolean isCorrelationIDPresent() {
 
         return MDC.get(Constants.CORRELATION_ID_MDC) != null;
     }
