@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.MDC;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -73,6 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
@@ -1490,7 +1492,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
 
         String eventName = TRIGGER_SMS_NOTIFICATION;
-
         HashMap<String, Object> properties = new HashMap<>();
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
@@ -1498,6 +1499,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
+        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelation());
 
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
         Event identityMgtEvent = new Event(eventName, properties);
@@ -1512,6 +1514,32 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug(errorMsg, e);
             }
         }
+    }
+
+    /**
+     * Get correlation id of current thread.
+     *
+     * @return correlation-id.
+     */
+    private static String getCorrelation() {
+
+        String correlationId;
+        if (isCorrelationIDPresent()) {
+            correlationId = MDC.get(SMSOTPConstants.CORRELATION_ID_MDC).toString();
+        } else {
+            correlationId = UUID.randomUUID().toString();
+        }
+        return correlationId;
+    }
+
+    /**
+     * Check whether correlation id is present in the log MDC.
+     *
+     * @return whether the correlation id is present.
+     */
+    private static boolean isCorrelationIDPresent() {
+
+        return MDC.get(SMSOTPConstants.CORRELATION_ID_MDC) != null;
     }
 
     private String getHttpErrorResponseCode(String errorMsg) {
