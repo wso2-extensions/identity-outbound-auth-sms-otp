@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
+import org.apache.logging.log4j.ThreadContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.store.SessionDataStore;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
@@ -387,7 +387,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         String correlationId;
         if (isCorrelationIDPresent()) {
-            correlationId = MDC.get(Constants.CORRELATION_ID_MDC).toString();
+            correlationId = ThreadContext.get(Constants.CORRELATION_ID_MDC);
         } else {
             correlationId = UUID.randomUUID().toString();
         }
@@ -401,6 +401,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      */
     private static boolean isCorrelationIDPresent() {
 
-        return MDC.get(Constants.CORRELATION_ID_MDC) != null;
+        return ThreadContext.get(Constants.CORRELATION_ID_MDC) != null;
     }
 }
