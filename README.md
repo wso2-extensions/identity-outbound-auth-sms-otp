@@ -33,6 +33,8 @@ properties.tokenRenewalInterval=60
 # Throttle OTP generation requests from the same user Id.
 # Set '0' for no throttling.
 properties.resendThrottleInterval=30
+# Set the maximum validation attempts allowed until the generated sms-otp expires.
+properties.maxValidationAttemptsAllowed=5
 ```
 4. If notifications are managed by the Identity Server, configure the **SMS template** by appending below at the end of
    the `<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file.

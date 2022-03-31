@@ -33,6 +33,7 @@ public class ConfigsDTO {
     private int otpValidityPeriod;
     private int otpRenewalInterval;
     private int resendThrottleInterval;
+    private int maxValidationAttemptsAllowed;
 
     public boolean isEnabled() {
 
@@ -134,6 +135,16 @@ public class ConfigsDTO {
         this.resendThrottleInterval = resendThrottleInterval;
     }
 
+    public int getMaxValidationAttemptsAllowed() {
+
+        return maxValidationAttemptsAllowed;
+    }
+
+    public void setMaxValidationAttemptsAllowed(int maxValidationAttemptsAllowed) {
+
+        this.maxValidationAttemptsAllowed = maxValidationAttemptsAllowed;
+    }
+
     @Override
     public String toString() {
 
@@ -148,6 +159,7 @@ public class ConfigsDTO {
                 .append(",\n\totpValidityPeriod = ").append(otpValidityPeriod)
                 .append(",\n\totpRenewalInterval = ").append(otpRenewalInterval)
                 .append(",\n\tresendThrottleInterval = ").append(resendThrottleInterval)
+                .append(",\n\tmaxValidationAttemptsAllowed = ").append(maxValidationAttemptsAllowed)
                 .append("\n}");
         return sb.toString();
     }
