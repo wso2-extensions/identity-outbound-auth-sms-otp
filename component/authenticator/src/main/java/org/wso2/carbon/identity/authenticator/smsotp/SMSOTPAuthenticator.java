@@ -24,7 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
+import org.apache.logging.log4j.ThreadContext;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -1525,7 +1525,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         String correlationId;
         if (isCorrelationIDPresent()) {
-            correlationId = MDC.get(SMSOTPConstants.CORRELATION_ID_MDC).toString();
+            correlationId = ThreadContext.get(SMSOTPConstants.CORRELATION_ID_MDC);
+
         } else {
             correlationId = UUID.randomUUID().toString();
         }
@@ -1539,7 +1540,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private static boolean isCorrelationIDPresent() {
 
-        return MDC.get(SMSOTPConstants.CORRELATION_ID_MDC) != null;
+        return ThreadContext.get(SMSOTPConstants.CORRELATION_ID_MDC) != null;
     }
 
     private String getHttpErrorResponseCode(String errorMsg) {
