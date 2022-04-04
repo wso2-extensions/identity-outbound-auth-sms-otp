@@ -81,7 +81,6 @@
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-testng</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>
