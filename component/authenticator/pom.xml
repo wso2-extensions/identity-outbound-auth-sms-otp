@@ -93,6 +93,12 @@
             <groupId>org.wso2.carbon.identity.event.handler.accountlock</groupId>
             <artifactId>org.wso2.carbon.identity.handler.event.account.lock</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
