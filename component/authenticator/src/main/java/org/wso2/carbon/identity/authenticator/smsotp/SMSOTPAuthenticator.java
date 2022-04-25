@@ -1101,7 +1101,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (SMSOTPConstants.POST_METHOD.equalsIgnoreCase(httpMethod)) {
                 httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                 if (StringUtils.isNotEmpty(payload)) {
-                    String contentType = ((String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE)).trim();
+                    String contentType =
+                            StringUtils.trimToEmpty((String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE));
                     /*
                     If the enable_payload_encoding_for_sms_otp configuration is disabled, mobile number in the
                     payload will be URL encoded for all the content-types except for application/json content type
