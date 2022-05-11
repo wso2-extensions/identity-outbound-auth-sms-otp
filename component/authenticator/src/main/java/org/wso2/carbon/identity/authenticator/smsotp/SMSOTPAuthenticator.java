@@ -1676,6 +1676,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             updatedClaims.put(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, String.valueOf(unlockTime));
             updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
                     String.valueOf(failedLoginLockoutCountValue + 1));
+            updatedClaims.put(SMSOTPConstants.ACCOUNT_LOCKED_REASON_CLAIM_URI,
+                    SMSOTPConstants.MAX_SMS_OTP_ATTEMPTS_EXCEEDED);
             IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
             setUserClaimValues(authenticatedUser, updatedClaims);
             String errorMessage = String.format("User account: %s is locked.", authenticatedUser.getUserName());
