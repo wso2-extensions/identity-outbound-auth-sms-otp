@@ -1110,7 +1110,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     */
                     if (SMSOTPUtils.isPayloadEncodingForSMSOTPEnabled(context)) {
                         /*
-                        here only the mobile number and SMS message will be encoded, assuming the rest of the content is
+                        Here only the mobile number and SMS message will be encoded, assuming the rest of the content is
                         in correct format.
                         */
                         encodedMobileNo = getEncodedValue(contentType, receivedMobileNumber);
