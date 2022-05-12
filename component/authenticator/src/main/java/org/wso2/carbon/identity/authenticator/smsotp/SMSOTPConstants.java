@@ -45,6 +45,7 @@ public class SMSOTPConstants {
             "http://wso2.org/claims/identity/failedLoginLockoutCount";
     public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
     public static final String ACCOUNT_UNLOCK_TIME_CLAIM = "http://wso2.org/claims/identity/unlockTime";
+    public static final String ACCOUNT_LOCKED_REASON_CLAIM_URI = "http://wso2.org/claims/identity/lockedReason";
 
     public static final String SMS_URL = "sms_url";
     public static final String HTTP_METHOD = "http_method";
@@ -136,6 +137,8 @@ public class SMSOTPConstants {
     public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
     public static final String ERROR_USER_ACCOUNT_LOCKED = "&authFailure=true&authFailureMsg=user.account.locked";
     public static final String ADMIN_INITIATED = "AdminInitiated";
+
+    public static final String MAX_SMS_OTP_ATTEMPTS_EXCEEDED = "MAX_SMS_OTP_ATTEMPTS_EXCEEDED";
 
     /**
      * Enums for error messages.
