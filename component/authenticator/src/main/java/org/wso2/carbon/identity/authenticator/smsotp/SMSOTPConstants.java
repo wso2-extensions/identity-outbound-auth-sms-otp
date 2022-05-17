@@ -45,6 +45,7 @@ public class SMSOTPConstants {
             "http://wso2.org/claims/identity/failedLoginLockoutCount";
     public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
     public static final String ACCOUNT_UNLOCK_TIME_CLAIM = "http://wso2.org/claims/identity/unlockTime";
+    public static final String ACCOUNT_LOCKED_REASON_CLAIM_URI = "http://wso2.org/claims/identity/lockedReason";
 
     public static final String SMS_URL = "sms_url";
     public static final String HTTP_METHOD = "http_method";
@@ -160,6 +161,7 @@ public class SMSOTPConstants {
 
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
     public static final String CORRELATION_ID = "correlation-id";
+    public static final String MAX_SMS_OTP_ATTEMPTS_EXCEEDED = "MAX_SMS_OTP_ATTEMPTS_EXCEEDED";
 
     /**
      * Enums for error messages.
