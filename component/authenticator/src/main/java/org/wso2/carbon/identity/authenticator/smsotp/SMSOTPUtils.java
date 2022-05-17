@@ -541,7 +541,6 @@ public class SMSOTPUtils {
         return false;
     }
 
-
     /**
      * Checks whether the payload encoding for sms otp is enabled.
      *
