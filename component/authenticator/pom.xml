@@ -73,8 +73,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wso2.org.ops4j.pax.logging</groupId>
-            <artifactId>pax-logging-log4j2</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
