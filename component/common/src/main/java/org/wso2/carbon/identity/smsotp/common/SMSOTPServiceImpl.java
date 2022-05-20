@@ -385,22 +385,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
      */
     public static String getCorrelationId() {
 
-        String correlationId;
-        if (isCorrelationIDPresent()) {
-            correlationId = MDC.get(Constants.CORRELATION_ID_MDC);
-        } else {
-            correlationId = UUID.randomUUID().toString();
-        }
-        return correlationId;
-    }
-
-    /**
-     * Check whether correlation id is present in the log MDC.
-     *
-     * @return whether the correlation id is present.
-     */
-    public static boolean isCorrelationIDPresent() {
-
-        return MDC.get(Constants.CORRELATION_ID_MDC) != null;
+        return StringUtils.isBlank(MDC.get(Constants.CORRELATION_ID_MDC))
+                ? UUID.randomUUID().toString() : MDC.get(Constants.CORRELATION_ID_MDC);
     }
 }
