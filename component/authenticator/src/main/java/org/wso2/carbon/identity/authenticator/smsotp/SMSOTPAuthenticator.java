@@ -1526,7 +1526,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
-        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelation());
+        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
         Event identityMgtEvent = new Event(eventName, properties);
         try {
@@ -1547,12 +1547,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      *
      * @return correlation-id.
      */
-    private static String getCorrelation() {
+    private static String getCorrelationId() {
 
         String correlationId;
         if (isCorrelationIDPresent()) {
             correlationId = ThreadContext.get(SMSOTPConstants.CORRELATION_ID_MDC);
-
         } else {
             correlationId = UUID.randomUUID().toString();
         }
