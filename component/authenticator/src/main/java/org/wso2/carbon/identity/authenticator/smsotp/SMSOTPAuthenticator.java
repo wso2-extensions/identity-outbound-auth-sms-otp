@@ -1544,7 +1544,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
     /**
      * Get correlation id of current thread.
-     *
      * @return correlation-id.
      */
     private static String getCorrelationId() {
@@ -1560,7 +1559,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
     /**
      * Check whether correlation id is present in the log MDC.
-     *
      * @return whether the correlation id is present.
      */
     private static boolean isCorrelationIDPresent() {
