@@ -25,7 +25,7 @@
     </parent>
     <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
     <artifactId>identity-outbound-auth-sms-otp</artifactId>
-    <version>3.1.5-SNAPSHOT</version>
+    <version>3.1.9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon Extension - SMS OTP Pom</name>
     <url>http://wso2.org</url>
@@ -66,9 +66,9 @@
                 <version>${commons-logging.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.ops4j.pax.logging</groupId>
-                <artifactId>pax-logging-api</artifactId>
-                <version>${pax.logging.api.version}</version>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${org.slf4j.verison}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -161,7 +161,25 @@
                 <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.governance</artifactId>
+                <version>${identity.governance.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>org.apache.oltu.oauth2</groupId>
                 <artifactId>org.apache.oltu.oauth2.client</artifactId>
@@ -416,13 +434,13 @@
         <mockito.version>1.10.19</mockito.version>
         <powermock.version>1.6.5</powermock.version>
         <slf4j.version>1.5.6</slf4j.version>
+        <org.slf4j.verison>1.7.21</org.slf4j.verison>
         <identity.extension.utils>1.0.8</identity.extension.utils>
         <identity.extension.utils.import.version.range>[1.0.8,2.0.0)
         </identity.extension.utils.import.version.range>
         <carbon.identity.account.lock.handler.version>1.1.12</carbon.identity.account.lock.handler.version>
         <carbon.identity.account.lock.handler.imp.pkg.version.range>[1.1.12, 2.0.0)
         </carbon.identity.account.lock.handler.imp.pkg.version.range>
-        <pax.logging.api.version>1.11.13</pax.logging.api.version>
         <maven.scr.plugin.version>1.26.0</maven.scr.plugin.version>
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
         <osgi.service.import.version.range>[1.2.0,2.0.0)</osgi.service.import.version.range>

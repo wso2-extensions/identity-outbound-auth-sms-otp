@@ -21,11 +21,12 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.owasp.encoder.Encode;
+import org.slf4j.MDC;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -76,13 +77,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR_SET_UTF_8;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CONTENT_TYPE;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.ERROR_MESSAGE_DETAILS;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.JSON_CONTENT_TYPE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MOBILE_NUMBER_REGEX;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.POST_METHOD;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.RESEND;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.XML_CONTENT_TYPE;
 
 import static java.util.Base64.getEncoder;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
@@ -135,7 +144,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 // if the request comes with authentication is basic, complete the flow.
                 return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
             }
-        } else if (Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
+        } else if (Boolean.parseBoolean(request.getParameter(RESEND))) {
             AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
             publishPostSMSOTPGeneratedEvent(request, context);
             return authenticatorFlowStatus;
@@ -520,7 +529,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         response.sendRedirect(FrameworkUtils
                                 .appendQueryParamsStringToUrl(url, SMSOTPConstants.MOBILE_NUMBER_REGEX_PATTERN_QUERY +
                                         getEncoder().encodeToString(context.getAuthenticatorProperties()
-                                                .get(SMSOTPConstants.MOBILE_NUMBER_REGEX)
+                                                .get(MOBILE_NUMBER_REGEX)
                                                 .getBytes()) +
                                         SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY +
                                         getEncoder().encodeToString(mobileNumberPatternViolationError.getBytes())));
@@ -775,7 +784,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         String failureReason = String.valueOf(
                                 context.getProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON));
                         String urlEncodedFailureReason = URLEncoder.encode(failureReason, CHAR_SET_UTF_8);
-                        String failureQueryParam = SMSOTPConstants.ERROR_MESSAGE_DETAILS + urlEncodedFailureReason;
+                        String failureQueryParam = ERROR_MESSAGE_DETAILS + urlEncodedFailureReason;
                         url = FrameworkUtils.appendQueryParamsStringToUrl(url, failureQueryParam);
                     }
                 }
@@ -1231,7 +1240,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             } else if (SMSOTPConstants.POST_METHOD.equalsIgnoreCase(httpMethod)) {
                 httpConnection.setRequestMethod(SMSOTPConstants.POST_METHOD);
                 if (StringUtils.isNotEmpty(payload)) {
-                    String contentType = ((String) headerElementProperties.get(SMSOTPConstants.CONTENT_TYPE)).trim();
+                    String contentType =
+                            StringUtils.trimToEmpty((String) headerElementProperties.get(CONTENT_TYPE));
                     /*
                     If the enable_payload_encoding_for_sms_otp configuration is disabled, mobile number in the
                     payload will be URL encoded for all the content-types except for application/json content type
@@ -1246,8 +1256,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         encodedSMSMessage = getEncodedValue(contentType, smsMessage);
                     } else {
                         encodedSMSMessage = smsMessage;
-                        if (StringUtils.isNotBlank(contentType) && SMSOTPConstants.POST_METHOD.equals(httpMethod) &&
-                                (SMSOTPConstants.JSON_CONTENT_TYPE).equals(contentType)) {
+                        if (StringUtils.isNotBlank(contentType) && POST_METHOD.equals(httpMethod) &&
+                                (JSON_CONTENT_TYPE).equals(contentType)) {
                             encodedMobileNo = receivedMobileNumber;
                         }
                     }
@@ -1431,10 +1441,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         String encodedValue;
         switch (contentType) {
-            case SMSOTPConstants.XML_CONTENT_TYPE:
+            case XML_CONTENT_TYPE:
                 encodedValue = Encode.forXml(value);
                 break;
-            case SMSOTPConstants.JSON_CONTENT_TYPE:
+            case JSON_CONTENT_TYPE:
                 Gson gson = new Gson();
                 encodedValue = gson.toJson(value);
                 break;
@@ -1518,7 +1528,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 NotificationChannels.SMS_CHANNEL.getChannelType());
         properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
-
+        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
         Event identityMgtEvent = new Event(eventName, properties);
         try {
@@ -1532,6 +1542,17 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug(errorMsg, e);
             }
         }
+    }
+
+    /**
+     * Get correlation id of current thread.
+     *
+     * @return correlation-id.
+     */
+    public static String getCorrelationId() {
+
+        return StringUtils.isBlank(MDC.get(SMSOTPConstants.CORRELATION_ID_MDC))
+                ? UUID.randomUUID().toString() : MDC.get(SMSOTPConstants.CORRELATION_ID_MDC);
     }
 
     private String getHttpErrorResponseCode(String errorMsg) {
@@ -1677,6 +1698,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             updatedClaims.put(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, String.valueOf(unlockTime));
             updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
                     String.valueOf(failedLoginLockoutCountValue + 1));
+            updatedClaims.put(SMSOTPConstants.ACCOUNT_LOCKED_REASON_CLAIM_URI,
+                    SMSOTPConstants.MAX_SMS_OTP_ATTEMPTS_EXCEEDED);
             IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
             setUserClaimValues(authenticatedUser, updatedClaims);
             String errorMessage = String.format("User account: %s is locked.", authenticatedUser.getUserName());
