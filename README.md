@@ -61,6 +61,20 @@ properties.maxValidationAttemptsAllowed=5
 ```
 6. Restart the server.
 
+**NOTE::** To include a **unique identification** in the **SMS template**, use the `correlation-id` variable in the 
+following syntax,
+
+`{{correlation-id}}`
+
+Following is a sample which includes the `correlation-id` in the SMS Template located available 
+`<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file,
+```xml
+    <configuration type="sendOTP" display="sendOTP" locale="en_US">
+        <body>Your One Time Password is : {{confirmation-code}}. 
+        Reference Id: {{correlation-id}}</body>
+    </configuration>
+```
+
 ## REST API support
 REst API support for this OSGI service can be found in the below git repository.
 

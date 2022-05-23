@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.slf4j.MDC;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.identity.application.authentication.framework.store.SessionDataStore;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
@@ -50,6 +51,7 @@ import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class implements the SMSOTPService interface.
@@ -292,7 +294,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             log.debug(String.format("Sending SMS OTP notification to user Id: %s.", user.getUserID()));
         }
 
-        HashMap<String, Object> properties = new HashMap<>();
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(Constants.CORRELATION_ID, getCorrelationId());
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, user.getUsername());
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, user.getUserStoreDomain());
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, user.getTenantDomain());
@@ -373,5 +376,16 @@ public class SMSOTPServiceImpl implements SMSOTPService {
     private int getTenantId() {
 
         return PrivilegedCarbonContext.getThreadLocalCarbonContext().getTenantId();
+    }
+
+    /**
+     * Get correlation id of current thread.
+     *
+     * @return correlation-id.
+     */
+    public static String getCorrelationId() {
+
+        return StringUtils.isBlank(MDC.get(Constants.CORRELATION_ID_MDC))
+                ? UUID.randomUUID().toString() : MDC.get(Constants.CORRELATION_ID_MDC);
     }
 }
