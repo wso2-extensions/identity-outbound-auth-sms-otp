@@ -99,7 +99,6 @@
                             javax.crypto.spec,
                             com.fasterxml.jackson.core,
                             com.fasterxml.jackson.databind,
-                            org.apache.log4j,
                             org.osgi.framework; version="${osgi.framework.imp.pkg.version.range}",
                             org.osgi.service.component; version="${osgi.service.import.version.range}",
                             org.apache.commons.lang3; version="${commons-lang.version.range}",
