@@ -21,12 +21,11 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.owasp.encoder.Encode;
-import org.slf4j.MDC;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.extension.identity.helper.util.IdentityHelperUtil;
@@ -76,7 +75,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpServletRequest;
@@ -1523,9 +1521,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+
         properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
-        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
+
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
         Event identityMgtEvent = new Event(eventName, properties);
         try {
@@ -1539,17 +1538,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug(errorMsg, e);
             }
         }
-    }
-
-    /**
-     * Get correlation id of current thread.
-     *
-     * @return correlation-id.
-     */
-    public static String getCorrelationId() {
-
-        return StringUtils.isBlank(MDC.get(SMSOTPConstants.CORRELATION_ID_MDC))
-                ? UUID.randomUUID().toString() : MDC.get(SMSOTPConstants.CORRELATION_ID_MDC);
     }
 
     private String getHttpErrorResponseCode(String errorMsg) {

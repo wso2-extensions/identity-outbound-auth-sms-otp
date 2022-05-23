@@ -50,9 +50,6 @@ public class Constants {
     public static final String SMS_OTP_MAX_VALIDATION_ATTEMPTS_ALLOWED = "smsOtp.maxValidationAttemptsAllowed";
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
 
-    public static final String CORRELATION_ID_MDC = "Correlation-ID";
-    public static final String CORRELATION_ID = "correlation-id";
-
     /**
      * SMS OTP service error codes.
      */
