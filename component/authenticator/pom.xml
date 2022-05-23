@@ -19,11 +19,11 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
         <artifactId>identity-outbound-auth-sms-otp</artifactId>
-        <version>3.1.8-SNAPSHOT</version>
+        <version>3.1.9-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.smsotp.connector</artifactId>
-    <version>3.1.8-SNAPSHOT</version>
+    <version>3.1.9-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For SMSOTP</name>
     <url>http://wso2.org</url>
@@ -93,6 +93,10 @@
             <groupId>org.wso2.carbon.identity.event.handler.accountlock</groupId>
             <artifactId>org.wso2.carbon.identity.handler.event.account.lock</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.governance</groupId>
+            <artifactId>org.wso2.carbon.identity.governance</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -129,6 +133,8 @@
                             org.wso2.carbon.identity.event; version="${carbon.identity.version.range}",
                             org.wso2.carbon.identity.event.event; version="${carbon.identity.version.range}",
                             org.wso2.carbon.identity.event.services; version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.governance.service.notification;
+                            version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.service;
                             version="${carbon.identity.account.lock.handler.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.exception;

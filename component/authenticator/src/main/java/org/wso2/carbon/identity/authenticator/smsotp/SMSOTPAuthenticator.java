@@ -51,6 +51,7 @@ import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
+import org.wso2.carbon.identity.governance.service.notification.NotificationChannels;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
@@ -1521,7 +1522,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
         properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
         properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
-
+        properties.put(IdentityEventConstants.EventProperty.NOTIFICATION_CHANNEL,
+                NotificationChannels.SMS_CHANNEL.getChannelType());
         properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
 
