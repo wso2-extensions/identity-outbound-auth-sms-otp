@@ -217,7 +217,7 @@ public class SMSOTPAuthenticatorTest {
         Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
-                new AuthenticationContext()), "/smsotpauthenticationendpoint/smsotp.jsp");
+                new AuthenticationContext()), "/authenticationendpoint/smsOtp.jsp");
     }
 
     @Test
@@ -230,7 +230,7 @@ public class SMSOTPAuthenticatorTest {
         Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
-                new AuthenticationContext()), "/smsotpauthenticationendpoint/smsotpError.jsp");
+                new AuthenticationContext()), "/authenticationendpoint/smsOtpError.jsp");
     }
 
     @Test
@@ -238,7 +238,7 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
         when(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext))
-                .thenReturn("/smsotpauthenticationendpoint/smsotpError.jsp");
+                .thenReturn("/authenticationendpoint/smsOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "redirectToErrorPage",
                 httpServletResponse, authenticationContext, null, null);
@@ -252,7 +252,7 @@ public class SMSOTPAuthenticatorTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         when(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext)).thenReturn(true);
         when(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext))
-                .thenReturn("/smsotpauthenticationendpoint/mobile.jsp");
+                .thenReturn("/authenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "redirectToMobileNoReqPage",
                 httpServletResponse, authenticationContext, null);
@@ -266,7 +266,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.STATUS_CODE, "");
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
         when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+                thenReturn("/authenticationendpoint/smsOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.ERROR_PAGE);
@@ -280,7 +280,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.STATUS_CODE, null);
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
         when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+                thenReturn("/authenticationendpoint/smsOtp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.ERROR_PAGE);
@@ -295,7 +295,7 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(false);
         when(SMSOTPUtils.isEnableResendCode(context)).thenReturn(true);
         when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/smsotpauthenticationendpoint/smsotpError.jsp");
+                thenReturn("/authenticationendpoint/smsOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.ERROR_PAGE);
@@ -310,7 +310,7 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.isEnableResendCode(context)).thenReturn(true);
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
         when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/smsotpauthenticationendpoint/smsotp.jsp");
+                thenReturn("/authenticationendpoint/smsOtp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "checkStatusCode",
                 httpServletResponse, context, null, SMSOTPConstants.SMS_LOGIN_PAGE);
@@ -339,7 +339,7 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(true);
         when(SMSOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class))).
-                thenReturn("/smsotpauthenticationendpoint/mobile.jsp");
+                thenReturn("/authenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
                 httpServletRequest, httpServletResponse, false, "John@carbon.super", "", "carbon.super", SMSOTPConstants
