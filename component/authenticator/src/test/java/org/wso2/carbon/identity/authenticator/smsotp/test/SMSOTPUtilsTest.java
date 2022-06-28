@@ -151,9 +151,9 @@ public class SMSOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE,
-                "smsotpauthenticationendpoint/mobile.jsp");
+                "authenticationendpoint/mobile.jsp");
         Assert.assertEquals(SMSOTPUtils.getMobileNumberRequestPage(authenticationContext),
-                "smsotpauthenticationendpoint/mobile.jsp");
+                "authenticationendpoint/mobile.jsp");
     }
 
     @Test
@@ -171,7 +171,7 @@ public class SMSOTPUtilsTest {
         authenticationContext.setProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL,
                 SMSOTPConstants.ERROR_PAGE);
         Assert.assertEquals(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext),
-                "smsotpauthenticationendpoint/smsotpError.jsp");
+                "authenticationendpoint/smsOtpError.jsp");
     }
 
     @Test
@@ -181,7 +181,7 @@ public class SMSOTPUtilsTest {
         authenticationContext.setProperty(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL,
                 SMSOTPConstants.SMS_LOGIN_PAGE);
         Assert.assertEquals(SMSOTPUtils.getLoginPageFromXMLFile(authenticationContext),
-                "smsotpauthenticationendpoint/smsotp.jsp");
+                "authenticationendpoint/smsOtp.jsp");
     }
 
     @Test
