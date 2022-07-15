@@ -20,6 +20,7 @@ package org.wso2.carbon.identity.authenticator.smsotp.test;
 
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.testng.Assert;
@@ -47,12 +48,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 @PrepareForTest({FileBasedConfigurationBuilder.class, IdentityTenantUtil.class})
+@PowerMockIgnore({"org.mockito.*"})
 public class SMSOTPUtilsTest {
 
     @Mock
