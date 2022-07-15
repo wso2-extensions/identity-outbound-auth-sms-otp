@@ -372,7 +372,7 @@ public class SMSOTPAuthenticatorTest {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        when((AuthenticatedUser)context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
