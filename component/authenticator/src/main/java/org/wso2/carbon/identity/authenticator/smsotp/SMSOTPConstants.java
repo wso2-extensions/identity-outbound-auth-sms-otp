@@ -36,7 +36,7 @@ public class SMSOTPConstants {
     public static final int SECRET_KEY_LENGTH = 5;
     public static final int NUMBER_BASE = 2;
     public static final int NUMBER_DIGIT = 6;
-    public static final int VALIDITY_TIME = 900;
+    public static final int DEFAULT_VALIDITY_PERIOD = 900;
     public static final String CODE = "OTPcode";
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
@@ -85,9 +85,9 @@ public class SMSOTPConstants {
     public static final String SMSOTP_AUTHENTICATION_ERROR_PAGE_URL = "SMSOTPAuthenticationEndpointErrorPage";
 
     public static final String LOGIN_PAGE = "authenticationendpoint/login.do";
-    public static final String SMS_LOGIN_PAGE = "smsotpauthenticationendpoint/smsotp.jsp";
+    public static final String SMS_LOGIN_PAGE = "authenticationendpoint/smsOtp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=authentication.fail.message";
-    public static final String ERROR_PAGE = "smsotpauthenticationendpoint/smsotpError.jsp";
+    public static final String ERROR_PAGE = "authenticationendpoint/smsOtpError.jsp";
     public static final String MOBILE_NUMBER_REQ_PAGE = "MobileNumberRegPage";
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
     public static final String REQUESTED_USER_MOBILE = "requestedUserMobile";
