@@ -586,6 +586,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = SMSOTPUtils.getUserRealm(tenantDomain);
         int tokenLength = SMSOTPConstants.NUMBER_DIGIT;
+        long otpValidityPeriod = SMSOTPConstants.DEFAULT_VALIDITY_PERIOD;
         boolean isEnableAlphanumericToken = SMSOTPUtils.isEnableAlphanumericToken(context);
         try {
             // One time password is generated and stored in the context.
@@ -595,9 +596,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 tokenLength = Integer.parseInt(SMSOTPUtils.getTokenLength(context));
             }
             if ((SMSOTPUtils.getTokenExpiryTime(context)) != null) {
-                long tokenExpiryTime = Integer.parseInt(SMSOTPUtils.getTokenExpiryTime(context));
-                context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME, tokenExpiryTime);
+                otpValidityPeriod = Integer.parseInt(SMSOTPUtils.getTokenExpiryTime(context));
             }
+            context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME, otpValidityPeriod);
             String otpToken = token.generateToken(secret, String.valueOf(SMSOTPConstants.NUMBER_BASE), tokenLength,
                     isEnableAlphanumericToken);
             context.setProperty(SMSOTPConstants.OTP_TOKEN, otpToken);
@@ -619,8 +620,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 //Use the default notification mechanism (CEP) to send SMS.
                 AuthenticatedUser authenticatedUser = (AuthenticatedUser)
                         context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+                String serviceProviderName = context.getServiceProviderName();
                 triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
-                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken);
+                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken, serviceProviderName,
+                        otpValidityPeriod);
             }
 
             if (!connectionResult) {
@@ -1516,7 +1519,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * We can reuse this method once the improvements done into the eventing and notification handler in IS.
      */
-    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName, String mobileNumber, String otpCode) {
+    protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName,
+                                       String mobileNumber, String otpCode, String serviceProviderName,
+                                       long otpExpiryTime) {
 
         String eventName = TRIGGER_SMS_NOTIFICATION;
 
@@ -1530,6 +1535,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
         properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
+        properties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, serviceProviderName);
+        properties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, String.valueOf(otpExpiryTime / 60));
         Event identityMgtEvent = new Event(eventName, properties);
         try {
             SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
@@ -1827,11 +1834,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             long otpGeneratedTime = (long) otpGeneratedTimeProperty;
             eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME, otpGeneratedTime);
 
-            String otpExpiryDuration = SMSOTPUtils.getTokenExpiryTime(context);
-            if (StringUtils.isNotEmpty(otpExpiryDuration)) {
-                long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryDuration);
-                eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
-            }
+            String otpValidityPeriod = SMSOTPUtils.getTokenExpiryTime(context);
+            long expiryTime = otpGeneratedTime + (StringUtils.isEmpty(otpValidityPeriod) ?
+                    SMSOTPConstants.DEFAULT_VALIDITY_PERIOD : Long.parseLong(otpValidityPeriod));
+            eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
         }
 
         eventProperties.put(IdentityEventConstants.EventProperty.CLIENT_IP, IdentityUtil.getClientIpAddress(request));
@@ -1877,11 +1883,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME,
                 otpGeneratedTime);
 
-        String otpExpiryTime = SMSOTPUtils.getTokenExpiryTime(context);
-        if (StringUtils.isNotEmpty(otpExpiryTime)) {
-            long expiryTime = otpGeneratedTime + Long.parseLong(otpExpiryTime);
-            eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
-        }
+        String otpValidityPeriod = SMSOTPUtils.getTokenExpiryTime(context);
+        long expiryTime = otpGeneratedTime + (StringUtils.isEmpty(otpValidityPeriod) ?
+                SMSOTPConstants.DEFAULT_VALIDITY_PERIOD : Long.parseLong(otpValidityPeriod));
+        eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
 
         String status;
         if (SMSOTPConstants.TOKEN_EXPIRED_VALUE.equals(context.getProperty(SMSOTPConstants.TOKEN_EXPIRED))) {
