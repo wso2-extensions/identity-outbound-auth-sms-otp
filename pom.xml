@@ -84,11 +84,31 @@
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.core</artifactId>
                 <version>${carbon.identity.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-log4j2</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
                 <version>${carbon.identity.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-log4j2</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -109,6 +129,16 @@
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.user.core</artifactId>
                 <version>${carbon.kernel.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.wso2.org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -150,6 +180,16 @@
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.event</artifactId>
                 <version>${carbon.identity.event.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-log4j2</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.event.handler.accountlock</groupId>
@@ -176,6 +216,10 @@
                     </exclusion>
                     <exclusion>
                         <groupId>org.ops4j.pax.logging</groupId>
+                        <artifactId>pax-logging-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.wso2.org.ops4j.pax.logging</groupId>
                         <artifactId>pax-logging-api</artifactId>
                     </exclusion>
                 </exclusions>
