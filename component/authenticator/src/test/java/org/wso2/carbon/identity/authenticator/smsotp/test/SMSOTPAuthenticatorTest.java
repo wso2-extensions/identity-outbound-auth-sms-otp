@@ -553,7 +553,7 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager
-                .getUserClaimValue(nullable(String.class), nullable(String.class), nullable(String.class))).thenReturn("123456,789123");
+                .getUserClaimValue(anyString(), anyString(), nullable(String.class))).thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
 
