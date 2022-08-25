@@ -546,7 +546,7 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(userStoreManager
+        hen(userStoreManager
                 .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
                 .thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
