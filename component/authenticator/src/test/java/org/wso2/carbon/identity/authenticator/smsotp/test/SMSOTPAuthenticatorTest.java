@@ -372,7 +372,7 @@ public class SMSOTPAuthenticatorTest {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
-        when((AuthenticatedUser)context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -546,7 +546,7 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        hen(userStoreManager
+        when(userStoreManager
                 .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
                 .thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
