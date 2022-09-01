@@ -18,16 +18,12 @@
  */
 package org.wso2.carbon.identity.authenticator.smsotp.test;
 
-import org.apache.axis2.context.ConfigurationContextFactory;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -55,7 +51,6 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -63,8 +58,6 @@ import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
-import org.wso2.carbon.identity.mgt.config.ConfigBuilder;
-import org.wso2.carbon.identity.mgt.mail.NotificationBuilder;
 import org.wso2.carbon.user.api.Claim;
 import org.wso2.carbon.user.api.ClaimManager;
 import org.wso2.carbon.user.api.UserStoreException;
@@ -90,6 +83,9 @@ import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQU
         IdentityTenantUtil.class, SMSOTPServiceDataHolder.class})
 @PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
+    
+    private static final long otpTime = 1608101321322l;
+    
     private SMSOTPAuthenticator smsotpAuthenticator;
 
     @Mock
@@ -377,7 +373,7 @@ public class SMSOTPAuthenticatorTest {
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(1608101321322l);
+        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -407,7 +403,7 @@ public class SMSOTPAuthenticatorTest {
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("testUser");
         authenticatedUser.setUserStoreDomain("secondary");
-        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, 1608101321322l);
+        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, otpTime);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -553,7 +549,8 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager
-                .getUserClaimValue(anyString(), anyString(), nullable(String.class))).thenReturn("123456,789123");
+                .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
+                .thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
 
