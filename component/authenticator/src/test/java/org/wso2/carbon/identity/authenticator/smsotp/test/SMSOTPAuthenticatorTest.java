@@ -68,10 +68,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -81,8 +79,11 @@ import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQU
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
         IdentityTenantUtil.class, SMSOTPServiceDataHolder.class})
-@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User"})
+@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
+    
+    private static final long otpTime = 1608101321322l;
+    
     private SMSOTPAuthenticator smsotpAuthenticator;
 
     @Mock
@@ -125,7 +126,6 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPServiceDataHolder.class);
         when(SMSOTPServiceDataHolder.getInstance()).thenReturn(sMSOTPServiceDataHolder);
         when(sMSOTPServiceDataHolder.getIdentityEventService()).thenReturn(identityEventService);
-        Mockito.doNothing().when(identityEventService).handleEvent(anyObject());
         when(httpServletRequest.getHeaderNames()).thenReturn(requestHeaders);
         initMocks(this);
     }
@@ -371,8 +371,8 @@ public class SMSOTPAuthenticatorTest {
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(anyLong());
-        when((AuthenticatedUser)context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -401,7 +401,7 @@ public class SMSOTPAuthenticatorTest {
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("testUser");
         authenticatedUser.setUserStoreDomain("secondary");
-        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, 1608101321322l);
+        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, otpTime);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -547,7 +547,8 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager
-                .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
+                .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
+                .thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
 
