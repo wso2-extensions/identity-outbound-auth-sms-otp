@@ -1286,6 +1286,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 httpResponse);
                     }
                     return true;
+                } else {
+                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                            + " and error message is " + httpConnection.getResponseMessage());
                 }
             } else {
                 if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
