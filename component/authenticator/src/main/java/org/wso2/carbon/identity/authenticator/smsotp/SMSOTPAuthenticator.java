@@ -1143,6 +1143,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 httpResponse);
                     }
                     return true;
+                } else {
+                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                            + " and error message is " + httpConnection.getResponseMessage());
                 }
             } else {
                 if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
@@ -1192,8 +1195,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             screenValue = getMaskedValue(context, encodedMobileNo, noOfDigits);
         }
         String content = contentRaw.replace(encodedMobileNo, screenValue);
-        URLDecoder decoder = new URLDecoder();
-        String decodedMobileNo = decoder.decode(encodedMobileNo);
+        String decodedMobileNo = URLDecoder.decode(encodedMobileNo);
         content = content.replace(decodedMobileNo, screenValue);
         content = maskConfiguredValues(context, content);
         context.setProperty(SMSOTPConstants.ERROR_INFO, content);
