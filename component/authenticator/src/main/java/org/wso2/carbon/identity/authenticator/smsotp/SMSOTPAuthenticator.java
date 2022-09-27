@@ -21,8 +21,8 @@ package org.wso2.carbon.identity.authenticator.smsotp;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.owasp.encoder.Encode;
@@ -90,28 +90,28 @@ import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.JSON
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MOBILE_NUMBER_REGEX;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.POST_METHOD;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.RESEND;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.XML_CONTENT_TYPE;
 
 import static java.util.Base64.getEncoder;
-import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
 
 /**
- * Authenticator of SMS OTP
+ * Authenticator of SMS OTP.
  */
 public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
-    private static final Log log = LogFactory.getLog(SMSOTPAuthenticator.class);
+    private static final Log LOG = LogFactory.getLog(SMSOTPAuthenticator.class);
     private static final String TRIGGER_SMS_NOTIFICATION = "TRIGGER_SMS_NOTIFICATION";
 
     /**
-     * Check whether the authentication or logout request can be handled by the authenticator
+     * Check whether the authentication or logout request can be handled by the authenticator.
      */
     @Override
     public boolean canHandle(HttpServletRequest request) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Inside SMSOTPAuthenticator canHandle method and check the existence of mobile number and " +
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Inside SMSOTPAuthenticator canHandle method and check the existence of mobile number and " +
                     "otp code");
         }
         return ((StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.RESEND))
@@ -176,8 +176,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             authenticatedUser = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
             // find the authenticated user.
             if (authenticatedUser == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Authentication failed: Could not find the authenticated user. ");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Authentication failed: Could not find the authenticated user. ");
                 }
                 throw new AuthenticationFailedException
                         ("Authentication failed: Cannot proceed further without identifying the user. ");
@@ -189,15 +189,15 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String errorPage = getErrorPage(context);
             // SMS OTP authentication is mandatory and user doesn't disable SMS OTP claim in user's profile.
             if (isSMSOTPMandatory) {
-                if (log.isDebugEnabled()) {
-                    log.debug("SMS OTP is mandatory. Hence processing in mandatory path");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("SMS OTP is mandatory. Hence processing in mandatory path");
                 }
                 processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
                 if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                         && !isMobileNumberUpdateFailed(context)) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Triggering SMS OTP retry flow");
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Triggering SMS OTP retry flow");
                     }
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
@@ -239,8 +239,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             if (StringUtils.isBlank(requestMobile) && !isMobileNumberUpdateFailed(context) && isCodeMismatch(context)) {
                 mobileNumber = String.valueOf(context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE));
             } else if (StringUtils.isBlank(requestMobile)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("User has not registered a mobile number: " + username);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("User has not registered a mobile number: " + username);
                 }
                 redirectToMobileNoReqPage(response, context, queryParams);
             } else {
@@ -264,8 +264,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (StringUtils.isEmpty(loginPage)) {
             loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
                     .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.SMS_LOGIN_PAGE);
-            if (log.isDebugEnabled()) {
-                log.debug("Default authentication endpoint context is used");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Default authentication endpoint context is used");
             }
         }
         return loginPage;
@@ -284,8 +284,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         if (StringUtils.isEmpty(errorPage)) {
             errorPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
                     .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.ERROR_PAGE);
-            if (log.isDebugEnabled()) {
-                log.debug("Default authentication endpoint context is used");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Default authentication endpoint context is used");
             }
         }
         return errorPage;
@@ -337,21 +337,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void processFirstStepOnly(AuthenticatedUser authenticatedUser, AuthenticationContext context) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Processing First step only. Skipping SMSOTP");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Processing First step only. Skipping SMSOTP");
         }
         //the authentication flow happens with basic authentication.
         StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
         if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
                 LocalApplicationAuthenticator) {
-            if (log.isDebugEnabled()) {
-                log.debug("Found local authenticator in previous step. Hence setting a local user");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found local authenticator in previous step. Hence setting a local user");
             }
             FederatedAuthenticatorUtil.updateLocalAuthenticatedUserInStepConfig(context, authenticatedUser);
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.BASIC);
         } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Found federated authenticator in previous step. Hence setting a local user");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Found federated authenticator in previous step. Hence setting a local user");
             }
             FederatedAuthenticatorUtil.updateAuthenticatedUserInStepConfig(context, authenticatedUser);
             context.setProperty(SMSOTPConstants.AUTHENTICATION, SMSOTPConstants.FEDERETOR);
@@ -372,11 +372,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                                String username, String tenantDomain)
             throws SMSOTPException, UserStoreException {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Updating mobile number for user : " + username);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Updating mobile number for user : " + username);
         }
         Map<String, String> attributes = new HashMap<>();
-        attributes.put(SMSOTPConstants.MOBILE_CLAIM, String.valueOf(context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE)));
+        attributes.put(SMSOTPConstants.MOBILE_CLAIM, String.valueOf(context
+                .getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE)));
         SMSOTPUtils.updateUserAttribute(MultitenantUtils.getTenantAwareUsername(username), attributes,
                 tenantDomain);
     }
@@ -395,14 +396,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private void processSMSOTPMandatoryCase(AuthenticationContext context, HttpServletRequest request,
                                             HttpServletResponse response, String queryParams, String username,
-                                            boolean isUserExists) throws AuthenticationFailedException, SMSOTPException {
+                                            boolean isUserExists) throws AuthenticationFailedException,
+            SMSOTPException {
         //the authentication flow happens with sms otp authentication.
         String tenantDomain = context.getTenantDomain();
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
                 && !isMobileNumberUpdateFailed(context)) {
-            if (log.isDebugEnabled()) {
-                log.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number update failure");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number " +
+                        "update failure");
             }
             checkStatusCode(response, context, queryParams, errorPage);
         } else {
@@ -419,14 +422,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             String federatedMobileAttributeKey;
             String mobile = null;
-            StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
-            String previousStepAuthenticator = stepConfig.getAuthenticatedAutenticator().getName();
-            StepConfig currentStep = context.getSequenceConfig().getStepMap().get(context.getCurrentStep());
-            String currentStepAuthenticator = currentStep.getAuthenticatorList().iterator().next().getName();
             if (sendOtpToFederatedMobile) {
+                StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
+                String previousStepAuthenticator = stepConfig.getAuthenticatedAutenticator().getName();
                 federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, previousStepAuthenticator);
                 if (StringUtils.isEmpty(federatedMobileAttributeKey)) {
-                    federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, currentStepAuthenticator);
+                    federatedMobileAttributeKey = getFederatedMobileAttributeKey(context,
+                            context.getParameter(SMSOTPConstants.AUTHENTICATION).toString());
                 }
                 Map<ClaimMapping, String> userAttributes = context.getCurrentAuthenticatedIdPs().values().
                         iterator().next().getUser().getUserAttributes();
@@ -440,8 +442,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     }
                 }
                 if (StringUtils.isEmpty(mobile)) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("There is no mobile claim to send otp ");
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("There is no mobile claim to send otp ");
                     }
                     throw new AuthenticationFailedException("There is no mobile claim to send otp");
                 }
@@ -494,8 +496,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String mobileNumber = null;
         if (isUserExists) {
             boolean isSMSOTPDisabledByUser = SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context);
-            if (log.isDebugEnabled()) {
-                log.debug("Has user enabled SMS OTP : " + isSMSOTPDisabledByUser);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Has user enabled SMS OTP : " + isSMSOTPDisabledByUser);
             }
             if (isSMSOTPDisabledByUser) {
                 // that Enable the SMS OTP in user's Profile. Cannot proceed further without SMS OTP authentication.
@@ -504,12 +506,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             }
         } else if (SMSOTPUtils.isSendOTPDirectlyToMobile(context)) {
-            if (log.isDebugEnabled()) {
-                log.debug("User :" + username + " doesn't exist");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("User :" + username + " doesn't exist");
             }
             if (request.getParameter(SMSOTPConstants.MOBILE_NUMBER) == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
                             "page");
                 }
                 String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
@@ -540,21 +542,22 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     throw new AuthenticationFailedException("Authentication failed!. An IOException occurred ", e);
                 }
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Mobile number found in request : " + request.getParameter(SMSOTPConstants.MOBILE_NUMBER));
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Mobile number found in request : " +
+                            request.getParameter(SMSOTPConstants.MOBILE_NUMBER));
                 }
                 mobileNumber = request.getParameter(SMSOTPConstants.MOBILE_NUMBER);
             }
         } else if (SMSOTPUtils.sendOtpToFederatedMobile(context)) {
-            if (log.isDebugEnabled()) {
-                log.debug("SMS OTP is mandatory. But user is not there in active directory. Hence send the otp to the " +
-                        "federated mobile claim");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("SMS OTP is mandatory. But user is not there in active directory. " +
+                        "Hence send the otp to the federated mobile claim");
             }
             proceedOTPWithFederatedMobileNumber(context, response, username, queryParams,
                     SMSOTPUtils.sendOtpToFederatedMobile(context));
         } else {
-            if (log.isDebugEnabled()) {
-                log.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("SMS OTP is mandatory. But couldn't find a mobile number.");
             }
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
@@ -602,8 +605,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String otpToken = token.generateToken(secret, String.valueOf(SMSOTPConstants.NUMBER_BASE), tokenLength,
                     isEnableAlphanumericToken);
             context.setProperty(SMSOTPConstants.OTP_TOKEN, otpToken);
-            if (log.isDebugEnabled()) {
-                log.debug("Generated OTP successfully and set to the context.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Generated OTP successfully and set to the context.");
             }
             //Get the values of the sms provider related api parameters.
             String smsUrl = authenticatorProperties.get(SMSOTPConstants.SMS_URL);
@@ -775,8 +778,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
             try {
                 String url = getURL(loginPage, queryParams);
-                if (log.isDebugEnabled()) {
-                    log.debug("Redirecting to mobile number request page : " + url);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Redirecting to mobile number request page : " + url);
                 }
                 String mobileNumberPatternViolationError = SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
                 String mobileNumberPattern =
@@ -834,8 +837,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         boolean isLocalUser = SMSOTPUtils.isLocalUser(context);
 
         if (authenticatedUser != null && isLocalUser && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
-            if (log.isDebugEnabled()) {
-                log.debug(String.format("Authentication failed since authenticated user: %s,  account is locked.",
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(String.format("Authentication failed since authenticated user: %s,  account is locked.",
                         authenticatedUser));
             }
             context.setProperty(SMSOTPConstants.ACCOUNT_LOCKED, true);
@@ -848,8 +851,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new InvalidCredentialsException("Code cannot not be null");
         }
         if (Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
-            if (log.isDebugEnabled()) {
-                log.debug("Retrying to resend the OTP");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Retrying to resend the OTP");
             }
             throw new InvalidCredentialsException("Retrying to resend the OTP");
         }
@@ -866,8 +869,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } else if (isLocalUser && "true".equals(SMSOTPUtils.getBackupCode(context))) {
             succeededAttempt = checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Given otp code is a mismatch.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Given otp code is a mismatch.");
             }
             context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
         }
@@ -889,7 +892,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     try {
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     } catch (SMSOTPException e) {
-                        throw new AuthenticationFailedException("Failed accessing the userstore for user: " + username, e.getCause());
+                        throw new AuthenticationFailedException("Failed accessing the userstore for user: " + username,
+                                e.getCause());
                     } catch (UserStoreClientException e) {
                         context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
                         throw new AuthenticationFailedException("Mobile claim update failed for user :" + username, e);
@@ -919,7 +923,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Optional<Object> tokenValidityTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
                 TOKEN_VALIDITY_TIME));
         if (!tokenValidityTime.isPresent() || !NumberUtils.isNumber(tokenValidityTime.get().toString())) {
-            log.error("TokenExpiryTime property is not configured in application-authentication.xml or SMS OTP " +
+            LOG.error("TokenExpiryTime property is not configured in application-authentication.xml or SMS OTP " +
                     "Authenticator UI");
             context.setSubject(authenticatedUser);
             return;
@@ -928,8 +932,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Optional<Object> otpTokenSentTime = Optional.ofNullable(context.getProperty(SMSOTPConstants.
                 SENT_OTP_TOKEN_TIME));
         if (!otpTokenSentTime.isPresent() || !NumberUtils.isNumber(otpTokenSentTime.get().toString())) {
-            if (log.isDebugEnabled()) {
-                log.debug("Could not find OTP sent time");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Could not find OTP sent time");
             }
             throw new AuthenticationFailedException("Internal Error Occurred");
         }
@@ -977,14 +981,14 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             // Check whether there is any backup OTPs and return.
             if (ArrayUtils.isEmpty(savedOTPs)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("The claim " + SMSOTPConstants.SAVED_OTP_LIST + " does not contain any values");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("The claim " + SMSOTPConstants.SAVED_OTP_LIST + " does not contain any values");
                 }
                 return false;
             }
             if (isBackUpCodeValid(savedOTPs, userToken)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Found saved backup SMS OTP for user :" + authenticatedUser);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Found saved backup SMS OTP for user :" + authenticatedUser);
                 }
                 isMatchingToken = true;
                 context.setSubject(authenticatedUser);
@@ -992,8 +996,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
                         SMSOTPConstants.SAVED_OTP_LIST, String.join(",", savedOTPs), null);
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("User entered OTP :" + userToken + " does not match with any of the saved " +
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("User entered OTP :" + userToken + " does not match with any of the saved " +
                             "backup codes");
                 }
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
@@ -1012,8 +1016,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         // Check whether the usertoken exists in the saved backup OTP list.
         for (String value : savedOTPs) {
-            if (value.equals(userToken))
+            if (value.equals(userToken)) {
                 return true;
+            }
         }
         return false;
     }
@@ -1065,7 +1070,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Get the friendly name of the Authenticator
+     * Get the friendly name of the Authenticator.
      */
     public String getFriendlyName() {
 
@@ -1073,7 +1078,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Get the name of the Authenticator
+     * Get the name of the Authenticator.
      */
     public String getName() {
 
@@ -1095,7 +1100,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Get the configuration properties of UI
+     * Get the configuration properties of UI.
      */
     @Override
     public List<Property> getConfigurationProperties() {
@@ -1142,7 +1147,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         httpResponse.setName(SMSOTPConstants.HTTP_RESPONSE);
         httpResponse.setDisplayName("HTTP Response Code");
         httpResponse.setRequired(false);
-        httpResponse.setDescription("Enter the HTTP response code the API sends upon successful call. Leave empty if unknown");
+        httpResponse.setDescription("Enter the HTTP response code the API sends upon successful call. " +
+                "Leave empty if unknown");
         httpResponse.setDisplayOrder(4);
         configProperties.add(httpResponse);
 
@@ -1159,7 +1165,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         valuesToBeMasked.setName(SMSOTPConstants.VALUES_TO_BE_MASKED_IN_ERROR_INFO);
         valuesToBeMasked.setDisplayName("Mask values in Error Info");
         valuesToBeMasked.setRequired(false);
-        valuesToBeMasked.setDescription("Enter comma separated Values to be masked by * in the detailed error messages");
+        valuesToBeMasked.setDescription("Enter comma separated Values to be masked by * " +
+                "in the detailed error messages");
         valuesToBeMasked.setDisplayOrder(6);
         configProperties.add(valuesToBeMasked);
 
@@ -1172,13 +1179,13 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         mobileNumberRegex.setDisplayOrder(7);
         configProperties.add(mobileNumberRegex);
 
-        Property RegexFailureErrorMessage = new Property();
-        RegexFailureErrorMessage.setName(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
-        RegexFailureErrorMessage.setDisplayName("Regex Violation Error Message");
-        RegexFailureErrorMessage.setRequired(false);
-        RegexFailureErrorMessage.setDescription("Enter error message for invalid mobile number patterns.");
-        RegexFailureErrorMessage.setDisplayOrder(8);
-        configProperties.add(RegexFailureErrorMessage);
+        Property regexFailureErrorMessage = new Property();
+        regexFailureErrorMessage.setName(SMSOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
+        regexFailureErrorMessage.setDisplayName("Regex Violation Error Message");
+        regexFailureErrorMessage.setRequired(false);
+        regexFailureErrorMessage.setDescription("Enter error message for invalid mobile number patterns.");
+        regexFailureErrorMessage.setDisplayOrder(8);
+        configProperties.add(regexFailureErrorMessage);
 
         return configProperties;
     }
@@ -1210,8 +1217,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String[] headerArray;
             HashMap<String, Object> headerElementProperties = new HashMap<>();
             if (StringUtils.isNotEmpty(headerString)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Processing HTTP headers since header string is available");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Processing HTTP headers since header string is available");
                 }
                 headerString = headerString.trim().replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll(
                         "\\$ctx.msg", smsMessage + otpToken);
@@ -1222,19 +1229,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         httpConnection.setRequestProperty(headerElements[0], headerElements[1]);
                         headerElementProperties.put(headerElements[0], headerElements[1]);
                     } else {
-                        log.info("Either header name or value not found. Hence not adding header which contains " +
+                        LOG.info("Either header name or value not found. Hence not adding header which contains " +
                                 headerElements[0]);
                     }
                 }
             } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("No configured headers found. Header string is empty");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("No configured headers found. Header string is empty");
                 }
             }
 
             // Processing HTTP Method
-            if (log.isDebugEnabled()) {
-                log.debug("Configured http method is " + httpMethod);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Configured http method is " + httpMethod);
             }
 
             if (SMSOTPConstants.GET_METHOD.equalsIgnoreCase(httpMethod)) {
@@ -1268,7 +1275,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             encodedSMSMessage + otpToken);
                     OutputStreamWriter writer = null;
                     try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET_UTF_8);
+                        writer = new OutputStreamWriter(httpConnection.getOutputStream(),
+                                SMSOTPConstants.CHAR_SET_UTF_8);
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message ", e);
@@ -1281,20 +1289,20 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             if (StringUtils.isNotEmpty(httpResponse)) {
                 if (httpResponse.trim().equals(String.valueOf(httpConnection.getResponseCode()))) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Code is successfully sent to the mobile and received expected response code : " +
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Code is successfully sent to the mobile and received expected response code : " +
                                 httpResponse);
                     }
                     return true;
                 } else {
-                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                    LOG.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
                             + " and error message is " + httpConnection.getResponseMessage());
                 }
             } else {
                 if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
                         || httpConnection.getResponseCode() == 202) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Code is successfully sent to the mobile. Relieved HTTP response code is : " +
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Code is successfully sent to the mobile. Relieved HTTP response code is : " +
                                 httpConnection.getResponseCode());
                     }
                     return true;
@@ -1302,9 +1310,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     context.setProperty(SMSOTPConstants.ERROR_CODE, httpConnection.getResponseCode() + " : " +
                             httpConnection.getResponseMessage());
                     if (httpConnection.getErrorStream() != null) {
-                        String content = getSanitizedErrorInfo(httpConnection.getErrorStream(), context, encodedMobileNo);
+                        String content = getSanitizedErrorInfo(httpConnection.getErrorStream(), context,
+                                encodedMobileNo);
 
-                        log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                        LOG.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
                                 + " and error message is " + httpConnection.getResponseMessage());
                         context.setProperty(SMSOTPConstants.ERROR_INFO, content);
                     }
@@ -1346,10 +1355,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         context.setProperty(SMSOTPConstants.ERROR_INFO, content);
 
         String errorContent = content;
-        if (log.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             errorContent = contentRaw;
         }
-        log.error(String.format("Following Error occurred while sending SMS for user: %s, %s", String.valueOf(context
+        LOG.error(String.format("Following Error occurred while sending SMS for user: %s, %s", String.valueOf(context
                 .getProperty(SMSOTPConstants.USER_NAME)), errorContent));
 
         return content;
@@ -1399,8 +1408,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 String headerString, String payload, String httpResponse, String mobile,
                                 String otpToken) throws IOException, AuthenticationFailedException {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Preparing message for sending out");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Preparing message for sending out");
         }
         HttpURLConnection httpConnection;
         boolean connection;
@@ -1415,7 +1424,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             smsProviderUrl = new URL(smsUrl);
         } catch (MalformedURLException e) {
-            log.error("Error while parsing SMS provider URL: " + smsUrl, e);
+            LOG.error("Error while parsing SMS provider URL: " + smsUrl, e);
             if (SMSOTPUtils.useInternalErrorCodes(context)) {
                 context.setProperty(SMSOTPConstants.ERROR_CODE, SMSOTPConstants.ErrorMessage.MALFORMED_URL.getCode());
             } else {
@@ -1546,9 +1555,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
             //We are not throwing any exception from here, because this event notification should not break the main
             // flow.
-            log.warn(errorMsg);
-            if (log.isDebugEnabled()) {
-                log.debug(errorMsg, e);
+            LOG.warn(errorMsg);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(errorMsg, e);
             }
         }
     }
@@ -1580,7 +1589,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @throws AuthenticationFailedException Exception on authentication failure.
      */
     private void resetSmsOtpFailedAttempts(AuthenticationContext context) throws AuthenticationFailedException {
-        
+
         /*
         Check whether account locking enabled for SMS OTP to keep backward compatibility.
         Account locking is not done for federated flows.
@@ -1623,7 +1632,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         .setUserClaimValues(usernameWithDomain, updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
             }
         } catch (UserStoreException e) {
-            log.error("Error while resetting failed SMS OTP attempts", e);
+            LOG.error("Error while resetting failed SMS OTP attempts", e);
             String errorMessage =
                     String.format("Failed to reset failed attempts count for user : %s.", authenticatedUser);
             throw new AuthenticationFailedException(errorMessage, e);
@@ -1732,7 +1741,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM},
                     UserCoreConstants.DEFAULT_PROFILE);
         } catch (UserStoreException e) {
-            log.error("Error while reading user claims", e);
+            LOG.error("Error while reading user claims", e);
             String errorMessage = String.format("Failed to read user claims for user : %s.", authenticatedUser);
             throw new AuthenticationFailedException(errorMessage, e);
         }
@@ -1748,7 +1757,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             userStoreManager.setUserClaimValues(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
                     authenticatedUser.getUserStoreDomain()), updatedClaims, UserCoreConstants.DEFAULT_PROFILE);
         } catch (UserStoreException e) {
-            log.error("Error while updating user claims", e);
+            LOG.error("Error while updating user claims", e);
             String errorMessage = String.format("Failed to update user claims for user : %s.", authenticatedUser);
             throw new AuthenticationFailedException(errorMessage, e);
         }
@@ -1772,8 +1781,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             if (userStoreManager == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("userStoreManager is null for user: " + username);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("userStoreManager is null for user: " + username);
                 }
                 throw new AuthenticationFailedException("userStoreManager is null for user: " + username);
             }
@@ -1781,8 +1790,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     .getUserClaimValues(tenantAwareUsername, new String[]{SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM},
                             null);
             if (claimValues.get(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM) == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug(String.format("No value configured for claim: %s, of user: %s",
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(String.format("No value configured for claim: %s, of user: %s",
                             SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, username));
                 }
                 return 0;
@@ -1816,14 +1825,15 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         eventProperties.put(IdentityEventConstants.EventProperty.USER_AGENT, request.getHeader(
                 SMSOTPConstants.USER_AGENT));
         if (request.getParameter(SMSOTPConstants.RESEND) != null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Setting true resend-code property in event since http request has resendCode parameter.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Setting true resend-code property in event since http request has resendCode parameter.");
             }
             eventProperties.put(IdentityEventConstants.EventProperty.RESEND_CODE,
                     request.getParameter(SMSOTPConstants.RESEND));
         } else {
-            if (log.isDebugEnabled()) {
-                log.debug("Setting false resend-code property in event since http request has not resendCode parameter.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Setting false resend-code property in event since http request " +
+                        "has not resendCode parameter.");
             }
             eventProperties.put(IdentityEventConstants.EventProperty.RESEND_CODE, false);
         }
@@ -1847,7 +1857,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(postOtpGenEvent);
         } catch (IdentityEventException e) {
-            String errorMsg = "An error occurred while triggering post event in SMS OTP generation flow. " + e.getMessage();
+            String errorMsg = "An error occurred while triggering post event in SMS OTP generation flow. " +
+                    e.getMessage();
             throw new AuthenticationFailedException(errorMsg, e);
         }
     }
@@ -1906,7 +1917,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         try {
             SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(postOtpValidateEvent);
         } catch (IdentityEventException e) {
-            String errorMsg = "An error occurred while triggering post event in SMS OTP validation flow. " + e.getMessage();
+            String errorMsg = "An error occurred while triggering post event in SMS OTP validation flow. " +
+                    e.getMessage();
             throw new AuthenticationFailedException(errorMsg, e);
         }
     }
