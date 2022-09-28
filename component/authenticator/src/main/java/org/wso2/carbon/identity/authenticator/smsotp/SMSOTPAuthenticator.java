@@ -194,8 +194,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
-                if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
-                        && !isMobileNumberUpdateFailed(context)) {
+                if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
+                        && !isMobileNumberUpdateFailed(context)) || (SMSOTPUtils.isLocalUser(context) &&
+                        SMSOTPUtils.isAccountLocked(authenticatedUser))) {
                     if (log.isDebugEnabled()) {
                         log.debug("Triggering SMS OTP retry flow");
                     }
@@ -999,8 +1000,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             }
         } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Cannot find the user claim for OTP list for user : " +
-                    authenticatedUser, e);
+            log.error("Cannot find the user claim for OTP list for user : " + authenticatedUser, e);
         }
         return isMatchingToken;
     }
