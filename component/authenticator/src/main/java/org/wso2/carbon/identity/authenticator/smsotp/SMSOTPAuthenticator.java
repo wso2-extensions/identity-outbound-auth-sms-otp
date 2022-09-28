@@ -174,7 +174,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
-                if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
+                if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) ||
+                        (SMSOTPUtils.isLocalUser(context) && SMSOTPUtils.isAccountLocked(authenticatedUser))) {
                     checkStatusCode(response, context, queryParams, errorPage);
                 } else {
                     mobileNumber = getMobileNumber(request, response, context, username, tenantDomain, queryParams);
@@ -786,6 +787,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         }
         if (!succeededAttempt) {
             handleSmsOtpVerificationFail(context);
+            context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             throw new AuthenticationFailedException("Invalid code. Verification failed.");
         }
         // It reached here means the authentication was successful.
@@ -876,8 +878,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             }
         } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Cannot find the user claim for OTP list for user : " +
-                    authenticatedUser, e);
+            log.error("Cannot find the user claim for OTP list for user : " + authenticatedUser, e);
         }
         return isMatchingToken;
     }
