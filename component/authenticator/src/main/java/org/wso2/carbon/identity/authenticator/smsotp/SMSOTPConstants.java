@@ -139,6 +139,7 @@ public class SMSOTPConstants {
     public static final String ADMIN_INITIATED = "AdminInitiated";
 
     public static final String MAX_SMS_OTP_ATTEMPTS_EXCEEDED = "MAX_SMS_OTP_ATTEMPTS_EXCEEDED";
+    public static final String OVERALL_FAILED_LOGIN_LOCKOUT_COUNT = "overallFailedLoginLockoutCount";
 
     /**
      * Enums for error messages.
