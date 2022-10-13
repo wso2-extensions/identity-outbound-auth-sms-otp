@@ -1533,15 +1533,26 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         Map<String, String> updatedClaims = new HashMap<>();
         if ((currentAttempts + 1) >= maxAttempts) {
             // Calculate the incremental unlock-time-interval in milli seconds.
-            unlockTimePropertyValue = (long) (unlockTimePropertyValue * 1000 * 60 * Math.pow(unlockTimeRatio,
-                    failedLoginLockoutCountValue));
+            if (context.getProperty(SMSOTPConstants.OVERALL_FAILED_LOGIN_LOCKOUT_COUNT) != null) {
+                int overallLockoutCount =
+                        (int) context.getProperty(SMSOTPConstants.OVERALL_FAILED_LOGIN_LOCKOUT_COUNT);
+                unlockTimePropertyValue = (long) (unlockTimePropertyValue * 1000 * 60 * Math.pow(unlockTimeRatio,
+                        overallLockoutCount));
+                updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
+                        String.valueOf(overallLockoutCount + 1));
+            } else {
+                unlockTimePropertyValue = (long) (unlockTimePropertyValue * 1000 * 60 * Math.pow(unlockTimeRatio,
+                        failedLoginLockoutCountValue));
+                updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
+                        String.valueOf(failedLoginLockoutCountValue + 1));
+            }
             // Calculate unlock-time by adding current-time and unlock-time-interval in milli seconds.
             long unlockTime = System.currentTimeMillis() + unlockTimePropertyValue;
             updatedClaims.put(SMSOTPConstants.ACCOUNT_LOCKED_CLAIM, Boolean.TRUE.toString());
             updatedClaims.put(SMSOTPConstants.SMS_OTP_FAILED_ATTEMPTS_CLAIM, "0");
             updatedClaims.put(SMSOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, String.valueOf(unlockTime));
-            updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
-                    String.valueOf(failedLoginLockoutCountValue + 1));
+            // updatedClaims.put(SMSOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM,
+            //         String.valueOf(failedLoginLockoutCountValue + 1));
             updatedClaims.put(SMSOTPConstants.ACCOUNT_LOCKED_REASON_CLAIM_URI,
                     SMSOTPConstants.MAX_SMS_OTP_ATTEMPTS_EXCEEDED);
             IdentityUtil.threadLocalProperties.get().put(SMSOTPConstants.ADMIN_INITIATED, false);
