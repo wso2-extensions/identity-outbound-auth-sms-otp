@@ -21,7 +21,6 @@ package org.wso2.carbon.identity.authenticator.smsotp.test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -38,6 +37,8 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.SequenceConfig;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.InvalidCredentialsException;
@@ -505,16 +506,22 @@ public class SMSOTPAuthenticatorTest {
 
         mockStatic(SMSOTPUtils.class);
         mockStatic(IdentityTenantUtil.class);
-        context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
-        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserId("4b4414e1-916b-4475-aaee-6b0751c29ff6");
         authenticatedUser.setUserName("admin");
         authenticatedUser.setTenantDomain("carbon.super");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
-
+        StepConfig stepConfig = new StepConfig();
+        stepConfig.setSubjectAttributeStep(true);
+        stepConfig.setAuthenticatedUser(authenticatedUser);
+        context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
+        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
+        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
+        context.setSequenceConfig(new SequenceConfig());
+        context.getSequenceConfig().getStepMap().put(1, stepConfig);
+        Whitebox.invokeMethod(smsotpAuthenticator, "getAuthenticatedUser",
+                context);
         Property property = new Property();
         property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
