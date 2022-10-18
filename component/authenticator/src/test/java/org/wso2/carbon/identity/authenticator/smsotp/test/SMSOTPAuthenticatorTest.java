@@ -502,8 +502,7 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         context.setSequenceConfig(new SequenceConfig());
         context.getSequenceConfig().getStepMap().put(1, stepConfig);
-        Whitebox.invokeMethod(smsotpAuthenticator, "getAuthenticatedUser",
-                context);
+        Whitebox.invokeMethod(smsotpAuthenticator, "getAuthenticatedUser", context);
         Property property = new Property();
         property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
