@@ -1643,7 +1643,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * Returns AuthenticatedUser object from context.
      *
      * @param context AuthenticationContext.
-     * @return AuthenticatedUser
+     * @return AuthenticatedUser.
      */
     private AuthenticatedUser getAuthenticatedUser(AuthenticationContext context) {
 
@@ -1652,8 +1652,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         for (StepConfig stepConfig : stepConfigMap.values()) {
             AuthenticatedUser authenticatedUserInStepConfig = stepConfig.getAuthenticatedUser();
             if (stepConfig.isSubjectAttributeStep() && authenticatedUserInStepConfig != null) {
-                // Make a copy of the user from the subject attribute step as we might modify this within
-                // the authenticator.
+                /* Make a copy of the user from the subject attribute step as we might modify this within
+                the authenticator.*/
                 authenticatedUser = new AuthenticatedUser(authenticatedUserInStepConfig);
                 break;
             }
