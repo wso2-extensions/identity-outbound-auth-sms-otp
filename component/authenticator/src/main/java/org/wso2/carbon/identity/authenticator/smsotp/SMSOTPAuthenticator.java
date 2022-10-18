@@ -749,8 +749,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
-        AuthenticatedUser authenticatedUser =
-                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        AuthenticatedUser authenticatedUser = getAuthenticatedUser(context);
         boolean isLocalUser = SMSOTPUtils.isLocalUser(context);
 
         if (authenticatedUser != null && isLocalUser && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
@@ -1638,5 +1637,27 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             throw new AuthenticationFailedException("Cannot find the user claim for unlock time for user : " +
                     username, e);
         }
+    }
+
+    /**
+     * Returns AuthenticatedUser object from context.
+     *
+     * @param context AuthenticationContext.
+     * @return AuthenticatedUser.
+     */
+    private AuthenticatedUser getAuthenticatedUser(AuthenticationContext context) {
+
+        AuthenticatedUser authenticatedUser = null;
+        Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
+        for (StepConfig stepConfig : stepConfigMap.values()) {
+            AuthenticatedUser authenticatedUserInStepConfig = stepConfig.getAuthenticatedUser();
+            if (stepConfig.isSubjectAttributeStep() && authenticatedUserInStepConfig != null) {
+                /* Make a copy of the user from the subject attribute step as we might modify this within
+                the authenticator.*/
+                authenticatedUser = new AuthenticatedUser(authenticatedUserInStepConfig);
+                break;
+            }
+        }
+        return authenticatedUser;
     }
 }
