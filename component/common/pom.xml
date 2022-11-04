@@ -23,11 +23,11 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
         <artifactId>identity-outbound-auth-sms-otp</artifactId>
-        <version>3.2.0</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.smsotp.common</artifactId>
-    <version>3.2.0</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - SMS OTP Service Implementation</name>
     <url>http://wso2.org</url>
