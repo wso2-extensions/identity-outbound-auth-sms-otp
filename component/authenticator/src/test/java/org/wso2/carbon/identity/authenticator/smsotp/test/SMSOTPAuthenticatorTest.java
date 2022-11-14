@@ -18,23 +18,15 @@
  */
 package org.wso2.carbon.identity.authenticator.smsotp.test;
 
-import org.apache.axis2.context.ConfigurationContextFactory;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.MockitoAnnotations.initMocks;
-
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.powermock.reflect.Whitebox;
 import org.testng.Assert;
 import org.testng.IObjectFactory;
@@ -42,12 +34,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
-
-import static org.mockito.Mockito.verify;
-
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.SequenceConfig;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.InvalidCredentialsException;
@@ -56,7 +47,6 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
-import org.wso2.carbon.identity.application.common.model.User;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -64,8 +54,6 @@ import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
-import org.wso2.carbon.identity.mgt.config.ConfigBuilder;
-import org.wso2.carbon.identity.mgt.mail.NotificationBuilder;
 import org.wso2.carbon.user.api.Claim;
 import org.wso2.carbon.user.api.ClaimManager;
 import org.wso2.carbon.user.api.UserStoreException;
@@ -74,23 +62,29 @@ import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
         IdentityTenantUtil.class, SMSOTPServiceDataHolder.class})
-@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User"})
+@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
+    
+    private static final long otpTime = 1608101321322l;
+    
     private SMSOTPAuthenticator smsotpAuthenticator;
 
     @Mock
@@ -133,7 +127,6 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPServiceDataHolder.class);
         when(SMSOTPServiceDataHolder.getInstance()).thenReturn(sMSOTPServiceDataHolder);
         when(sMSOTPServiceDataHolder.getIdentityEventService()).thenReturn(identityEventService);
-        Mockito.doNothing().when(identityEventService).handleEvent(anyObject());
         when(httpServletRequest.getHeaderNames()).thenReturn(requestHeaders);
         initMocks(this);
     }
@@ -379,8 +372,8 @@ public class SMSOTPAuthenticatorTest {
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(anyLong());
-        when((AuthenticatedUser)context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
+        when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
@@ -409,7 +402,7 @@ public class SMSOTPAuthenticatorTest {
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("testUser");
         authenticatedUser.setUserStoreDomain("secondary");
-        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, 1608101321322l);
+        context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, otpTime);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -513,16 +506,22 @@ public class SMSOTPAuthenticatorTest {
 
         mockStatic(SMSOTPUtils.class);
         mockStatic(IdentityTenantUtil.class);
-        context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
-        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserId("4b4414e1-916b-4475-aaee-6b0751c29ff6");
         authenticatedUser.setUserName("admin");
         authenticatedUser.setTenantDomain("carbon.super");
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
-
+        StepConfig stepConfig = new StepConfig();
+        stepConfig.setSubjectAttributeStep(true);
+        stepConfig.setAuthenticatedUser(authenticatedUser);
+        context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
+        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
+        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
+        context.setSequenceConfig(new SequenceConfig());
+        context.getSequenceConfig().getStepMap().put(1, stepConfig);
+        Whitebox.invokeMethod(smsotpAuthenticator, "getAuthenticatedUser",
+                context);
         Property property = new Property();
         property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
@@ -555,7 +554,8 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager
-                .getUserClaimValue(anyString(),anyString(), anyString())).thenReturn("123456,789123");
+                .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
+                .thenReturn("123456,789123");
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
 
@@ -667,6 +667,7 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetScreenAttributeWhenMobileRequest() throws UserStoreException {
+
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(SMSOTPUtils.getScreenUserAttribute(context)).thenReturn
@@ -681,11 +682,11 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
         // with forward order
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778******");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
 
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******9889");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "******9889");
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})

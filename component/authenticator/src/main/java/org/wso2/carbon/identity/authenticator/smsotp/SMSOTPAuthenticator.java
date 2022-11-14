@@ -194,8 +194,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
-                if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
-                        && !isMobileNumberUpdateFailed(context)) {
+                if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
+                        && !isMobileNumberUpdateFailed(context)) || (SMSOTPUtils.isLocalUser(context) &&
+                        SMSOTPUtils.isAccountLocked(authenticatedUser))) {
                     if (log.isDebugEnabled()) {
                         log.debug("Triggering SMS OTP retry flow");
                     }
@@ -829,8 +830,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response,
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
-        AuthenticatedUser authenticatedUser =
-                (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
+        AuthenticatedUser authenticatedUser = getAuthenticatedUser(context);
         boolean isLocalUser = SMSOTPUtils.isLocalUser(context);
 
         if (authenticatedUser != null && isLocalUser && SMSOTPUtils.isAccountLocked(authenticatedUser)) {
@@ -999,8 +999,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
             }
         } catch (UserStoreException e) {
-            throw new AuthenticationFailedException("Cannot find the user claim for OTP list for user : " +
-                    authenticatedUser, e);
+            log.error("Cannot find the user claim for OTP list for user : " + authenticatedUser, e);
         }
         return isMatchingToken;
     }
@@ -1016,6 +1015,28 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Returns AuthenticatedUser object from context.
+     *
+     * @param context AuthenticationContext.
+     * @return AuthenticatedUser
+     */
+    private AuthenticatedUser getAuthenticatedUser(AuthenticationContext context) {
+
+        AuthenticatedUser authenticatedUser = null;
+        Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
+        for (StepConfig stepConfig : stepConfigMap.values()) {
+            AuthenticatedUser authenticatedUserInStepConfig = stepConfig.getAuthenticatedUser();
+            if (stepConfig.isSubjectAttributeStep() && authenticatedUserInStepConfig != null) {
+                // Make a copy of the user from the subject attribute step as we might modify this within
+                // the authenticator.
+                authenticatedUser = new AuthenticatedUser(authenticatedUserInStepConfig);
+                break;
+            }
+        }
+        return authenticatedUser;
     }
 
     /**
@@ -1286,6 +1307,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                 httpResponse);
                     }
                     return true;
+                } else {
+                    log.error("Error while sending SMS: error code is " + httpConnection.getResponseCode()
+                            + " and error message is " + httpConnection.getResponseMessage());
                 }
             } else {
                 if (httpConnection.getResponseCode() == 200 || httpConnection.getResponseCode() == 201
@@ -1337,8 +1361,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             screenValue = getMaskedValue(context, encodedMobileNo, noOfDigits);
         }
         String content = contentRaw.replace(encodedMobileNo, screenValue);
-        URLDecoder decoder = new URLDecoder();
-        String decodedMobileNo = decoder.decode(encodedMobileNo);
+        String decodedMobileNo = URLDecoder.decode(encodedMobileNo);
         content = content.replace(decodedMobileNo, screenValue);
         content = maskConfiguredValues(context, content);
         context.setProperty(SMSOTPConstants.ERROR_INFO, content);
