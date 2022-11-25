@@ -456,10 +456,10 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.23.28</carbon.identity.version>
-        <identity.governance.version>1.4.1</identity.governance.version>
-        <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
-        <carbon.identity.version.range>[5.16.0,6.0.0)</carbon.identity.version.range>
+        <carbon.identity.version>6.0.0</carbon.identity.version>
+        <identity.governance.version>2.0.0</identity.governance.version>
+        <carbon.identity.event.version>6.0.0</carbon.identity.event.version>
+        <carbon.identity.version.range>[6.0.0,7.0.0)</carbon.identity.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.7.1</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>
@@ -484,22 +484,22 @@
         <powermock.version>2.0.2</powermock.version>
         <slf4j.version>1.7.12</slf4j.version>
         <org.slf4j.verison>1.7.21</org.slf4j.verison>
-        <identity.extension.utils>1.0.8</identity.extension.utils>
-        <identity.extension.utils.import.version.range>[1.0.8,2.0.0)
+        <identity.extension.utils>2.0.0</identity.extension.utils>
+        <identity.extension.utils.import.version.range>[2.0.0,3.0.0)
         </identity.extension.utils.import.version.range>
-        <carbon.identity.account.lock.handler.version>1.1.12</carbon.identity.account.lock.handler.version>
-        <carbon.identity.account.lock.handler.imp.pkg.version.range>[1.1.12, 2.0.0)
+        <carbon.identity.account.lock.handler.version>2.0.0</carbon.identity.account.lock.handler.version>
+        <carbon.identity.account.lock.handler.imp.pkg.version.range>[2.0.0, 3.0.0)
         </carbon.identity.account.lock.handler.imp.pkg.version.range>
         <maven.scr.plugin.version>1.26.0</maven.scr.plugin.version>
         <apache.felix.scr.ds.annotations.version>1.2.4</apache.felix.scr.ds.annotations.version>
         <osgi.service.import.version.range>[1.2.0,2.0.0)</osgi.service.import.version.range>
         <import.package.version.commons.logging>[1.2.0,2.0.0)</import.package.version.commons.logging>
-        <carbon.identity.package.import.version.range>[5.14.0, 6.0.0)</carbon.identity.package.import.version.range>
-        <carbon.identity.framework.imp.pkg.version.range>[5.15.28, 6.0.0)
+        <carbon.identity.package.import.version.range>[6.0.0, 7.0.0)</carbon.identity.package.import.version.range>
+        <carbon.identity.framework.imp.pkg.version.range>[6.0.0, 7.0.0)
         </carbon.identity.framework.imp.pkg.version.range>
         <carbon.kernel.package.import.version.range>[4.5.0, 5.0.0)</carbon.kernel.package.import.version.range>
         <carbon.user.api.imp.pkg.version.range>[1.0.1, 2.0.0)</carbon.user.api.imp.pkg.version.range>
-        <identity.governance.imp.pkg.version.range>[1.3.9, 2.0.0)</identity.governance.imp.pkg.version.range>
+        <identity.governance.imp.pkg.version.range>[2.0.0, 3.0.0)</identity.governance.imp.pkg.version.range>
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <commons-lang.version.range>[2.6.0,4.0.0)</commons-lang.version.range>
     </properties>
