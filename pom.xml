@@ -456,7 +456,7 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.25.90</carbon.identity.version>
+        <carbon.identity.version>5.23.28</carbon.identity.version>
         <identity.governance.version>1.4.1</identity.governance.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
         <carbon.identity.version.range>[5.16.0,6.0.0)</carbon.identity.version.range>
