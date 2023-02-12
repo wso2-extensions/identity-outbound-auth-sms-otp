@@ -1234,8 +1234,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 if (log.isDebugEnabled()) {
                     log.debug("Processing HTTP headers since header string is available");
                 }
-                headerString = headerString.trim().replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll(
-                        "\\$ctx.msg", smsMessage + otpToken).replaceAll("\\$ctx.otp", otpToken);
+                headerString = replacePlaceholders(headerString.trim(), otpToken, receivedMobileNumber, smsMessage);
                 headerArray = headerString.split(",");
                 for (String header : headerArray) {
                     String[] headerElements = header.split(":", 2);
@@ -1285,8 +1284,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             encodedMobileNo = receivedMobileNumber;
                         }
                     }
-                    payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                            encodedSMSMessage + otpToken).replaceAll("\\$ctx.otp", otpToken);
+                    payload = replacePlaceholders(payload, otpToken, encodedMobileNo, encodedSMSMessage);
                     OutputStreamWriter writer = null;
                     try {
                         writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET_UTF_8);
@@ -1429,9 +1427,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String receivedMobileNumber = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
 
         String encodedSmsMessage = smsMessage.replaceAll("\\s", "+");
-        smsUrl = smsUrl.replaceAll("\\$ctx.num", receivedMobileNumber)
-                .replaceAll("\\$ctx.msg", encodedSmsMessage + otpToken)
-                .replaceAll("\\$ctx.otp", otpToken);
+        smsUrl = replacePlaceholders(smsUrl, otpToken, receivedMobileNumber, encodedSmsMessage);
         URL smsProviderUrl = null;
         try {
             smsProviderUrl = new URL(smsUrl);
@@ -1453,6 +1449,22 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         connection = getConnection(httpConnection, context, headerString, payload, httpResponse,
                 mobile, smsMessage, otpToken, httpMethod);
         return connection;
+    }
+
+    /**
+     * Replace the placeholders with their actual values in the request payload.
+     *
+     * @param payload       Message payload with placeholders
+     * @param otpToken      Generated OTP token
+     * @param mobileNumber  Mobile phone number
+     * @param message       Message content (without OTP)
+     * @return  Message payload string after populating actual values for the placeholders
+     */
+    private String replacePlaceholders(String payload, String otpToken, String mobileNumber, String message) {
+
+        return payload.replaceAll("\\$ctx.num", mobileNumber)
+                .replaceAll("\\$ctx.msg", message + otpToken)
+                .replaceAll("\\$ctx.otp", otpToken);
     }
 
     /**
