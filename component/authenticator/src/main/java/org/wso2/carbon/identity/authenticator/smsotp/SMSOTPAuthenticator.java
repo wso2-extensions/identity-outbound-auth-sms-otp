@@ -1235,7 +1235,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     log.debug("Processing HTTP headers since header string is available");
                 }
                 headerString = headerString.trim().replaceAll("\\$ctx.num", receivedMobileNumber).replaceAll(
-                        "\\$ctx.msg", smsMessage + otpToken);
+                        "\\$ctx.msg", smsMessage + otpToken).replaceAll("\\$ctx.otp", otpToken);
                 headerArray = headerString.split(",");
                 for (String header : headerArray) {
                     String[] headerElements = header.split(":", 2);
@@ -1286,7 +1286,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         }
                     }
                     payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.msg",
-                            encodedSMSMessage + otpToken);
+                            encodedSMSMessage + otpToken).replaceAll("\\$ctx.otp", otpToken);
                     OutputStreamWriter writer = null;
                     try {
                         writer = new OutputStreamWriter(httpConnection.getOutputStream(), SMSOTPConstants.CHAR_SET_UTF_8);
