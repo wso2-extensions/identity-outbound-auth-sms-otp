@@ -51,6 +51,11 @@
                 <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.governance</artifactId>
+                <version>${identity.governance.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.logging</artifactId>
                 <version>${commons-logging.version}</version>
@@ -393,6 +398,8 @@
     <properties>
         <carbon.identity.version>5.12.153</carbon.identity.version>
         <carbon.identity.version.range>[5.11.0,5.13.0)</carbon.identity.version.range>
+        <identity.governance.version>1.1.37</identity.governance.version>
+        <identity.governance.imp.pkg.version.range>[1.1.37, 2.0.0)</identity.governance.imp.pkg.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.4.35</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>
