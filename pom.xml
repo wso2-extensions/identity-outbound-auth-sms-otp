@@ -396,12 +396,13 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.12.153</carbon.identity.version>
+        <carbon.identity.version>5.15.47</carbon.identity.version>
         <carbon.identity.version.range>[5.11.0,5.13.0)</carbon.identity.version.range>
         <identity.governance.version>1.1.37</identity.governance.version>
         <identity.governance.imp.pkg.version.range>[1.1.37, 2.0.0)</identity.governance.imp.pkg.version.range>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.4.35</carbon.kernel.version>
+        <carbon.kernel.imp.pkg.version.range>[4.4.0,5.0.0)</carbon.kernel.imp.pkg.version.range>
         <oltu.version>1.0.0.wso2v2</oltu.version>
         <org.apache.oltu.oauth2.client.version>1.0.0</org.apache.oltu.oauth2.client.version>
         <oltu.package.import.version.range>[1.0.0, 2.0.0)</oltu.package.import.version.range>
@@ -428,5 +429,7 @@
         <carbon.identity.account.lock.handler.version>1.1.12</carbon.identity.account.lock.handler.version>
         <carbon.identity.account.lock.handler.imp.pkg.version.range>[1.1.12, 2.0.0)
         </carbon.identity.account.lock.handler.imp.pkg.version.range>
+        <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
+        <osgi.service.component.imp.pkg.version.range>[1.2.0, 2.0.0)</osgi.service.component.imp.pkg.version.range>
     </properties>
 </project>

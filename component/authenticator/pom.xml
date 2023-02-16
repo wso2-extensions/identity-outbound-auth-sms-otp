@@ -139,8 +139,22 @@
                             org.apache.axiom.*,
                             org.wso2.carbon.ui.*,
                             org.apache.commons.logging.*; version="1.0.4",
-                            org.osgi.framework,
-                            org.wso2.carbon.identity.application.authentication.framework.*,
+                            org.osgi.framework.*;
+                            version="${osgi.framework.imp.pkg.version.range}",
+                            org.osgi.service.component.*;
+                            version="${osgi.service.component.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.application.authentication.framework.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.application.common.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.core.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.event.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.context.*;
+                            version="${carbon.kernel.imp.pkg.version.range}",
+                            org.wso2.carbon.utils.*;
+                            version="${carbon.kernel.imp.pkg.version.range}",
                             javax.servlet,
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;
