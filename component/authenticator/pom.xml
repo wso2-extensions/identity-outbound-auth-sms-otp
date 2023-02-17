@@ -159,7 +159,7 @@
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;
                             version="${identity.extension.utils.import.version.range}",
-                            org.wso2.carbon.identity.governance.service.notification;
+                            org.wso2.carbon.identity.governance.*;
                             version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.service;
                             version="${carbon.identity.account.lock.handler.imp.pkg.version.range}",
