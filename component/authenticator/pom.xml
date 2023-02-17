@@ -89,6 +89,10 @@
             <groupId>org.wso2.carbon.identity.event.handler.accountlock</groupId>
             <artifactId>org.wso2.carbon.identity.handler.event.account.lock</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.carbon.identity.governance</groupId>
+            <artifactId>org.wso2.carbon.identity.governance</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -135,12 +139,28 @@
                             org.apache.axiom.*,
                             org.wso2.carbon.ui.*,
                             org.apache.commons.logging.*; version="1.0.4",
-                            org.osgi.framework,
-                            org.wso2.carbon.identity.application.authentication.framework.*,
+                            org.osgi.framework.*;
+                            version="${osgi.framework.imp.pkg.version.range}",
+                            org.osgi.service.component.*;
+                            version="${osgi.service.component.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.application.authentication.framework.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.application.common.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.core.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.event.*;
+                            version="${carbon.identity.version.range}",
+                            org.wso2.carbon.context.*;
+                            version="${carbon.kernel.imp.pkg.version.range}",
+                            org.wso2.carbon.utils.*;
+                            version="${carbon.kernel.imp.pkg.version.range}",
                             javax.servlet,
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;
                             version="${identity.extension.utils.import.version.range}",
+                            org.wso2.carbon.identity.governance.service.notification;
+                            version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.service;
                             version="${carbon.identity.account.lock.handler.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.exception;
