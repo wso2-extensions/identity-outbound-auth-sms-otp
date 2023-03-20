@@ -113,7 +113,8 @@
                             org.apache.commons.logging.*; version="1.0.4",
                             org.osgi.framework,
                             org.osgi.service.component; version="${osgi.service.import.version.range}",
-                            org.wso2.carbon.identity.application.authentication.framework.*,
+                            org.wso2.carbon.identity.application.authentication.framework.*;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
                             javax.servlet,
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;
@@ -123,6 +124,10 @@
                             org.wso2.carbon.identity.event.services; version="${carbon.identity.version.range}",
                             org.wso2.carbon.identity.governance.service.notification;
                             version="${identity.governance.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.core.util; version="${carbon.identity.version.range}",
+                            org.wso2.carbon.identity.application.common.model;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.governance; version="${identity.governance.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.service;
                             version="${carbon.identity.account.lock.handler.imp.pkg.version.range}",
                             org.wso2.carbon.identity.handler.event.account.lock.exception;
