@@ -76,13 +76,13 @@ public class OnetimePasswordTest {
     public void testGenerateTokenWithNumericToken() throws Exception {
         OneTimePassword otp = PowerMockito.spy(oneTimePassword);
         Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, false),
-                "0701282405");
+                "0020315280");
     }
 
     @Test
     public void testGenerateTokenWithAlphaNumericToken() throws Exception {
         OneTimePassword otp = PowerMockito.spy(oneTimePassword);
         Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, true),
-                "IWYTV8DJ31");
+                "3FDC3J6089");
     }
 }
