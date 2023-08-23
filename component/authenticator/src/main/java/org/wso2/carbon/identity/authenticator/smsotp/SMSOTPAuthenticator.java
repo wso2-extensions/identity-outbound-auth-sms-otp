@@ -186,6 +186,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             boolean isUserExists = FederatedAuthenticatorUtil.isUserExistInUserStore(username);
             String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                     context.getCallerSessionKey(), context.getContextIdentifier());
+            // This multi option URI is used to navigate back to multi option page to select a different
+            // authentication option from SMS OTP pages.
+            String multiOptionURI = getMultiOptionURIQueryParam(request);
+            if (StringUtils.isNotEmpty(multiOptionURI)) {
+                queryParams += multiOptionURI;
+            }
             String errorPage = getErrorPage(context);
             // SMS OTP authentication is mandatory and user doesn't disable SMS OTP claim in user's profile.
             if (isSMSOTPMandatory) {
@@ -216,6 +222,23 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         } catch (UserStoreException e) {
             throw new AuthenticationFailedException("Failed to get the user from User Store. ", e);
         }
+    }
+
+    /**
+     * Get MultiOptionURI query parameter from the request.
+     * @param request Http servlet request.
+     * @return MultiOptionURI query parameter.
+     */
+    private String getMultiOptionURIQueryParam(HttpServletRequest request) {
+
+        if (request != null) {
+            String multiOptionURI = request.getParameter(SMSOTPConstants.MULTI_OPTION_URI);
+            if (StringUtils.isNotEmpty(multiOptionURI)) {
+                return "&" + SMSOTPConstants.MULTI_OPTION_URI + "="
+                        + Encode.forUriComponent(multiOptionURI);
+            }
+        }
+        return StringUtils.EMPTY;
     }
 
     /**

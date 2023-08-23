@@ -159,6 +159,7 @@ public class SMSOTPConstants {
     public static final String STATUS_OTP_EXPIRED = "otp-expired";
     public static final String STATUS_CODE_MISMATCH = "code-mismatch";
     public static final String OTP_GENERATED_TIME = "otp-generated-time";
+    public static final String MULTI_OPTION_URI = "multiOptionURI";
 
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
     public static final String CORRELATION_ID = "correlation-id";
