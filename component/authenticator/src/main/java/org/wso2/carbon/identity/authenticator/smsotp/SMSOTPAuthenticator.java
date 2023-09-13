@@ -47,6 +47,8 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
+import org.wso2.carbon.identity.core.ServiceURLBuilder;
+import org.wso2.carbon.identity.core.URLBuilderException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.IdentityEventConstants;
@@ -77,6 +79,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -292,7 +296,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug("Default authentication endpoint context is used");
             }
         }
-        return loginPage;
+        try {
+            return buildURL(loginPage, SMSOTPConstants.SMS_LOGIN_PAGE);
+        } catch (URLBuilderException e) {
+            throw new AuthenticationFailedException("Error building SMS OTP login page URL.", e);
+        }
     }
 
     /**
@@ -312,7 +320,35 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug("Default authentication endpoint context is used");
             }
         }
-        return errorPage;
+        try {
+            return buildURL(errorPage, SMSOTPConstants.ERROR_PAGE);
+        } catch (URLBuilderException e) {
+            throw new AuthenticationFailedException("Error building SMS OTP error page URL.", e);
+        }
+    }
+
+    /**
+     * Get the mobile number request page from authentication.xml file or use the request page from constant file.
+     *
+     * @param context the AuthenticationContext
+     * @return the mobile number request page
+     * @throws AuthenticationFailedException
+     */
+    private String getMobileNoReqPage(AuthenticationContext context) throws AuthenticationFailedException {
+
+        String mobileNoReqPage = SMSOTPUtils.getMobileNumberRequestPage(context);
+        if (StringUtils.isEmpty(mobileNoReqPage)) {
+            mobileNoReqPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+                    .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.MOBILE_NO_REQ_PAGE);
+            if (log.isDebugEnabled()) {
+                log.debug("Default authentication endpoint context is used");
+            }
+        }
+        try {
+            return buildURL(mobileNoReqPage, SMSOTPConstants.MOBILE_NO_REQ_PAGE);
+        } catch (URLBuilderException e) {
+            throw new AuthenticationFailedException("Error building mobile number request page URL.", e);
+        }
     }
 
     /**
@@ -536,7 +572,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     log.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
                             "page");
                 }
-                String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
+                String loginPage = getMobileNoReqPage(context);
                 try {
                     String url = getURL(loginPage, queryParams);
                     String mobileNumberPatternViolationError = SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
@@ -796,7 +832,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         boolean isEnableMobileNoUpdate = SMSOTPUtils.isEnableMobileNoUpdate(context);
         if (isEnableMobileNoUpdate) {
-            String loginPage = SMSOTPUtils.getMobileNumberRequestPage(context);
+            String loginPage = getMobileNoReqPage(context);
             try {
                 String url = getURL(loginPage, queryParams);
                 if (log.isDebugEnabled()) {
@@ -1983,5 +2019,43 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private boolean isCodeMismatch(AuthenticationContext context) {
 
         return Boolean.parseBoolean(String.valueOf(context.getProperty(SMSOTPConstants.CODE_MISMATCH)));
+    }
+
+    /**
+     * This method generates the URL from the provided context.
+     *
+     * @param urlFromConfig URL from the configurations.
+     * @param defaultContext Default context.
+     * @return The generated URL.
+     */
+    private static String buildURL(String urlFromConfig, String defaultContext) throws URLBuilderException {
+
+        String contextToBuildURL = defaultContext;
+        if (StringUtils.isNotBlank(urlFromConfig)) {
+            contextToBuildURL = urlFromConfig;
+        }
+        try {
+            if (isURLRelative(contextToBuildURL)) {
+                // When tenant qualified URL feature is enabled, this will generate a tenant qualified URL.
+                return ServiceURLBuilder.create().addPath(contextToBuildURL).build().getAbsolutePublicURL();
+            }
+        } catch (URISyntaxException e) {
+            throw new URLBuilderException("Error while building public absolute URL for context: " + defaultContext, e);
+        }
+
+        // URL from the configuration was an absolute one. We return the same without any modification.
+        return contextToBuildURL;
+    }
+
+    /**
+     * This method returns whether the URL is relative or not.
+     *
+     * @param url The URL to be checked.
+     * @return Returns true if the URL is relative and false if the URL is absolute.
+     * @throws URISyntaxException
+     */
+    private static boolean isURLRelative(String url) throws URISyntaxException {
+
+        return !new URI(url).isAbsolute();
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.wso2.carbon.identity.authenticator.smsotp.test;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -32,9 +33,11 @@ import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
+import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.SequenceConfig;
@@ -52,6 +55,9 @@ import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
+import org.wso2.carbon.identity.core.ServiceURL;
+import org.wso2.carbon.identity.core.ServiceURLBuilder;
+import org.wso2.carbon.identity.core.URLBuilderException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.user.api.Claim;
@@ -63,27 +69,36 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.REQUESTED_USER_MOBILE;
+import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENANT_DOMAIN_NAME;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
-        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class})
+        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class})
 @PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
     
     private static final long otpTime = 1608101321322l;
+
+    public static String TENANT_DOMAIN = "wso2.com";
+    public static String SUPER_TENANT = "carbon.super";
     
     private SMSOTPAuthenticator smsotpAuthenticator;
 
@@ -129,6 +144,7 @@ public class SMSOTPAuthenticatorTest {
         when(sMSOTPServiceDataHolder.getIdentityEventService()).thenReturn(identityEventService);
         when(httpServletRequest.getHeaderNames()).thenReturn(requestHeaders);
         initMocks(this);
+        mockServiceURLBuilder();
     }
 
     @AfterMethod
@@ -198,32 +214,6 @@ public class SMSOTPAuthenticatorTest {
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNumber",
                 httpServletRequest, httpServletResponse, any(AuthenticationContext.class),
                 "Kanapriya", "queryParams"), "0775968325");
-    }
-
-    @Test
-    public void testGetLoginPage() throws Exception {
-        mockStatic(SMSOTPUtils.class);
-        mockStatic(ConfigurationFacade.class);
-        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
-        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
-        Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
-                new AuthenticationContext()), "/authenticationendpoint/login.do");
-        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
-                new AuthenticationContext()), "/authenticationendpoint/smsOtp.jsp");
-    }
-
-    @Test
-    public void testGetErrorPage() throws Exception {
-        mockStatic(SMSOTPUtils.class);
-        mockStatic(ConfigurationFacade.class);
-        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
-        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
-        Assert.assertNotEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
-                new AuthenticationContext()), "/authenticationendpoint/login.do");
-        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
-                new AuthenticationContext()), "/authenticationendpoint/smsOtpError.jsp");
     }
 
     @Test
@@ -314,10 +304,13 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testProcessSMSOTPFlow() throws Exception {
         mockStatic(SMSOTPUtils.class);
+        mockStatic(ConfigurationFacade.class);
         when(SMSOTPUtils.isSMSOTPDisableForLocalUser("John", context)).thenReturn(true);
         when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
                 thenReturn(SMSOTPConstants.ERROR_PAGE);
         when(SMSOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class))).thenReturn(true);
+        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
+        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
         context.setProperty(SMSOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "processSMSOTPFlow", context,
@@ -726,5 +719,246 @@ public class SMSOTPAuthenticatorTest {
     @ObjectFactory
     public IObjectFactory getObjectFactory() {
         return new PowerMockObjectFactory();
+    }
+
+    private void mockServiceURLBuilder() throws URLBuilderException {
+
+        ServiceURLBuilder builder = new ServiceURLBuilder() {
+
+            String path = "";
+
+            @Override
+            public ServiceURLBuilder addPath(String... strings) {
+
+                Arrays.stream(strings).forEach(x -> {
+                    if (x.startsWith("/")) {
+                        path += x;
+                    } else {
+                        path += "/" + x;
+                    }
+                });
+                return this;
+            }
+
+            @Override
+            public ServiceURLBuilder addParameter(String s, String s1) {
+
+                return this;
+            }
+
+            @Override
+            public ServiceURLBuilder setFragment(String s) {
+
+                return this;
+            }
+
+            @Override
+            public ServiceURLBuilder addFragmentParameter(String s, String s1) {
+
+                return this;
+            }
+
+            @Override
+            public ServiceURL build() {
+
+                ServiceURL serviceURL = mock(ServiceURL.class);
+                PowerMockito.when(serviceURL.getRelativePublicURL()).thenReturn(path);
+                PowerMockito.when(serviceURL.getRelativeInternalURL()).thenReturn(path);
+
+                String tenantDomain = IdentityTenantUtil.getTenantDomainFromContext();
+                if (IdentityTenantUtil.isTenantQualifiedUrlsEnabled()
+                        && !StringUtils.equals(tenantDomain, SUPER_TENANT_DOMAIN_NAME)) {
+                    PowerMockito.when(serviceURL.getAbsolutePublicURL())
+                            .thenReturn("https://localhost:9443/t/" + tenantDomain + path);
+                } else {
+                    PowerMockito.when(serviceURL.getAbsolutePublicURL()).thenReturn("https://localhost:9443" + path);
+                }
+                return serviceURL;
+            }
+        };
+
+        mockStatic(ServiceURLBuilder.class);
+        PowerMockito.when(ServiceURLBuilder.create()).thenReturn(builder);
+    }
+
+    @DataProvider(name = "mobileNoReqDataProvider")
+    public static Object[][] getMobileNoReqPageData() {
+
+        return new Object[][]{
+
+                // Super tenant
+                {false, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/mobile.jsp"},
+                {true, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/mobile.jsp"},
+
+                // Tenant
+                {false, TENANT_DOMAIN, null, "https://localhost:9443/authenticationendpoint/mobile.jsp"},
+                {true, TENANT_DOMAIN, null, "https://localhost:9443/t/wso2.com/authenticationendpoint/mobile.jsp"},
+
+                // Super tenant with Externalized relative URLs
+                {false, SUPER_TENANT, "mysmsotp/mobile.jsp", "https://localhost:9443/mysmsotp/mobile.jsp"},
+                {true, SUPER_TENANT, "mysmsotp/mobile.jsp", "https://localhost:9443/mysmsotp/mobile.jsp"},
+
+                // Tenant with Externalized relative URLs
+                {false, TENANT_DOMAIN, "mysmsotp/mobile.jsp", "https://localhost:9443/mysmsotp/mobile.jsp"},
+                {true, TENANT_DOMAIN, "mysmsotp/mobile.jsp", "https://localhost:9443/t/wso2.com/mysmsotp/mobile.jsp"},
+
+                // Super tenant with Externalized absolute URLs
+                {false, SUPER_TENANT, "https://mydomain/mobile.jsp", "https://mydomain/mobile.jsp"},
+                {true, SUPER_TENANT, "https://mydomain/mobile.jsp", "https://mydomain/mobile.jsp"},
+
+                // Tenant with Externalized absolute URLs
+                {false, TENANT_DOMAIN, "https://mydomain/mobile.jsp", "https://mydomain/mobile.jsp"},
+                {true, TENANT_DOMAIN, "https://mydomain/mobile.jsp", "https://mydomain/mobile.jsp"},
+        };
+    }
+
+    @Test(dataProvider = "mobileNoReqDataProvider")
+    public void testGetMobileNoReqPage(boolean isTenantQualifiedURLEnabled,
+                                       String tenantDomain, String urlFromConfig,
+                                       String expectedURL) throws Exception {
+
+        mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(ConfigurationFacade.class);
+
+        Map<String, String> parameters = new HashMap<>();
+        if (urlFromConfig != null) {
+            parameters.put(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE, urlFromConfig);
+        }
+        context.setProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY, new Object());
+        context.setTenantDomain(tenantDomain);
+
+        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
+        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
+        when(SMSOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class))).thenCallRealMethod();
+        when(SMSOTPUtils.getConfiguration(any(AuthenticationContext.class),
+                eq(SMSOTPConstants.MOBILE_NUMBER_REQ_PAGE))).thenCallRealMethod();
+        when(SMSOTPUtils.getSMSParameters()).thenReturn(parameters);
+
+        PowerMockito.when(IdentityTenantUtil.isTenantQualifiedUrlsEnabled()).thenReturn(isTenantQualifiedURLEnabled);
+        PowerMockito.when(IdentityTenantUtil.getTenantDomainFromContext()).thenReturn(tenantDomain);
+
+        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNoReqPage",
+                context), expectedURL);
+    }
+
+    @DataProvider(name = "loginPageDataProvider")
+    public static Object[][] getLoginPageData() {
+
+        return new Object[][]{
+
+                // Super tenant
+                {false, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/smsOtp.jsp"},
+                {true, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/smsOtp.jsp"},
+
+                // Tenant
+                {false, TENANT_DOMAIN, null, "https://localhost:9443/authenticationendpoint/smsOtp.jsp"},
+                {true, TENANT_DOMAIN, null, "https://localhost:9443/t/wso2.com/authenticationendpoint/smsOtp.jsp"},
+
+                // Super tenant with Externalized relative URLs
+                {false, SUPER_TENANT, "mysmsotp/smsOtp.jsp", "https://localhost:9443/mysmsotp/smsOtp.jsp"},
+                {true, SUPER_TENANT, "mysmsotp/smsOtp.jsp", "https://localhost:9443/mysmsotp/smsOtp.jsp"},
+
+                // Tenant with Externalized relative URLs
+                {false, TENANT_DOMAIN, "mysmsotp/smsOtp.jsp", "https://localhost:9443/mysmsotp/smsOtp.jsp"},
+                {true, TENANT_DOMAIN, "mysmsotp/smsOtp.jsp", "https://localhost:9443/t/wso2.com/mysmsotp/smsOtp.jsp"},
+
+                // Super tenant with Externalized absolute URLs
+                {false, SUPER_TENANT, "https://mydomain/smsOtp.jsp", "https://mydomain/smsOtp.jsp"},
+                {true, SUPER_TENANT, "https://mydomain/smsOtp.jsp", "https://mydomain/smsOtp.jsp"},
+
+                // Tenant with Externalized absolute URLs
+                {false, TENANT_DOMAIN, "https://mydomain/smsOtp.jsp", "https://mydomain/smsOtp.jsp"},
+                {true, TENANT_DOMAIN, "https://mydomain/smsOtp.jsp", "https://mydomain/smsOtp.jsp"},
+        };
+    }
+
+    @Test(dataProvider = "loginPageDataProvider")
+    public void testGetLoginPage(boolean isTenantQualifiedURLEnabled,
+                                       String tenantDomain, String urlFromConfig,
+                                       String expectedURL) throws Exception {
+
+        mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(ConfigurationFacade.class);
+
+        Map<String, String> parameters = new HashMap<>();
+        if (urlFromConfig != null) {
+            parameters.put(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL, urlFromConfig);
+        }
+        context.setProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY, new Object());
+        context.setTenantDomain(tenantDomain);
+
+        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
+        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
+        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).thenCallRealMethod();
+        when(SMSOTPUtils.getConfiguration(any(AuthenticationContext.class), eq(SMSOTPConstants.SMSOTP_AUTHENTICATION_ENDPOINT_URL))).thenCallRealMethod();
+        when(SMSOTPUtils.getSMSParameters()).thenReturn(parameters);
+
+        PowerMockito.when(IdentityTenantUtil.isTenantQualifiedUrlsEnabled()).thenReturn(isTenantQualifiedURLEnabled);
+        PowerMockito.when(IdentityTenantUtil.getTenantDomainFromContext()).thenReturn(tenantDomain);
+
+        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getLoginPage",
+                context), expectedURL);
+    }
+
+    @DataProvider(name = "errorPageDataProvider")
+    public static Object[][] getErrorPageData() {
+
+        return new Object[][]{
+
+                // Super tenant
+                {false, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/smsOtpError.jsp"},
+                {true, SUPER_TENANT, null, "https://localhost:9443/authenticationendpoint/smsOtpError.jsp"},
+
+                // Tenant
+                {false, TENANT_DOMAIN, null, "https://localhost:9443/authenticationendpoint/smsOtpError.jsp"},
+                {true, TENANT_DOMAIN, null, "https://localhost:9443/t/wso2.com/authenticationendpoint/smsOtpError.jsp"},
+
+                // Super tenant with Externalized relative URLs
+                {false, SUPER_TENANT, "mysmsotp/smsOtpError.jsp", "https://localhost:9443/mysmsotp/smsOtpError.jsp"},
+                {true, SUPER_TENANT, "mysmsotp/smsOtpError.jsp", "https://localhost:9443/mysmsotp/smsOtpError.jsp"},
+
+                // Tenant with Externalized relative URLs
+                {false, TENANT_DOMAIN, "mysmsotp/smsOtpError.jsp", "https://localhost:9443/mysmsotp/smsOtpError.jsp"},
+                {true, TENANT_DOMAIN, "mysmsotp/smsOtpError.jsp", "https://localhost:9443/t/wso2.com/mysmsotp/smsOtpError.jsp"},
+
+                // Super tenant with Externalized absolute URLs
+                {false, SUPER_TENANT, "https://mydomain/smsOtpError.jsp", "https://mydomain/smsOtpError.jsp"},
+                {true, SUPER_TENANT, "https://mydomain/smsOtpError.jsp", "https://mydomain/smsOtpError.jsp"},
+
+                // Tenant with Externalized absolute URLs
+                {false, TENANT_DOMAIN, "https://mydomain/smsOtpError.jsp", "https://mydomain/smsOtpError.jsp"},
+                {true, TENANT_DOMAIN, "https://mydomain/smsOtpError.jsp", "https://mydomain/smsOtpError.jsp"},
+        };
+    }
+
+    @Test(dataProvider = "errorPageDataProvider")
+    public void testGetErrorPage(boolean isTenantQualifiedURLEnabled,
+                                 String tenantDomain, String urlFromConfig,
+                                 String expectedURL) throws Exception {
+
+        mockStatic(IdentityTenantUtil.class);
+        mockStatic(SMSOTPUtils.class);
+        mockStatic(ConfigurationFacade.class);
+
+        Map<String, String> parameters = new HashMap<>();
+        if (urlFromConfig != null) {
+            parameters.put(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL, urlFromConfig);
+        }
+        context.setProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY, new Object());
+        context.setTenantDomain(tenantDomain);
+
+        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
+        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("/authenticationendpoint/login.do");
+        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).thenCallRealMethod();
+        when(SMSOTPUtils.getConfiguration(any(AuthenticationContext.class), eq(SMSOTPConstants.SMSOTP_AUTHENTICATION_ERROR_PAGE_URL))).thenCallRealMethod();
+        when(SMSOTPUtils.getSMSParameters()).thenReturn(parameters);
+
+        PowerMockito.when(IdentityTenantUtil.isTenantQualifiedUrlsEnabled()).thenReturn(isTenantQualifiedURLEnabled);
+        PowerMockito.when(IdentityTenantUtil.getTenantDomainFromContext()).thenReturn(tenantDomain);
+
+        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
+                context), expectedURL);
     }
 }

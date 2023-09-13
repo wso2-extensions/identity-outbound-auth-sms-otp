@@ -88,6 +88,7 @@ public class SMSOTPConstants {
     public static final String SMS_LOGIN_PAGE = "authenticationendpoint/smsOtp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=authentication.fail.message";
     public static final String ERROR_PAGE = "authenticationendpoint/smsOtpError.jsp";
+    public static final String MOBILE_NO_REQ_PAGE = "authenticationendpoint/mobile.jsp";
     public static final String MOBILE_NUMBER_REQ_PAGE = "MobileNumberRegPage";
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
     public static final String REQUESTED_USER_MOBILE = "requestedUserMobile";
