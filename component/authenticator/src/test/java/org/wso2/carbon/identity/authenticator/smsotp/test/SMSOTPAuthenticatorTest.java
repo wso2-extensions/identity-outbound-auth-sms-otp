@@ -55,6 +55,7 @@ import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
+import org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils;
 import org.wso2.carbon.identity.core.ServiceURL;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
@@ -91,7 +92,7 @@ import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENA
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
-        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class})
+        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class, LoggerUtils.class})
 @PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
     
@@ -145,6 +146,8 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getHeaderNames()).thenReturn(requestHeaders);
         initMocks(this);
         mockServiceURLBuilder();
+        mockStatic(LoggerUtils.class);
+        when(LoggerUtils.isDiagnosticLogsEnabled()).thenReturn(true);
     }
 
     @AfterMethod
@@ -781,8 +784,8 @@ public class SMSOTPAuthenticatorTest {
         PowerMockito.when(ServiceURLBuilder.create()).thenReturn(builder);
     }
 
-    @DataProvider(name = "mobileNoReqDataProvider")
-    public static Object[][] getMobileNoReqPageData() {
+    @DataProvider(name = "mobileNumberRequestDataProvider")
+    public static Object[][] getMobileNumberRequestPageData() {
 
         return new Object[][]{
 
@@ -812,8 +815,8 @@ public class SMSOTPAuthenticatorTest {
         };
     }
 
-    @Test(dataProvider = "mobileNoReqDataProvider")
-    public void testGetMobileNoReqPage(boolean isTenantQualifiedURLEnabled,
+    @Test(dataProvider = "mobileNumberRequestDataProvider")
+    public void testGetMobileNumberRequestPage(boolean isTenantQualifiedURLEnabled,
                                        String tenantDomain, String urlFromConfig,
                                        String expectedURL) throws Exception {
 
@@ -838,7 +841,7 @@ public class SMSOTPAuthenticatorTest {
         PowerMockito.when(IdentityTenantUtil.isTenantQualifiedUrlsEnabled()).thenReturn(isTenantQualifiedURLEnabled);
         PowerMockito.when(IdentityTenantUtil.getTenantDomainFromContext()).thenReturn(tenantDomain);
 
-        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNoReqPage",
+        Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNumberRequestPage",
                 context), expectedURL);
     }
 

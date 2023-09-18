@@ -152,6 +152,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.framework</groupId>
+                <artifactId>org.wso2.carbon.identity.central.log.mgt</artifactId>
+                <version>${carbon.identity.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.ui</artifactId>
                 <version>${carbon.kernel.version}</version>
@@ -288,6 +293,12 @@
                 <version>${apache.felix.scr.ds.annotations.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.wso2.carbon.identity.organization.management.core</groupId>
+                <artifactId>org.wso2.carbon.identity.organization.management.service</artifactId>
+                <version>${org.wso2.carbon.identity.organization.management.core.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>org.jacoco</groupId>
                 <artifactId>org.jacoco.agent</artifactId>
@@ -456,10 +467,12 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.23.28</carbon.identity.version>
+        <carbon.identity.version>5.25.338</carbon.identity.version>
         <identity.governance.version>1.4.1</identity.governance.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
         <carbon.identity.version.range>[5.16.0,7.0.0)</carbon.identity.version.range>
+        <org.wso2.carbon.identity.organization.management.core.version>1.0.0
+        </org.wso2.carbon.identity.organization.management.core.version>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.9.0</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>

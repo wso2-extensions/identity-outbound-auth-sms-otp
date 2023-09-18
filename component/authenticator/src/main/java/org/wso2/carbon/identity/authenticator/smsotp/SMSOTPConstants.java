@@ -249,4 +249,20 @@ public class SMSOTPConstants {
             return ErrorMessage.SERVER_UNKNOWN_ERROR;
         }
     }
+
+    /**
+     * Constants related to log management.
+     */
+    public static class LogConstants {
+
+        public static final String OUTBOUND_AUTH_SMSOTP_SERVICE = "outbound-auth-sms-otp";
+
+        /**
+         * Define action IDs for diagnostic logs.
+         */
+        public static class ActionIDs {
+
+            public static final String SEND_SMS_OTP = "send-sms-otp";
+        }
+    }
 }

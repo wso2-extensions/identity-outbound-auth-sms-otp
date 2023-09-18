@@ -47,6 +47,8 @@ import org.wso2.carbon.identity.application.common.model.ClaimMapping;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.authenticator.smsotp.exception.SMSOTPException;
 import org.wso2.carbon.identity.authenticator.smsotp.internal.SMSOTPServiceDataHolder;
+import org.wso2.carbon.identity.central.log.mgt.utils.LogConstants;
+import org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
@@ -61,6 +63,7 @@ import org.wso2.carbon.user.api.UserStoreManager;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.UserStoreClientException;
 import org.wso2.carbon.user.core.service.RealmService;
+import org.wso2.carbon.utils.DiagnosticLog;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.io.BufferedReader;
@@ -91,6 +94,8 @@ import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CONTENT_TYPE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.ERROR_MESSAGE_DETAILS;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.JSON_CONTENT_TYPE;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.LogConstants.ActionIDs.SEND_SMS_OTP;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.LogConstants.OUTBOUND_AUTH_SMSOTP_SERVICE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MOBILE_NUMBER_REGEX;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.POST_METHOD;
@@ -334,18 +339,29 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @return the mobile number request page
      * @throws AuthenticationFailedException
      */
-    private String getMobileNoReqPage(AuthenticationContext context) throws AuthenticationFailedException {
+    private String getMobileNumberRequestPage(AuthenticationContext context) throws AuthenticationFailedException {
 
-        String mobileNoReqPage = SMSOTPUtils.getMobileNumberRequestPage(context);
-        if (StringUtils.isEmpty(mobileNoReqPage)) {
-            mobileNoReqPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
+        if (LoggerUtils.isDiagnosticLogsEnabled()) {
+            DiagnosticLog.DiagnosticLogBuilder diagnosticLogBuilder = new DiagnosticLog.DiagnosticLogBuilder(
+                    OUTBOUND_AUTH_SMSOTP_SERVICE, SEND_SMS_OTP);
+            diagnosticLogBuilder.logDetailLevel(DiagnosticLog.LogDetailLevel.APPLICATION)
+                    .resultStatus(DiagnosticLog.ResultStatus.SUCCESS)
+                    .inputParam(LogConstants.InputKeys.STEP, context.getCurrentStep())
+                    .inputParams(getApplicationDetails(context))
+                    .resultMessage("Requesting mobile number for SMS OTP.");
+            LoggerUtils.triggerDiagnosticLogEvent(diagnosticLogBuilder);
+        }
+
+        String mobileNumberRequestPage = SMSOTPUtils.getMobileNumberRequestPage(context);
+        if (StringUtils.isEmpty(mobileNumberRequestPage)) {
+            mobileNumberRequestPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
                     .replace(SMSOTPConstants.LOGIN_PAGE, SMSOTPConstants.MOBILE_NO_REQ_PAGE);
             if (log.isDebugEnabled()) {
                 log.debug("Default authentication endpoint context is used");
             }
         }
         try {
-            return buildURL(mobileNoReqPage, SMSOTPConstants.MOBILE_NO_REQ_PAGE);
+            return buildURL(mobileNumberRequestPage, SMSOTPConstants.MOBILE_NO_REQ_PAGE);
         } catch (URLBuilderException e) {
             throw new AuthenticationFailedException("Error building mobile number request page URL.", e);
         }
@@ -572,7 +588,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     log.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
                             "page");
                 }
-                String loginPage = getMobileNoReqPage(context);
+                String loginPage = getMobileNumberRequestPage(context);
                 try {
                     String url = getURL(loginPage, queryParams);
                     String mobileNumberPatternViolationError = SMSOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
@@ -832,7 +848,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         boolean isEnableMobileNoUpdate = SMSOTPUtils.isEnableMobileNoUpdate(context);
         if (isEnableMobileNoUpdate) {
-            String loginPage = getMobileNoReqPage(context);
+            String loginPage = getMobileNumberRequestPage(context);
             try {
                 String url = getURL(loginPage, queryParams);
                 if (log.isDebugEnabled()) {
@@ -2057,5 +2073,21 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private static boolean isURLRelative(String url) throws URISyntaxException {
 
         return !new URI(url).isAbsolute();
+    }
+
+    /**
+     * Get application details from the authentication context.
+     * @param context Authentication context.
+     * @return Map of application details.
+     */
+    private Map<String, String> getApplicationDetails(AuthenticationContext context) {
+
+        Map<String, String> applicationDetailsMap = new HashMap<>();
+        FrameworkUtils.getApplicationResourceId(context).ifPresent(applicationId ->
+                applicationDetailsMap.put(LogConstants.InputKeys.APPLICATION_ID, applicationId));
+        FrameworkUtils.getApplicationName(context).ifPresent(applicationName ->
+                applicationDetailsMap.put(LogConstants.InputKeys.APPLICATION_NAME,
+                        applicationName));
+        return applicationDetailsMap;
     }
 }
