@@ -88,6 +88,7 @@ public class SMSOTPConstants {
     public static final String SMS_LOGIN_PAGE = "authenticationendpoint/smsOtp.jsp";
     public static final String RETRY_PARAMS = "&authFailure=true&authFailureMsg=authentication.fail.message";
     public static final String ERROR_PAGE = "authenticationendpoint/smsOtpError.jsp";
+    public static final String MOBILE_NO_REQ_PAGE = "authenticationendpoint/mobile.jsp";
     public static final String MOBILE_NUMBER_REQ_PAGE = "MobileNumberRegPage";
     public static final String MOBILE_NUMBER = "MOBILE_NUMBER";
     public static final String REQUESTED_USER_MOBILE = "requestedUserMobile";
@@ -246,6 +247,22 @@ public class SMSOTPConstants {
                 return errorIndex.get(SMSOTPConstants.SMSOTP_PREFIX + smsProviderErrorCode);
             }
             return ErrorMessage.SERVER_UNKNOWN_ERROR;
+        }
+    }
+
+    /**
+     * Constants related to log management.
+     */
+    public static class LogConstants {
+
+        public static final String OUTBOUND_AUTH_SMSOTP_SERVICE = "outbound-auth-sms-otp";
+
+        /**
+         * Define action IDs for diagnostic logs.
+         */
+        public static class ActionIDs {
+
+            public static final String SEND_SMS_OTP = "send-sms-otp";
         }
     }
 }
