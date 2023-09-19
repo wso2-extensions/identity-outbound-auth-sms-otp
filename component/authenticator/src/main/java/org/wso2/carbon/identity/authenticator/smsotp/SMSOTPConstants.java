@@ -152,6 +152,8 @@ public class SMSOTPConstants {
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX = "account.lock.handler.On.Failure.Max.Attempts";
     public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
     public static final String ERROR_USER_ACCOUNT_LOCKED = "&authFailure=true&authFailureMsg=user.account.locked";
+    public static final String ERROR_TENANT_MISMATCH =
+            "&authFailure=true&authFailureMsg=user.tenant.domain.mismatch.message";
     public static final String ADMIN_INITIATED = "AdminInitiated";
 
     public static final String USER_AGENT = "user-agent";
@@ -165,6 +167,25 @@ public class SMSOTPConstants {
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
     public static final String CORRELATION_ID = "correlation-id";
     public static final String MAX_SMS_OTP_ATTEMPTS_EXCEEDED = "MAX_SMS_OTP_ATTEMPTS_EXCEEDED";
+
+    public static final String IS_IDF_INITIATED_FROM_AUTHENTICATOR = "isIdfInitiatedFromAuthenticator";
+    public static final String IDF_HANDLER_NAME = "IdentifierExecutor";
+    public static final String USER = "user";
+    public static final String SMS_OTP_NUMERIC_OTP = "OnlyNumericCharactersForSmsOtp";
+    public static final String IS_CHAR_IN_OTP = "IsCharInOTP";
+    public static final String SMS_OTP_EXPIRY_TIME = "SmsOtpExpiryTime";
+    public static final int SMS_OTP_MAX_EXPIRY_TIME = 1440;
+    public static final int SMS_OTP_MIN_EXPIRY_TIME = 1;
+    public static final String OTP_EXPIRE_TIME_DEFAULT = "300000";
+    public static final String OTP_EXPIRE_TIME_DEFAULT_IN_MINS = "5";
+    public static final String SMS_OTP_LENGTH = "SmsOtpLength";
+    public static final int SMS_OTP_MIN_LENGTH = 4;
+    public static final int SMS_OTP_MAX_LENGTH = 10;
+    public static final String SMS_OTP_NUMERIC_CHAR_SET = "9245378016";
+    public static final String SMS_OTP_UPPER_CASE_ALPHABET_CHAR_SET = "KIGXHOYSPRWCEFMVUQLZDNABJT";
+    public static final String IS_REDIRECT_TO_SMS_OTP = "isRedirectToSmsOTP";
+    public static final String TOKEN_EXPIRE_TIME_IN_MILIS = "tokenExpirationTime";
+    public static final String USE_CASE = "usecase";
 
     /**
      * Enums for error messages.

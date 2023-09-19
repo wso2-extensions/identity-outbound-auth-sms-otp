@@ -230,6 +230,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.identity.governance</groupId>
+                <artifactId>org.wso2.carbon.identity.captcha</artifactId>
+                <version>${identity.governance.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.oltu.oauth2</groupId>
                 <artifactId>org.apache.oltu.oauth2.client</artifactId>
                 <version>0.31</version>
@@ -467,7 +472,7 @@
         </snapshotRepository>
     </distributionManagement>
     <properties>
-        <carbon.identity.version>5.25.338</carbon.identity.version>
+        <carbon.identity.version>5.25.450</carbon.identity.version>
         <identity.governance.version>1.4.1</identity.governance.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
         <carbon.identity.version.range>[5.16.0,7.0.0)</carbon.identity.version.range>
