@@ -48,11 +48,23 @@
             <artifactId>org.wso2.carbon.idp.mgt</artifactId>
             <version>${carbon.identity.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon</groupId>
             <artifactId>org.wso2.carbon.logging</artifactId>
             <version>${commons-logging.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.log4j.wso2</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.wso2.carbon.identity.framework</groupId>
@@ -180,7 +192,28 @@
                     <groupId>jline</groupId>
                     <artifactId>jline</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.wso2.orbit.org.owasp.encoder</groupId>
@@ -398,7 +431,7 @@
         <maven.surefire.plugin.version>2.18.1</maven.surefire.plugin.version>
         <mockito.version>1.10.19</mockito.version>
         <powermock.version>1.6.5</powermock.version>
-        <slf4j.version>1.5.6</slf4j.version>
+        <slf4j.version>1.6.1</slf4j.version>
         <identity.extension.utils>1.0.8</identity.extension.utils>
         <identity.extension.utils.import.version.range>[1.0.8, 2.0.0)
         </identity.extension.utils.import.version.range>
