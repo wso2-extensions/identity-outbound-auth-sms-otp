@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -40,16 +41,21 @@ import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
+import org.wso2.carbon.identity.application.authentication.framework.config.builder.FileBasedConfigurationBuilder;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.ApplicationConfig;
+import org.wso2.carbon.identity.application.authentication.framework.config.model.AuthenticatorConfig;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.SequenceConfig;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.InvalidCredentialsException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException;
+import org.wso2.carbon.identity.application.authentication.framework.internal.FrameworkServiceDataHolder;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.Property;
+import org.wso2.carbon.identity.application.common.model.ServiceProvider;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPAuthenticator;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants;
 import org.wso2.carbon.identity.authenticator.smsotp.SMSOTPUtils;
@@ -92,15 +98,15 @@ import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENA
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
-        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class, LoggerUtils.class})
+        IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class, LoggerUtils.class,
+        FileBasedConfigurationBuilder.class, FrameworkServiceDataHolder.class})
 @PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
     
     private static final long otpTime = 1608101321322l;
-
     public static String TENANT_DOMAIN = "wso2.com";
     public static String SUPER_TENANT = "carbon.super";
-    
+
     private SMSOTPAuthenticator smsotpAuthenticator;
 
     @Mock
@@ -114,6 +120,9 @@ public class SMSOTPAuthenticatorTest {
 
     @Spy
     private SMSOTPAuthenticator spy;
+
+    @Spy
+    private AuthenticatorConfig spyAuthenticatorConfig;
 
     @Mock
     SMSOTPUtils smsotpUtils;
@@ -130,6 +139,15 @@ public class SMSOTPAuthenticatorTest {
     @Mock
     private RealmService realmService;
 
+    @Mock
+    private FileBasedConfigurationBuilder fileBasedConfigurationBuilder;
+
+    @Mock
+    private StepConfig stepConfig;
+
+    @Mock
+    private FrameworkServiceDataHolder frameworkServiceDataHolder;
+
     @Mock private ClaimManager claimManager;
     @Mock private Claim claim;
     @Mock private SMSOTPServiceDataHolder sMSOTPServiceDataHolder;
@@ -140,6 +158,8 @@ public class SMSOTPAuthenticatorTest {
     @BeforeMethod
     public void setUp() throws Exception {
         smsotpAuthenticator = new SMSOTPAuthenticator();
+        mockStatic(FileBasedConfigurationBuilder.class);
+        mockStatic(FrameworkServiceDataHolder.class);
         mockStatic(SMSOTPServiceDataHolder.class);
         when(SMSOTPServiceDataHolder.getInstance()).thenReturn(sMSOTPServiceDataHolder);
         when(sMSOTPServiceDataHolder.getIdentityEventService()).thenReturn(identityEventService);
@@ -366,9 +386,20 @@ public class SMSOTPAuthenticatorTest {
         when(context.isLogoutRequest()).thenReturn(false);
         when(httpServletRequest.getParameter(SMSOTPConstants.MOBILE_NUMBER)).thenReturn("true");
         context.setTenantDomain("carbon.super");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
+        authenticatorConfig.setParameterMap(parameters);
+        when(stepConfig.getAuthenticatedAutenticator()).thenReturn(authenticatorConfig);
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         when(context.getProperty(SMSOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
+        authenticatedUser.setUserName("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
+        when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -391,13 +422,20 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(FederatedAuthenticatorUtil.class);
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
+        mockStatic(ConfigurationFacade.class);
+        when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
         when(context.isLogoutRequest()).thenReturn(false);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("");
         context.setTenantDomain("carbon.super");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("testUser");
-        authenticatedUser.setUserStoreDomain("secondary");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
+        when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
         context.setProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME, otpTime);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
@@ -407,7 +445,9 @@ public class SMSOTPAuthenticatorTest {
         when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                 context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
-
+        when(configurationFacade.getAuthenticationEndpointURL()).thenReturn("dummyLoginPageURL");
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         AuthenticatorFlowStatus status = spy.process(httpServletRequest, httpServletResponse, context);
         Assert.assertEquals(status, AuthenticatorFlowStatus.INCOMPLETE);
     }
@@ -418,8 +458,18 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(SMSOTPUtils.class);
         mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
+        authenticatorConfig.setParameterMap(parameters);
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+        when(stepConfig.getAuthenticatedAutenticator()).thenReturn(authenticatorConfig);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserName("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
@@ -446,8 +496,17 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
         when(context.isRetrying()).thenReturn(true);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserName("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
+        when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(false);
@@ -472,6 +531,18 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
         FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("usecase", "test");
+        spyAuthenticatorConfig.setParameterMap(parameters);
+        when(stepConfig.getAuthenticatedAutenticator()).thenReturn(spyAuthenticatorConfig);
+        setStepConfigWithSmsOTPAuthenticator(spyAuthenticatorConfig, null, context);
+        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(null);
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(spyAuthenticatorConfig);
+        when(FrameworkServiceDataHolder.getInstance()).thenReturn(frameworkServiceDataHolder);
+        when(frameworkServiceDataHolder.getRealmService()).thenReturn(realmService);
+        when(context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY)).thenReturn(null);
+        when(context.getProperty(SMSOTPConstants.USE_CASE)).thenReturn("test");
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
     }
@@ -514,6 +585,10 @@ public class SMSOTPAuthenticatorTest {
         context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
         context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         context.setSequenceConfig(new SequenceConfig());
         context.getSequenceConfig().getStepMap().put(1, stepConfig);
         Whitebox.invokeMethod(smsotpAuthenticator, "getAuthenticatedUser",
@@ -539,9 +614,14 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
 
@@ -576,9 +656,13 @@ public class SMSOTPAuthenticatorTest {
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
         context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
         context.setProperty(SMSOTPConstants.USER_NAME,"admin");
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
 
@@ -605,8 +689,13 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
@@ -627,8 +716,14 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Map<String, String> parameters = new HashMap<>();
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+        authenticatorConfig.setParameterMap(parameters);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
+        authenticatedUser.setUserName("admin");
+        authenticatedUser.setTenantDomain("carbon.super");
+        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
@@ -716,6 +811,12 @@ public class SMSOTPAuthenticatorTest {
         configProperties.add(mobileNumberRegexPattern);
         Property mobileNumberPatternFailureErrorMessage = new Property();
         configProperties.add(mobileNumberPatternFailureErrorMessage);
+        Property lengthOTP = new Property();
+        configProperties.add(lengthOTP);
+        Property expiryTimeOTP = new Property();
+        configProperties.add(expiryTimeOTP);
+        Property numericOTP = new Property();
+        configProperties.add(numericOTP);
         Assert.assertEquals(configProperties.size(), smsotpAuthenticator.getConfigurationProperties().size());
     }
 
@@ -963,5 +1064,38 @@ public class SMSOTPAuthenticatorTest {
 
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getErrorPage",
                 context), expectedURL);
+    }
+
+    /**
+     * Set a step configuration to the context with SMSOTP authenticator.
+     *
+     * @param authenticatorConfig Authenticator config.
+     * @param authenticatedUser   Authenticated user.
+     * @param context             Authentication context.
+     */
+    private void setStepConfigWithSmsOTPAuthenticator(AuthenticatorConfig authenticatorConfig,
+                                                      AuthenticatedUser authenticatedUser,
+                                                      AuthenticationContext context) {
+
+        Map<Integer, StepConfig> stepConfigMap = new HashMap<>();
+        // SMS OTP authenticator step.
+        StepConfig smsOTPStep = new StepConfig();
+        authenticatorConfig.setName(SMSOTPConstants.AUTHENTICATOR_NAME);
+        List<AuthenticatorConfig> authenticatorList = new ArrayList<>();
+        authenticatorList.add(authenticatorConfig);
+        smsOTPStep.setAuthenticatorList(authenticatorList);
+        smsOTPStep.setAuthenticatedUser(authenticatedUser);
+        smsOTPStep.setSubjectAttributeStep(true);
+        stepConfigMap.put(1, smsOTPStep);
+
+        ServiceProvider serviceProvider = new ServiceProvider();
+        serviceProvider.setSaasApp(false);
+        ApplicationConfig applicationConfig = new ApplicationConfig(serviceProvider, context.getTenantDomain());
+
+        SequenceConfig sequenceConfig = new SequenceConfig();
+        sequenceConfig.setStepMap(stepConfigMap);
+        sequenceConfig.setApplicationConfig(applicationConfig);
+        context.setSequenceConfig(sequenceConfig);
+        context.setCurrentStep(1);
     }
 }

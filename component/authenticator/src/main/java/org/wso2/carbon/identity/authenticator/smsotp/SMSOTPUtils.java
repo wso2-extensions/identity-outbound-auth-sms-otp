@@ -531,7 +531,7 @@ public class SMSOTPUtils {
         if(stepConfigMap != null) {
             for (StepConfig stepConfig : stepConfigMap.values()) {
                 if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep()) {
-                    if (stepConfig.getAuthenticatedIdP().equals(SMSOTPConstants.LOCAL_AUTHENTICATOR)) {
+                    if (SMSOTPConstants.LOCAL_AUTHENTICATOR.equals(stepConfig.getAuthenticatedIdP())) {
                         return true;
                     }
                     break;
