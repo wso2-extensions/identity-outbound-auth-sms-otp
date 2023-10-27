@@ -136,8 +136,24 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         return ((StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.RESEND))
                 && StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE)))
                 || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.CODE))
-                || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.MOBILE_NUMBER))
-                || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.USER_NAME)));
+                || StringUtils.isNotEmpty(request.getParameter(SMSOTPConstants.MOBILE_NUMBER)));
+    }
+
+    @Override
+    public boolean canHandleRequestFromMultiOptionStep(HttpServletRequest request, AuthenticationContext context) {
+
+        // Since all SMSOTP as 1FA, basic, and IDF authenticators has the username parameter in the request, we need to
+        // use the currentAuthenticator context to identify if the request is coming from SMSOTP authenticator.
+        // For basic and IDF authenticators, the currentAuthenticator context will be null.
+        boolean canHandleRequest = canHandle(request) ||
+                (StringUtils.isNotBlank(request.getParameter(SMSOTPConstants.USER_NAME)) &&
+                        getName().equalsIgnoreCase(context.getCurrentAuthenticator()));
+        if (canHandleRequest) {
+            log.debug("SMSOTPAuthenticator can handle the request from multi-option step.");
+        } else {
+            log.debug("SMSOTPAuthenticator cannot handle the request from multi-option step.");
+        }
+        return canHandleRequest;
     }
 
     @Override
