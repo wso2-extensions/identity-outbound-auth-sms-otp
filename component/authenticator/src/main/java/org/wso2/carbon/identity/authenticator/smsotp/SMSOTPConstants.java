@@ -40,6 +40,9 @@ public class SMSOTPConstants {
     public static final String CODE = "OTPcode";
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
+    public static final String OTP_BACKUP_CODES_IDENTITY_CLAIM = "http://wso2.org/claims/identity/otpbackupcodes";
+    public static final String HANDLE_BACKUP_CODES_AS_IDENTITY_CLAIM = "OTPBackupCodes.UseIdentityClaims";
+    public static final String BACKUP_CODES_SEPARATOR = ",";
     public static final String USER_SMSOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/smsotp_disabled";
     public static final String SMS_OTP_FAILED_ATTEMPTS_CLAIM = "http://wso2.org/claims/identity/failedSmsOtpAttempts";
     public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM =

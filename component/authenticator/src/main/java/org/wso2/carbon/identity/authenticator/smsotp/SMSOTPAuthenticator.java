@@ -1270,21 +1270,38 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String username = context.getProperty(SMSOTPConstants.USER_NAME).toString();
         String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
         UserRealm userRealm = getUserRealm(username);
+        String backupCodesClaim = null;
         try {
             if (userRealm != null) {
                 UserStoreManager userStoreManager = userRealm.getUserStoreManager();
+                boolean isHandleBackupCodesAsIdentityClaim = Boolean.parseBoolean(IdentityUtil
+                        .getProperty(SMSOTPConstants.HANDLE_BACKUP_CODES_AS_IDENTITY_CLAIM));
+                if (isHandleBackupCodesAsIdentityClaim) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(SMSOTPConstants.HANDLE_BACKUP_CODES_AS_IDENTITY_CLAIM + " property is enabled, " +
+                                "hence treating OTP backup code claim as " + SMSOTPConstants.OTP_BACKUP_CODES_IDENTITY_CLAIM);
+                    }
+                    backupCodesClaim = SMSOTPConstants.OTP_BACKUP_CODES_IDENTITY_CLAIM;
+                } else {
+                    backupCodesClaim = SMSOTPConstants.SAVED_OTP_LIST;
+                }
+
                 if (userStoreManager != null) {
-                    String savedOTPString = userStoreManager
-                            .getUserClaimValue(tenantAwareUsername, SMSOTPConstants.SAVED_OTP_LIST, null);
-                    if (StringUtils.isNotEmpty(savedOTPString)) {
-                        savedOTPs = savedOTPString.split(",");
+                    Map<String, String> returnedClaimMap = userStoreManager
+                            .getUserClaimValues(tenantAwareUsername, new String[]{backupCodesClaim}, null);
+                    if (!returnedClaimMap.isEmpty()) {
+                        String savedOTPString = returnedClaimMap.get(backupCodesClaim);
+                        if (StringUtils.isNotEmpty(savedOTPString)) {
+                            savedOTPs = savedOTPString.split(SMSOTPConstants.BACKUP_CODES_SEPARATOR);
+                        }
                     }
                 }
             }
+
             // Check whether there is any backup OTPs and return.
             if (ArrayUtils.isEmpty(savedOTPs)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("The claim " + SMSOTPConstants.SAVED_OTP_LIST + " does not contain any values");
+                    log.debug("The claim " + backupCodesClaim + " does not contain any values.");
                 }
                 return false;
             }
@@ -1295,8 +1312,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 isMatchingToken = true;
                 context.setSubject(authenticatedUser);
                 savedOTPs = (String[]) ArrayUtils.removeElement(savedOTPs, userToken);
-                userRealm.getUserStoreManager().setUserClaimValue(tenantAwareUsername,
-                        SMSOTPConstants.SAVED_OTP_LIST, String.join(",", savedOTPs), null);
+                if (log.isDebugEnabled()) {
+                    log.debug("Removing backup code from saved backup codes list.");
+                }
+                Map<String, String> updatedClaims = new HashMap<>();
+                updatedClaims.put(backupCodesClaim, String.join(SMSOTPConstants.BACKUP_CODES_SEPARATOR, savedOTPs));
+                userRealm.getUserStoreManager().setUserClaimValues(tenantAwareUsername, updatedClaims, null);
             } else {
                 if (log.isDebugEnabled()) {
                     log.debug("User entered OTP :" + userToken + " does not match with any of the saved " +
@@ -1329,7 +1350,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      * @param context AuthenticationContext.
      * @return AuthenticatedUser
      */
-    private AuthenticatedUser getAuthenticatedUser(AuthenticationContext context) {
+    public AuthenticatedUser getAuthenticatedUser(AuthenticationContext context) {
 
         AuthenticatedUser authenticatedUser = null;
         Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
