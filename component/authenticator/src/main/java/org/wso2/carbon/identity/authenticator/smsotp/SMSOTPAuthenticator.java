@@ -44,6 +44,8 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.I
 import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedIdPData;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatorData;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatorParamMetadata;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.common.model.ClaimMapping;
@@ -71,7 +73,6 @@ import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.user.core.util.UserCoreUtil;
 import org.wso2.carbon.utils.DiagnosticLog;
-import org.wso2.carbon.user.core.util.UserCoreUtil;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.io.BufferedReader;
@@ -2553,5 +2554,61 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private boolean isSMSOTPAsFirstFactor(AuthenticationContext context) {
 
         return (context.getCurrentStep() == 1 || isPreviousIdPAuthenticationFlowHandler(context));
+    }
+
+    /**
+     * This method is responsible for validating whether the authenticator is supported for API Based Authentication.
+     *
+     * @return true if the authenticator is supported for API Based Authentication.
+     */
+    @Override
+    public boolean isAPIBasedAuthenticationSupported() {
+
+        return true;
+    }
+
+    /**
+     * This method is responsible for obtaining authenticator-specific data needed to
+     * initialize the authentication process within the provided authentication context.
+     *
+     * @param context The authentication context containing information about the current authentication attempt.
+     * @return An {@code Optional} containing an {@code AuthenticatorData} object representing the initiation data.
+     *         If the initiation data is available, it is encapsulated within the {@code Optional}; otherwise,
+     *         an empty {@code Optional} is returned.
+     */
+    @Override
+    public Optional<AuthenticatorData> getAuthInitiationData(AuthenticationContext context) {
+
+        AuthenticatorData authenticatorData = new AuthenticatorData();
+        authenticatorData.setName(getName());
+        String idpName = null;
+        AuthenticatedUser authenticatedUser = null;
+        if (context != null && context.getExternalIdP() != null) {
+            idpName = context.getExternalIdP().getIdPName();
+            authenticatedUser = getAuthenticatedUser(context);
+        }
+
+        authenticatorData.setIdp(idpName);
+        authenticatorData.setI18nKey(SMSOTPConstants.AUTHENTICATOR_SMS_OTP);
+
+        List<AuthenticatorParamMetadata> authenticatorParamMetadataList = new ArrayList<>();
+        List<String> requiredParams = new ArrayList<>();
+        if (authenticatedUser == null) {
+            AuthenticatorParamMetadata usernameMetadata = new AuthenticatorParamMetadata(
+                    SMSOTPConstants.USER_NAME, FrameworkConstants.AuthenticatorParamType.STRING,
+                    0, Boolean.FALSE, SMSOTPConstants.USERNAME_PARAM);
+            authenticatorParamMetadataList.add(usernameMetadata);
+            requiredParams.add(SMSOTPConstants.USER_NAME);
+        } else {
+            AuthenticatorParamMetadata codeMetadata = new AuthenticatorParamMetadata(
+                    SMSOTPConstants.CODE, FrameworkConstants.AuthenticatorParamType.STRING,
+                    1, Boolean.TRUE, SMSOTPConstants.CODE_PARAM);
+            authenticatorParamMetadataList.add(codeMetadata);
+            requiredParams.add(SMSOTPConstants.CODE);
+        }
+        authenticatorData.setPromptType(FrameworkConstants.AuthenticatorPromptType.USER_PROMPT);
+        authenticatorData.setRequiredParams(requiredParams);
+        authenticatorData.setAuthParams(authenticatorParamMetadataList);
+        return Optional.of(authenticatorData);
     }
 }

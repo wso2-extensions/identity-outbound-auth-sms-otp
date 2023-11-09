@@ -186,6 +186,9 @@ public class SMSOTPConstants {
     public static final String IS_REDIRECT_TO_SMS_OTP = "isRedirectToSmsOTP";
     public static final String TOKEN_EXPIRE_TIME_IN_MILIS = "tokenExpirationTime";
     public static final String USE_CASE = "usecase";
+    public static final String AUTHENTICATOR_SMS_OTP = "authenticator.sms.otp";
+    public static final String CODE_PARAM = "code.param";
+    public static final String USERNAME_PARAM = "username.param";
 
     /**
      * Enums for error messages.
