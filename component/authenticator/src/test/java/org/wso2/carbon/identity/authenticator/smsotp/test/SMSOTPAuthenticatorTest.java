@@ -149,22 +149,15 @@ public class SMSOTPAuthenticatorTest {
     @Mock
     private FrameworkServiceDataHolder frameworkServiceDataHolder;
 
-    @Mock
-    private ClaimManager claimManager;
-    @Mock
-    private Claim claim;
-    @Mock
-    private SMSOTPServiceDataHolder sMSOTPServiceDataHolder;
-    @Mock
-    private IdentityEventService identityEventService;
-    @Mock
-    private Enumeration<String> requestHeaders;
-    @Mock
-    private AuthenticatedUser authenticatedUser;
+    @Mock private ClaimManager claimManager;
+    @Mock private Claim claim;
+    @Mock private SMSOTPServiceDataHolder sMSOTPServiceDataHolder;
+    @Mock private IdentityEventService identityEventService;
+    @Mock private Enumeration<String> requestHeaders;
+    @Mock private AuthenticatedUser authenticatedUser;
 
     @BeforeMethod
     public void setUp() throws Exception {
-
         smsotpAuthenticator = new SMSOTPAuthenticator();
         mockStatic(FileBasedConfigurationBuilder.class);
         mockStatic(FrameworkServiceDataHolder.class);
@@ -185,26 +178,22 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetFriendlyName() {
-
         Assert.assertEquals(smsotpAuthenticator.getFriendlyName(), SMSOTPConstants.AUTHENTICATOR_FRIENDLY_NAME);
     }
 
     @Test
     public void testGetName() {
-
         Assert.assertEquals(smsotpAuthenticator.getName(), SMSOTPConstants.AUTHENTICATOR_NAME);
     }
 
     @Test
     public void testRetryAuthenticationEnabled() throws Exception {
-
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
         Assert.assertTrue((Boolean) Whitebox.invokeMethod(smsotp, "retryAuthenticationEnabled"));
     }
 
     @Test
     public void testGetContextIdentifierPassed() {
-
         when(httpServletRequest.getParameter(FrameworkConstants.SESSION_DATA_KEY)).thenReturn
                 ("0246893");
         Assert.assertEquals(smsotpAuthenticator.getContextIdentifier(httpServletRequest), "0246893");
@@ -212,7 +201,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCanHandleTrue() {
-
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("resendCode");
         Assert.assertEquals(smsotpAuthenticator.canHandle(httpServletRequest), true);
@@ -220,7 +208,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCanHandleFalse() {
-
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn(null);
         when(httpServletRequest.getParameter(SMSOTPConstants.MOBILE_NUMBER)).thenReturn(null);
@@ -229,7 +216,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetURL() throws Exception {
-
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
         Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL",
                         SMSOTPConstants.LOGIN_PAGE, null),
@@ -238,7 +224,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetURLwithQueryParams() throws Exception {
-
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
         Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL",
                         SMSOTPConstants.LOGIN_PAGE, "n=John&n=Susan"),
@@ -248,7 +233,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetMobileNumber() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0775968325");
         Assert.assertEquals(Whitebox.invokeMethod(smsotpAuthenticator, "getMobileNumber",
@@ -258,7 +242,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testRedirectToErrorPage() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
         when(SMSOTPUtils.getErrorPageFromXMLFile(authenticationContext))
@@ -272,7 +255,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testRedirectToMobileNumberReqPage() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
         when(SMSOTPUtils.isEnableMobileNoUpdate(authenticationContext)).thenReturn(true);
@@ -287,7 +269,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCode() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.STATUS_CODE, "");
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
@@ -302,7 +283,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithNullValue() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.STATUS_CODE, null);
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
@@ -317,7 +297,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithMismatch() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.CODE_MISMATCH, "true");
         when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(false);
@@ -333,7 +312,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithTokenExpired() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
         when(SMSOTPUtils.isEnableResendCode(context)).thenReturn(true);
@@ -349,7 +327,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testProcessSMSOTPFlow() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         mockStatic(ConfigurationFacade.class);
         when(SMSOTPUtils.isSMSOTPDisableForLocalUser("John", context)).thenReturn(true);
@@ -633,7 +610,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testProcessAuthenticationResponseWithValidBackupCode() throws Exception {
-
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
@@ -723,7 +699,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testProcessAuthenticationResponseWithCodeMismatch() throws Exception {
-
         mockStatic(SMSOTPUtils.class);
         mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
@@ -756,7 +731,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testCheckWithBackUpCodes() throws Exception {
-
         mockStatic(IdentityTenantUtil.class);
         context.setProperty(SMSOTPConstants.USER_NAME, "admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
@@ -812,7 +786,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetScreenAttribute() throws UserStoreException, AuthenticationFailedException {
-
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(SMSOTPUtils.getScreenUserAttribute(context)).thenReturn
@@ -822,18 +795,16 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userRealm.getUserStoreManager()
-                .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null)).thenReturn(
-                "0778965231");
+                .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null))
+                .thenReturn("0778965231");
         when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
         // with forward order
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"),
-                "0778******");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
 
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"),
-                "******5231");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "******5231");
     }
 
     @Test
@@ -864,7 +835,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(expectedExceptions = {SMSOTPException.class})
     public void testUpdateMobileNumberForUsername() throws Exception {
-
         mockStatic(IdentityTenantUtil.class);
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
@@ -875,7 +845,6 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testGetConfigurationProperties() {
-
         List<Property> configProperties = new ArrayList<Property>();
         Property smsUrl = new Property();
         configProperties.add(smsUrl);
@@ -906,7 +875,6 @@ public class SMSOTPAuthenticatorTest {
 
     @ObjectFactory
     public IObjectFactory getObjectFactory() {
-
         return new PowerMockObjectFactory();
     }
 
