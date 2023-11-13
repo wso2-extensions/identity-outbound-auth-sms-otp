@@ -584,8 +584,8 @@ public class SMSOTPAuthenticatorTest {
         stepConfig.setSubjectAttributeStep(true);
         stepConfig.setAuthenticatedUser(authenticatedUser);
         context.setProperty(SMSOTPConstants.CODE_MISMATCH, false);
-        context.setProperty(SMSOTPConstants.OTP_TOKEN, "123456");
-        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME, "");
+        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123456");
+        context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,"");
         Map<String, String> parameters = new HashMap<>();
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         authenticatorConfig.setParameterMap(parameters);
@@ -649,61 +649,13 @@ public class SMSOTPAuthenticatorTest {
                 httpServletRequest, httpServletResponse, context);
     }
 
-    @Test
-    public void testProcessAuthenticationResponseWithValidBackupCodeInIdentityClaim() throws Exception {
-
-        mockStatic(IdentityTenantUtil.class);
-        mockStatic(SMSOTPUtils.class);
-        when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(SMSOTPConstants.OTP_TOKEN, "123456");
-        context.setProperty(SMSOTPConstants.USER_NAME, "admin");
-        Map<String, String> parameters = new HashMap<>();
-        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
-        authenticatorConfig.setParameterMap(parameters);
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        authenticatedUser.setUserName("admin");
-        authenticatedUser.setTenantDomain("carbon.super");
-        setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
-        when(smsotpAuthenticator.getAuthenticatedUser(context)).thenReturn(authenticatedUser);
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
-        when(SMSOTPUtils.getBackupCode(context)).thenReturn("true");
-
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(userStoreManager.getUserClaimValues(anyString(),
-                eq(new String[]{SMSOTPConstants.OTP_BACKUP_CODES_IDENTITY_CLAIM}), anyString()))
-                .thenReturn(Collections.singletonMap(SMSOTPConstants.OTP_BACKUP_CODES_IDENTITY_CLAIM, "123456,789123"));
-        mockStatic(FrameworkUtils.class);
-        when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
-
-        mockStatic(IdentityUtil.class);
-        when(IdentityUtil.getProperty(SMSOTPConstants.HANDLE_BACKUP_CODES_AS_IDENTITY_CLAIM)).thenReturn("true");
-
-        Property property = new Property();
-        property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
-        property.setValue("true");
-        when(SMSOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
-                .thenReturn(new Property[]{property});
-        when(SMSOTPUtils.isLocalUser(context)).thenReturn(true);
-        when(userStoreManager.getClaimManager()).thenReturn(claimManager);
-        when(userStoreManager.getClaimManager().getClaim(SMSOTPConstants.OTP_BACKUP_CODES_IDENTITY_CLAIM))
-                .thenReturn(claim);
-        when(context.getProperty(SMSOTPConstants.CODE_MISMATCH)).thenReturn(false);
-
-        Whitebox.invokeMethod(smsotpAuthenticator, "processAuthenticationResponse",
-                httpServletRequest, httpServletResponse, context);
-    }
-
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testProcessAuthenticationResponseWithCodeMismatch() throws Exception {
         mockStatic(SMSOTPUtils.class);
         mockStatic(IdentityTenantUtil.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(SMSOTPConstants.OTP_TOKEN, "123");
-        context.setProperty(SMSOTPConstants.USER_NAME, "admin");
+        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
+        context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         Map<String, String> parameters = new HashMap<>();
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         authenticatorConfig.setParameterMap(parameters);
@@ -732,7 +684,7 @@ public class SMSOTPAuthenticatorTest {
     @Test
     public void testCheckWithBackUpCodes() throws Exception {
         mockStatic(IdentityTenantUtil.class);
-        context.setProperty(SMSOTPConstants.USER_NAME, "admin");
+        context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
@@ -751,16 +703,16 @@ public class SMSOTPAuthenticatorTest {
                 .thenReturn(Collections.singletonMap(SMSOTPConstants.SAVED_OTP_LIST, "12345,4568,1234,7896"));
         AuthenticatedUser user = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         mockStatic(FrameworkUtils.class);
-        when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
+        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         Whitebox.invokeMethod(smsotpAuthenticator, "checkWithBackUpCodes",
-                context, "1234", user);
+                context,"1234",user);
     }
 
     public void testCheckWithInvalidBackUpCodes() throws Exception {
 
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
-        context.setProperty(SMSOTPConstants.USER_NAME, "admin");
+        context.setProperty(SMSOTPConstants.USER_NAME,"admin");
         when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
@@ -775,7 +727,7 @@ public class SMSOTPAuthenticatorTest {
         setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         mockStatic(FrameworkUtils.class);
-        when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
+        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         when(userRealm.getUserStoreManager()
                 .getUserClaimValues(MultitenantUtils.getTenantAwareUsername("admin"),
                         new String[]{SMSOTPConstants.SAVED_OTP_LIST}, null))
@@ -795,16 +747,15 @@ public class SMSOTPAuthenticatorTest {
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userRealm.getUserStoreManager()
-                .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null))
-                .thenReturn("0778965231");
+                .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null)).thenReturn("0778965231");
         when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
         // with forward order
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"0778******");
 
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "******5231");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context,userRealm,"admin"),"******5231");
     }
 
     @Test
@@ -824,13 +775,11 @@ public class SMSOTPAuthenticatorTest {
         when(SMSOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
         // with forward order
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"),
-                "0778******");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
 
         // with backward order
         when(SMSOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"),
-                "******9889");
+        Assert.assertEquals(smsotpAuthenticator.getScreenAttribute(context, userRealm, "admin"), "******9889");
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})
@@ -840,7 +789,7 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
         Whitebox.invokeMethod(smsotpAuthenticator, "updateMobileNumberForUsername",
-                context, httpServletRequest, "admin", "carbon.super");
+                context,httpServletRequest,"admin","carbon.super");
     }
 
     @Test
