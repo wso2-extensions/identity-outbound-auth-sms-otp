@@ -123,6 +123,7 @@ public class SMSOTPConstants {
     public static final String ERROR_SMSOTP_DISABLE = "&authFailure=true&authFailureMsg=smsotp.disable";
     public static final String ERROR_SMSOTP_DISABLE_MSG = "smsotp.disable";
     public static final String SEND_OTP_DIRECTLY_DISABLE = "&authFailure=true&authFailureMsg=directly.send.otp.disable";
+    public static final String ERROR_USER_NOT_FOUND = "&authFailure=true&authFailureMsg=error.user.not.found.smsotp";
     public static final String SEND_OTP_DIRECTLY_DISABLE_MSG = "directly.send.otp.disable";
     public static final String ERROR_CODE_MISMATCH = "code.mismatch";
     public static final String ERROR_CODE = "errorCode";
