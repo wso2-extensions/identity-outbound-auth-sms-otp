@@ -199,6 +199,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
             } else {
                 log.debug("The user does not exist in the user stores.");
+                String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
+                        context.getCallerSessionKey(), context.getContextIdentifier());
+                redirectToErrorPage(response, context, queryParams, SMSOTPConstants.ERROR_USER_NOT_FOUND);
                 return AuthenticatorFlowStatus.INCOMPLETE;
             }
         } else if (Boolean.parseBoolean(request.getParameter(RESEND))) {
