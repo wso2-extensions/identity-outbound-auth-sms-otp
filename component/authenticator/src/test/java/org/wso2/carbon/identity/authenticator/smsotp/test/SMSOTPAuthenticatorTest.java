@@ -22,7 +22,6 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -68,6 +67,7 @@ import org.wso2.carbon.identity.core.ServiceURL;
 import org.wso2.carbon.identity.core.ServiceURLBuilder;
 import org.wso2.carbon.identity.core.URLBuilderException;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
 import org.wso2.carbon.user.api.Claim;
 import org.wso2.carbon.user.api.ClaimManager;
@@ -79,6 +79,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -102,10 +103,10 @@ import static org.wso2.carbon.utils.multitenancy.MultitenantConstants.SUPER_TENA
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ConfigurationFacade.class, SMSOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
         IdentityTenantUtil.class, SMSOTPServiceDataHolder.class, ServiceURLBuilder.class, LoggerUtils.class,
-        FileBasedConfigurationBuilder.class, FrameworkServiceDataHolder.class})
+        FileBasedConfigurationBuilder.class, FrameworkServiceDataHolder.class, IdentityUtil.class})
 @PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*"})
 public class SMSOTPAuthenticatorTest {
-    
+
     private static final long otpTime = 1608101321322l;
     public static String TENANT_DOMAIN = "wso2.com";
     public static String SUPER_TENANT = "carbon.super";
@@ -220,7 +221,7 @@ public class SMSOTPAuthenticatorTest {
     public void testGetURL() throws Exception {
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
         Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL",
-                SMSOTPConstants.LOGIN_PAGE, null),
+                        SMSOTPConstants.LOGIN_PAGE, null),
                 "authenticationendpoint/login.do?authenticators=SMSOTP");
     }
 
@@ -228,7 +229,7 @@ public class SMSOTPAuthenticatorTest {
     public void testGetURLwithQueryParams() throws Exception {
         SMSOTPAuthenticator smsotp = PowerMockito.spy(smsotpAuthenticator);
         Assert.assertEquals(Whitebox.invokeMethod(smsotp, "getURL",
-                SMSOTPConstants.LOGIN_PAGE, "n=John&n=Susan"),
+                        SMSOTPConstants.LOGIN_PAGE, "n=John&n=Susan"),
                 "authenticationendpoint/login.do?n=John&n=Susan&authenticators=SMSOTP");
     }
 
@@ -611,12 +612,12 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
-    public void testProcessAuthenticationResponseWithvalidBackupCode() throws Exception {
+    public void testProcessAuthenticationResponseWithValidBackupCode() throws Exception {
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
         when(httpServletRequest.getParameter(SMSOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(SMSOTPConstants.OTP_TOKEN,"123");
-        context.setProperty(SMSOTPConstants.USER_NAME,"admin");
+        context.setProperty(SMSOTPConstants.OTP_TOKEN, "123456");
+        context.setProperty(SMSOTPConstants.USER_NAME, "admin");
         Map<String, String> parameters = new HashMap<>();
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         authenticatorConfig.setParameterMap(parameters);
@@ -632,11 +633,10 @@ public class SMSOTPAuthenticatorTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(userStoreManager
-                .getUserClaimValue("admin", SMSOTPConstants.SAVED_OTP_LIST, null))
-                .thenReturn("123456,789123");
+        when(userStoreManager.getUserClaimValues(anyString(), eq(new String[]{SMSOTPConstants.SAVED_OTP_LIST}),
+                anyString())).thenReturn(Collections.singletonMap(SMSOTPConstants.SAVED_OTP_LIST, "123456,789123"));
         mockStatic(FrameworkUtils.class);
-        when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
+        when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
 
         Property property = new Property();
         property.setName(SMSOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
@@ -701,8 +701,9 @@ public class SMSOTPAuthenticatorTest {
         setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
         when(userRealm.getUserStoreManager()
-                .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
-                        SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
+                .getUserClaimValues(MultitenantUtils.getTenantAwareUsername("admin"),
+                        new String[]{SMSOTPConstants.SAVED_OTP_LIST}, null))
+                .thenReturn(Collections.singletonMap(SMSOTPConstants.SAVED_OTP_LIST, "12345,4568,1234,7896"));
         AuthenticatedUser user = (AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
@@ -731,8 +732,9 @@ public class SMSOTPAuthenticatorTest {
         mockStatic(FrameworkUtils.class);
         when (FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
         when(userRealm.getUserStoreManager()
-                .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
-                        SMSOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
+                .getUserClaimValues(MultitenantUtils.getTenantAwareUsername("admin"),
+                        new String[]{SMSOTPConstants.SAVED_OTP_LIST}, null))
+                .thenReturn(Collections.singletonMap(SMSOTPConstants.SAVED_OTP_LIST, "12345,4568,1234,7896"));
         Whitebox.invokeMethod(smsotpAuthenticator, "checkWithBackUpCodes",
                 context, "45698789", authenticatedUser);
     }
@@ -921,8 +923,8 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(dataProvider = "mobileNumberRequestDataProvider")
     public void testGetMobileNumberRequestPage(boolean isTenantQualifiedURLEnabled,
-                                       String tenantDomain, String urlFromConfig,
-                                       String expectedURL) throws Exception {
+                                               String tenantDomain, String urlFromConfig,
+                                               String expectedURL) throws Exception {
 
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
@@ -982,8 +984,8 @@ public class SMSOTPAuthenticatorTest {
 
     @Test(dataProvider = "loginPageDataProvider")
     public void testGetLoginPage(boolean isTenantQualifiedURLEnabled,
-                                       String tenantDomain, String urlFromConfig,
-                                       String expectedURL) throws Exception {
+                                 String tenantDomain, String urlFromConfig,
+                                 String expectedURL) throws Exception {
 
         mockStatic(IdentityTenantUtil.class);
         mockStatic(SMSOTPUtils.class);
