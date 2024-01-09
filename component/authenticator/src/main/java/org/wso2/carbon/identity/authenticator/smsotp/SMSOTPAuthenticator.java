@@ -64,6 +64,8 @@ import org.wso2.carbon.identity.event.IdentityEventConstants;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.event.Event;
 import org.wso2.carbon.identity.governance.service.notification.NotificationChannels;
+import org.wso2.carbon.identity.recovery.IdentityRecoveryConstants;
+import org.wso2.carbon.identity.recovery.util.Utils;
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.api.UserStoreManager;
@@ -1197,6 +1199,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE);
                 if (verifiedMobileObject != null) {
                     try {
+                        if (Utils.getThreadLocalToSkipSendingSmsOtpVerificationOnUpdate() != null) {
+                            Utils.unsetThreadLocalToSkipSendingSmsOtpVerificationOnUpdate();
+                        }
+                        Utils.setThreadLocalToSkipSendingSmsOtpVerificationOnUpdate(IdentityRecoveryConstants.
+                                SkipMobileNumberVerificationOnUpdateStates.SKIP_ON_SMS_OTP_FLOW.toString());
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
                     } catch (SMSOTPException e) {
                         throw new AuthenticationFailedException("Failed accessing the userstore for user: " + username, e.getCause());
@@ -1210,6 +1217,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                             context.setProperty(SMSOTPConstants.PROFILE_UPDATE_FAILURE_REASON, ex.getMessage());
                         }
                         throw new AuthenticationFailedException("Mobile claim update failed for user " + username, e);
+                    } finally {
+                        Utils.unsetThreadLocalToSkipSendingSmsOtpVerificationOnUpdate();
                     }
                 }
             }
