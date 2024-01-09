@@ -1199,9 +1199,6 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 Object verifiedMobileObject = context.getProperty(SMSOTPConstants.REQUESTED_USER_MOBILE);
                 if (verifiedMobileObject != null) {
                     try {
-                        if (Utils.getThreadLocalToSkipSendingSmsOtpVerificationOnUpdate() != null) {
-                            Utils.unsetThreadLocalToSkipSendingSmsOtpVerificationOnUpdate();
-                        }
                         Utils.setThreadLocalToSkipSendingSmsOtpVerificationOnUpdate(IdentityRecoveryConstants.
                                 SkipMobileNumberVerificationOnUpdateStates.SKIP_ON_SMS_OTP_FLOW.toString());
                         updateMobileNumberForUsername(context, request, username, tenantDomain);
