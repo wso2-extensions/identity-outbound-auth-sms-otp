@@ -49,7 +49,7 @@ properties.maxValidationAttemptsAllowed=5
     </mapping>
     <to eventAdapterType="http">
         <property name="http.client.method">httpPost</property>
-        <property name="http.url">A_VALID_WEBHOOK_ENDPOINT</property>
+        <property name="http.url">VALID_WEBHOOK_ENDPOINT</property>
     </to>
 </eventPublisher>
 ```
