@@ -38,6 +38,7 @@ properties.maxValidationAttemptsAllowed=5
 ```
 5. If notifications are managed by the Identity Server, configure the **event publisher** by creating 
    `SMSPublisher.xml` file in the `<IS_HOME>/deployment/server/eventpublishers/` directory.
+   (Make sure to add a valid webhook endpoint in `http.url` section.)
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <eventPublisher name="SMSPublisher" processing="enable"
@@ -48,7 +49,7 @@ properties.maxValidationAttemptsAllowed=5
     </mapping>
     <to eventAdapterType="http">
         <property name="http.client.method">httpPost</property>
-        <property name="http.url">https://webhook.site/678cf852-39a3-416a-8ff9-4331905d1b95</property>
+        <property name="http.url">VALID_WEBHOOK_ENDPOINT</property>
     </to>
 </eventPublisher>
 ```
