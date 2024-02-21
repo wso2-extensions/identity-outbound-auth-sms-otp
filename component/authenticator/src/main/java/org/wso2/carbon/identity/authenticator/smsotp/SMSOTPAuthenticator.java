@@ -394,12 +394,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String mobile = null;
             StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
             String previousStepAuthenticator = stepConfig.getAuthenticatedAutenticator().getName();
-            StepConfig currentStep = context.getSequenceConfig().getStepMap().get(context.getCurrentStep());
-            String currentStepAuthenticator = currentStep.getAuthenticatorList().iterator().next().getName();
             if (sendOtpToFederatedMobile) {
                 federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, previousStepAuthenticator);
                 if (StringUtils.isEmpty(federatedMobileAttributeKey)) {
-                    federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, currentStepAuthenticator);
+                    federatedMobileAttributeKey = getFederatedMobileAttributeKey(context, getName());
                 }
                 Map<ClaimMapping, String> userAttributes = context.getCurrentAuthenticatedIdPs().values().
                         iterator().next().getUser().getUserAttributes();
