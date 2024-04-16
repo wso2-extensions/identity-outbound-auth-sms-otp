@@ -1,0 +1,13 @@
+{
+    "name": "SMSOTP",
+    "owner": "WSO2",
+    "category": "Local authenticator",
+    "documentationUrl": "https://github.com/wso2-extensions/identity-outbound-auth-sms-otp/tree/v2.0.22/docs",
+    "description": "The SMSOTP authenticator allows you to authenticate user via short messages through WSO2 IS.",
+    "status": "Active",
+    "labels": [
+        "Twofactor",
+        "Token"
+    ],
+    "releases": []
+}
