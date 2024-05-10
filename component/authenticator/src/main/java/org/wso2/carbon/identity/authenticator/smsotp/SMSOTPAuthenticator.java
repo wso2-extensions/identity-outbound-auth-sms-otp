@@ -2609,6 +2609,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         AuthenticatorData authenticatorData = new AuthenticatorData();
         authenticatorData.setName(getName());
+        authenticatorData.setDisplayName(getFriendlyName());
         String idpName = null;
         AuthenticatedUser authenticatedUser = null;
         if (context != null && context.getExternalIdP() != null) {
