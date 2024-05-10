@@ -1125,6 +1125,8 @@ public class SMSOTPAuthenticatorTest {
         authenticatorParamMetadataList.add(usernameMetadata);
 
         Assert.assertEquals(authenticatorDataObj.getName(), SMSOTPConstants.AUTHENTICATOR_NAME);
+        Assert.assertEquals(authenticatorDataObj.getDisplayName(), SMSOTPConstants.AUTHENTICATOR_FRIENDLY_NAME,
+                "Authenticator display name should match.");
         Assert.assertEquals(authenticatorDataObj.getAuthParams().size(), authenticatorParamMetadataList.size(),
                 "Size of lists should be equal.");
         Assert.assertEquals(authenticatorDataObj.getPromptType(),
