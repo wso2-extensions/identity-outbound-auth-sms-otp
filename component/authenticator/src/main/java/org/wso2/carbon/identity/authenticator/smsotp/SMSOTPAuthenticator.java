@@ -1903,6 +1903,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         String hiddenScreenValue;
 
         int screenAttributeLength = screenUserAttributeValue.length();
+        // Ensure noOfDigits is not greater than screenAttributeLength.
+        noOfDigits = Math.min(noOfDigits, screenAttributeLength);
+        if (screenAttributeLength <= noOfDigits && log.isDebugEnabled()) {
+            log.debug("Mobile number length is less than or equal to noOfDigits: " + noOfDigits);
+        }
         if (SMSOTPConstants.BACKWARD.equals(SMSOTPUtils.getDigitsOrder(context))) {
             screenValue = screenUserAttributeValue.substring(screenAttributeLength - noOfDigits,
                     screenAttributeLength);
