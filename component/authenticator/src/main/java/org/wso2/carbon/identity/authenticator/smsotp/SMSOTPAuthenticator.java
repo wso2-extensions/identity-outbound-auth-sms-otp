@@ -1901,6 +1901,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         String screenValue;
         String hiddenScreenValue;
+        String maskingRegex = SMSOTPUtils.getScreenValueRegex(context);
+
+        if (StringUtils.isNotEmpty(maskingRegex)) {
+            screenValue = screenUserAttributeValue.replaceAll(maskingRegex, SMSOTPConstants.SCREEN_VALUE_MASKING_CHARACTER);
+            return screenValue;
+        }
 
         int screenAttributeLength = screenUserAttributeValue.length();
         // Ensure noOfDigits is not greater than screenAttributeLength.
