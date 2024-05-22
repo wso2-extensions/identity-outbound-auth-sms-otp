@@ -134,7 +134,7 @@ public class SMSOTPConstants {
     public static final String NO_DIGITS = "noOfDigits";
     public static final String ORDER = "order";
     public static final String BACKWARD = "backward";
-    public static final String SCREEN_VALUE_REGEX = "screenValueMaskRegex";
+    public static final String SCREEN_VALUE_REGEX = "screenUserAttributeMaskRegex";
     public static final String SCREEN_VALUE_MASKING_CHARACTER = "*";
     public static final String SCREEN_VALUE = "&screenvalue=";
     public static final String CODE_MISMATCH = "codeMismatch";
