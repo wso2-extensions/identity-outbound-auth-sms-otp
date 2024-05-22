@@ -552,4 +552,15 @@ public class SMSOTPUtils {
         return Boolean
                 .parseBoolean(getConfiguration(context, SMSOTPConstants.ENABLE_PAYLOAD_ENCODING_FOR_SMS_OTP));
     }
+
+    /**
+     * Get the regex masking the screen value.
+     *
+     * @param context Authentication context.
+     * @return regex for masking screen value.
+     */
+    public static String getScreenValueRegex(AuthenticationContext context) {
+
+        return getConfiguration(context, SMSOTPConstants.SCREEN_VALUE_REGEX);
+    }
 }
