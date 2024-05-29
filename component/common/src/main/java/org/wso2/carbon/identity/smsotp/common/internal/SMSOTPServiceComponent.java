@@ -28,6 +28,8 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.wso2.carbon.identity.event.services.IdentityEventService;
+import org.wso2.carbon.identity.governance.IdentityGovernanceService;
+import org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPService;
 import org.wso2.carbon.identity.smsotp.common.SMSOTPServiceImpl;
 import org.wso2.carbon.identity.smsotp.common.util.Utils;
@@ -97,5 +99,39 @@ public class SMSOTPServiceComponent {
         if (log.isDebugEnabled()) {
             log.debug("Setting the Event Service.");
         }
+    }
+
+    @Reference(
+            name = "AccountLockService",
+            service = org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetAccountLockService"
+    )
+    protected void setAccountLockService(AccountLockService accountLockService) {
+
+        SMSOTPServiceDataHolder.getInstance().setAccountLockService(accountLockService);
+    }
+
+    protected void unsetAccountLockService(AccountLockService accountLockService) {
+
+        SMSOTPServiceDataHolder.getInstance().setAccountLockService(null);
+    }
+
+    @Reference(
+            name = "IdentityGovernanceService",
+            service = org.wso2.carbon.identity.governance.IdentityGovernanceService.class,
+            cardinality = ReferenceCardinality.MANDATORY,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unsetIdentityGovernanceService"
+    )
+    protected void setIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
+
+        SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(identityGovernanceService);
+    }
+
+    protected void unsetIdentityGovernanceService(IdentityGovernanceService identityGovernanceService) {
+
+        SMSOTPServiceDataHolder.getInstance().setIdentityGovernanceService(null);
     }
 }

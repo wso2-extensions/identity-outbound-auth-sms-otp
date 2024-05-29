@@ -49,6 +49,20 @@ public class Constants {
     public static final String SMS_OTP_RESEND_THROTTLE_INTERVAL = "smsOtp.resendThrottleInterval";
     public static final String SMS_OTP_MAX_VALIDATION_ATTEMPTS_ALLOWED = "smsOtp.maxValidationAttemptsAllowed";
     public static final String SMS_OTP_SHOW_FAILURE_REASON = "smsOtp.showValidationFailureReason";
+    public static final String SMS_OTP_LOCK_ACCOUNT_ON_FAILED_ATTEMPTS = "smsOtp.lockAccountOnFailedAttempts";
+
+    public static final String PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO = "account.lock.handler.login.fail.timeout.ratio";
+    public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
+    public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX = "account.lock.handler.On.Failure.Max.Attempts";
+    public static final String PROPERTY_ACCOUNT_LOCK_TIME = "account.lock.handler.Time";
+    public static final String SMS_OTP_FAILED_ATTEMPTS_CLAIM = "http://wso2.org/claims/identity/failedSmsOtpAttempts";
+    public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM =
+            "http://wso2.org/claims/identity/failedLoginLockoutCount";
+    public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
+    public static final String ACCOUNT_UNLOCK_TIME_CLAIM = "http://wso2.org/claims/identity/unlockTime";
+    public static final String ACCOUNT_LOCKED_REASON_CLAIM_URI = "http://wso2.org/claims/identity/lockedReason";
+    public static final String MAX_SMS_OTP_ATTEMPTS_EXCEEDED = "MAX_SMS_OTP_ATTEMPTS_EXCEEDED";
+    public static final String ADMIN_INITIATED = "AdminInitiated";
 
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
     public static final String CORRELATION_ID = "correlation-id";
@@ -72,12 +86,13 @@ public class Constants {
                 "Mandatory parameters not found : %s."),
         CLIENT_OTP_VALIDATION_FAILED("SMS-60008", "Provided OTP is invalid.",
                 "Provided OTP is invalid. User id : %s."),
-        CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP fround for the user.",
+        CLIENT_NO_OTP_FOR_USER("SMS-60009", "No OTP found for the user.",
                 "No OTP found for the user Id : %s."),
         CLIENT_SLOW_DOWN_RESEND("SMS-60010", "Slow down.",
                 "Please wait %s seconds before retrying."),
         CLIENT_OTP_VALIDATION_BLOCKED("SMS-60011", "Maximum allowed failed validation attempts exceeded.",
                 "Maximum allowed failed validation attempts exceeded for user id : %s."),
+        CLIENT_ACCOUNT_LOCKED("SMS-60012", "Account locked.", "Account is locked for the user ID: %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",
@@ -99,7 +114,11 @@ public class Constants {
         SERVER_INVALID_RENEWAL_INTERVAL_ERROR("SMS-65009", "Invalid renewal interval value.",
                 "Renewal interval should be smaller than the OTP validity period. Renewal interval: %s."),
         SERVER_UNEXPECTED_ERROR("SMS-65010", "An unexpected server error occurred.",
-                "An unexpected server error occurred.");
+                "An unexpected server error occurred."),
+        SERVER_ERROR_VALIDATING_ACCOUNT_LOCK_STATUS("SMS-65011", "Error validating account lock status.",
+                "Server encountered an error while validating account lock status for the user ID : %s."),
+        SERVER_ERROR_RETRIEVING_ACCOUNT_LOCK_CONFIGS("SMS-65012", "Can't retrieve account lock connector " +
+                "configurations.", "Server encountered an error while retrieving account lock connector configurations.");
 
         private final String code;
         private final String message;
