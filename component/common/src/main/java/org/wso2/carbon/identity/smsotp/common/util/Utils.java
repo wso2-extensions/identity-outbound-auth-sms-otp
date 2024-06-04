@@ -22,17 +22,26 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.event.IdentityEventConfigBuilder;
 import org.wso2.carbon.identity.event.IdentityEventException;
 import org.wso2.carbon.identity.event.bean.ModuleConfiguration;
+import org.wso2.carbon.identity.governance.IdentityGovernanceException;
+import org.wso2.carbon.identity.handler.event.account.lock.exception.AccountLockServiceException;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.dto.ConfigsDTO;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPClientException;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import org.wso2.carbon.identity.smsotp.common.internal.SMSOTPServiceDataHolder;
+import org.wso2.carbon.user.core.common.User;
 
 import java.util.Properties;
 import java.util.UUID;
+
+import static org.wso2.carbon.identity.handler.event.account.lock.constants.AccountConstants.ACCOUNT_LOCKED_PROPERTY;
+import static org.wso2.carbon.identity.handler.event.account.lock.constants.AccountConstants.ACCOUNT_UNLOCK_TIME_PROPERTY;
+import static org.wso2.carbon.identity.handler.event.account.lock.constants.AccountConstants.FAILED_LOGIN_ATTEMPTS_PROPERTY;
+import static org.wso2.carbon.identity.handler.event.account.lock.constants.AccountConstants.LOGIN_FAIL_TIMEOUT_RATIO_PROPERTY;
 
 /**
  * Util functions for SMS OTP service.
@@ -136,6 +145,10 @@ public class Utils {
                 Constants.DEFAULT_MAX_VALIDATION_ATTEMPTS_ALLOWED;
         configs.setMaxValidationAttemptsAllowed(maxValidationAttemptsAllowed);
 
+        boolean lockAccountOnFailedAttempts = Boolean.parseBoolean(org.apache.commons.lang.StringUtils.trim(
+                properties.getProperty(Constants.SMS_OTP_LOCK_ACCOUNT_ON_FAILED_ATTEMPTS)));
+        configs.setLockAccountOnFailedAttempts(lockAccountOnFailedAttempts);
+
         // Should we send the same OTP upon the next generation request. Defaults to 'false'.
         boolean resendSameOtp = (otpRenewalInterval > 0) && (otpRenewalInterval < otpValidityPeriod);
         configs.setResendSameOtp(resendSameOtp);
@@ -198,5 +211,41 @@ public class Utils {
             description = error.getDescription();
         }
         return new SMSOTPServerException(error.getCode(), error.getMessage(), description);
+    }
+
+    /**
+     * Check whether a given user is locked.
+     *
+     * @param user The user.
+     * @return True if user account is locked.
+     */
+    public static boolean isAccountLocked(User user) throws SMSOTPServerException {
+
+        try {
+            return SMSOTPServiceDataHolder.getInstance().getAccountLockService().isAccountLocked(user.getUsername(),
+                    user.getTenantDomain(), user.getUserStoreDomain());
+        } catch (AccountLockServiceException e) {
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_ERROR_VALIDATING_ACCOUNT_LOCK_STATUS,
+                    user.getUserID(), e);
+        }
+    }
+
+    /**
+     * Get the account lock connector configurations.
+     *
+     * @param tenantDomain Tenant domain.
+     * @return Account lock connector configurations.
+     * @throws SMSOTPServerException Server exception while retrieving account lock configurations.
+     */
+    public static Property[] getAccountLockConnectorConfigs(String tenantDomain) throws SMSOTPServerException {
+
+        try {
+            return SMSOTPServiceDataHolder.getInstance().getIdentityGovernanceService().getConfiguration
+                    (new String[]{ACCOUNT_LOCKED_PROPERTY, FAILED_LOGIN_ATTEMPTS_PROPERTY, ACCOUNT_UNLOCK_TIME_PROPERTY,
+                            LOGIN_FAIL_TIMEOUT_RATIO_PROPERTY}, tenantDomain);
+        } catch (IdentityGovernanceException e) {
+            throw Utils.handleServerException(Constants.ErrorMessage.SERVER_ERROR_RETRIEVING_ACCOUNT_LOCK_CONFIGS, null,
+                    e);
+        }
     }
 }

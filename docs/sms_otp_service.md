@@ -28,15 +28,22 @@ properties.tokenRenewalInterval=60
 properties.resendThrottleInterval=30
 # Set the maximum validation attempts allowed until the generated sms-otp expires.
 properties.maxValidationAttemptsAllowed=5
+# Lock the account after reaching the maximum number of failed login attempts.
+properties.lockAccountOnFailedAttempts = true
 ```
-4. If notifications are managed by the Identity Server, configure the **SMS template** by appending below at the end of
+
+   **NOTE:** If `properties.lockAccountOnFailedAttempts` is set to `true`, at tenant level it is required to enable 
+   the account lock capability and configure other properties such as unlock time duration.
+   For more details, refer to the documentation: https://is.docs.wso2.com/en/5.11.0/learn/account-locking-by-failed-login-attempts/#configuring-wso2-is-for-account-locking
+
+5. If notifications are managed by the Identity Server, configure the **SMS template** by appending below at the end of
    the `<IS_HOME>/repository/conf/sms/sms-templates-admin-config.xml` file.
 ```xml
     <configuration type="sendOTP" display="sendOTP" locale="en_US">
         <body>Your One Time Password is : {{confirmation-code}}</body>
     </configuration>
 ```
-5. If notifications are managed by the Identity Server, configure the **event publisher** by creating 
+6. If notifications are managed by the Identity Server, configure the **event publisher** by creating 
    `SMSPublisher.xml` file in the `<IS_HOME>/deployment/server/eventpublishers/` directory.
    (Make sure to add a valid webhook endpoint in `http.url` section.)
 ```xml
@@ -53,7 +60,7 @@ properties.maxValidationAttemptsAllowed=5
     </to>
 </eventPublisher>
 ```
-6. Restart the server.
+7. Restart the server.
 
 **NOTE::** To include a **unique identification** in the **SMS template**, use the `correlation-id` variable in the 
 following syntax,
