@@ -184,7 +184,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     setResolvedUserInContext(context, authenticatedUser);
                 }
             } else if (isPreviousIdPAuthenticationFlowHandler(context)) {
-                authenticatedUser = resolveUserFromUserStore(authenticatedUser);
+                boolean isUserResolved = FrameworkUtils.getIsUserResolved(context);
+                // Resolve the user from user store if the user is not resolved in IDF handler.
+                if (!isUserResolved) {
+                    authenticatedUser = resolveUserFromUserStore(authenticatedUser);
+                }
                 setResolvedUserInContext(context, authenticatedUser);
             }
             if (authenticatedUser != null) {
