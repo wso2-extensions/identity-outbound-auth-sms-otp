@@ -25,7 +25,7 @@
     </parent>
     <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.smsotp</groupId>
     <artifactId>identity-outbound-auth-sms-otp</artifactId>
-    <version>3.3.30-SNAPSHOT</version>
+    <version>3.3.30</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon Extension - SMS OTP Pom</name>
     <url>http://wso2.org</url>
@@ -342,7 +342,7 @@
         <url>https://github.com/wso2-extensions/identity-outbound-auth-sms-otp.git</url>
         <developerConnection>scm:git:https://github.com/wso2-extensions/identity-outbound-auth-sms-otp.git
         </developerConnection>
-        <tag>HEAD</tag>
+        <tag>v3.3.30</tag>
     </scm>
     <build>
         <extensions>
