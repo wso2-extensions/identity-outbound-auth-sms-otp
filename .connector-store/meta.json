@@ -11,26 +11,26 @@
     ],
     "releases": [
         {
-            "tagName": "2.0.22",
+            "tagName": "v2.0.22",
             "products": [
                 "IS 5.8.0",
                 "IS 5.7.0"
             ]
         },
         {
-            "tagName": "2.0.19",
+            "tagName": "v2.0.19",
             "products": [
                 "IS 5.7.0"
             ]
         },
         {
-            "tagName": "2.0.17",
+            "tagName": "v2.0.17",
             "products": [
                 "IS 5.7.0"
             ]
         },
         {
-            "tagName": "2.0.16",
+            "tagName": "v2.0.16",
             "products": [
                 "IS 5.7.0"
             ]
