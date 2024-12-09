@@ -1,7 +1,7 @@
 /*
- *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2015-2024, WSO2 LLC. (http://www.wso2.com).
  *
- *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  WSO2 LLC. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License.
  *  You may obtain a copy of the License at
@@ -164,6 +164,12 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                            HttpServletResponse response,
                                            AuthenticationContext context)
             throws AuthenticationFailedException, LogoutFailedException {
+
+        // If the current authenticator is not SMS OTP, then set the flow to not retrying which could have been
+        // set from other authenticators and not cleared.
+        if (!SMSOTPConstants.AUTHENTICATOR_NAME.equals(context.getCurrentAuthenticator())) {
+            context.setRetrying(false);
+        }
         // if the logout request comes, then no need to go through and complete the flow.
         if (context.isLogoutRequest()) {
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
@@ -171,7 +177,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             // if the request comes with MOBILE_NUMBER, it will go through this flow.
             initiateAuthenticationRequest(request, response, context);
             return AuthenticatorFlowStatus.INCOMPLETE;
-        } else if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE))) {
+        } else if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.CODE)) &&
+                !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))) {
             AuthenticatedUser authenticatedUser = getAuthenticatedUser(context);
             if (authenticatedUser == null) {
                 if (StringUtils.isEmpty(request.getParameter(SMSOTPConstants.USER_NAME))) {
