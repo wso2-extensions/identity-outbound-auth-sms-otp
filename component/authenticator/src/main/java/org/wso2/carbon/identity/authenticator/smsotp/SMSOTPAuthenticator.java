@@ -774,9 +774,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             boolean isCharInOTP = isAlphaNumericOTPEnabled(authenticatorProperties, context);
             context.setProperty(SMSOTPConstants.IS_CHAR_IN_OTP, isCharInOTP);
 
-            int expiryTime = getSMSOTPExpiryTime(authenticatorProperties, context);
+            long expiryTime = getSMSOTPExpiryTime(authenticatorProperties, context);
             context.setProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME,
-                    Integer.toString(expiryTime));
+                    Long.toString(expiryTime));
 
             int numOfDigitsInOTP = getSMSOTPLength(authenticatorProperties, context);
             context.setProperty(SMSOTPConstants.SMS_OTP_LENGTH, numOfDigitsInOTP);
@@ -944,26 +944,30 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     /**
-     * Retrieve the SMS OTP expiry time.
+     * Retrieve the SMS OTP expiry time in milliseconds.
      *
      * @param authenticatorProperties Map of authenticator properties.
-     * @return int value of the SMS OTP expiry time.
+     * @return long value of the SMS OTP expiry time.
      */
-    private int getSMSOTPExpiryTime(Map<String, String> authenticatorProperties, AuthenticationContext context) {
+    private long getSMSOTPExpiryTime(Map<String, String> authenticatorProperties, AuthenticationContext context) {
 
-        int expiryTime = Integer.parseInt(SMSOTPConstants.OTP_EXPIRE_TIME_DEFAULT);
+        long expiryTime = Long.parseLong(SMSOTPConstants.OTP_EXPIRE_TIME_DEFAULT);
         if (StringUtils.isNotEmpty(
                 authenticatorProperties.get(SMSOTPConstants.SMS_OTP_EXPIRY_TIME))) {
             int expiryTimeInMinutes = Integer.parseInt(authenticatorProperties
                     .get(SMSOTPConstants.SMS_OTP_EXPIRY_TIME));
             if (expiryTimeInMinutes <= SMSOTPConstants.SMS_OTP_MAX_EXPIRY_TIME
                     && expiryTimeInMinutes >= SMSOTPConstants.SMS_OTP_MIN_EXPIRY_TIME) {
+                // In the SMS OTP configuration in the UI, the expiry time is configured in minutes.
+                // Therefore, it is converted to milliseconds.
                 expiryTime = expiryTimeInMinutes * 60 * 1000;
             }
         } else if (SMSOTPUtils.getTokenExpiryTime(context) != null) {
             String tokenExpiryTime = SMSOTPUtils.getTokenExpiryTime(context);
             if (StringUtils.isNumeric(tokenExpiryTime)) {
-                expiryTime = Integer.parseInt(tokenExpiryTime);
+                // In the SMS OTP configuration in the toml file, the expiry time is configured in seconds.
+                // Therefore, it is converted to milliseconds.
+                expiryTime = Long.parseLong(tokenExpiryTime) * 1000;
             }
         }
         return expiryTime;
@@ -1261,7 +1265,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
 
         long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(otpTokenSentTime.get().toString());
 
-        if (elapsedTokenTime <= (Long.parseLong(tokenValidityTime.get().toString()) * 1000)) {
+        if (elapsedTokenTime <= (Long.parseLong(tokenValidityTime.get().toString()))) {
             context.removeProperty(SMSOTPConstants.TOKEN_EXPIRED);
             context.setSubject(authenticatedUser);
         } else {
@@ -2256,7 +2260,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             long otpGeneratedTime = (long) otpGeneratedTimeProperty;
             eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME, otpGeneratedTime);
 
-            String otpValidityPeriod = SMSOTPUtils.getTokenExpiryTime(context);
+            String otpValidityPeriod = (String) context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME);
             long expiryTime = otpGeneratedTime + (StringUtils.isEmpty(otpValidityPeriod) ?
                     SMSOTPConstants.DEFAULT_VALIDITY_PERIOD : Long.parseLong(otpValidityPeriod));
             eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
@@ -2306,7 +2310,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         eventProperties.put(IdentityEventConstants.EventProperty.OTP_GENERATED_TIME,
                 otpGeneratedTime);
 
-        int otpExpiryTime = getSMSOTPExpiryTime(authenticatorProperties, context);
+        long otpExpiryTime = getSMSOTPExpiryTime(authenticatorProperties, context);
         long expiryTime = otpGeneratedTime + otpExpiryTime;
         eventProperties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, expiryTime);
 
