@@ -68,6 +68,7 @@ import static org.wso2.carbon.identity.handler.event.account.lock.constants.Acco
 public class SMSOTPServiceImpl implements SMSOTPService {
 
     private static final Log log = LogFactory.getLog(SMSOTPService.class);
+    private static final boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
 
     /**
      * {@inheritDoc}
@@ -101,7 +102,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     String.format("Error while retrieving user for the Id : %s.", userId), e);
         }
 
-        boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
         // Check if the user is locked.
         if (Utils.isAccountLocked(user)) {
             if (!showFailureReason) {
@@ -158,8 +158,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
 
-        boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
-
         // Retrieve session from the database.
         String sessionId = Utils.getHash(userId);
         String jsonString = (String) SessionDataStore.getInstance()
@@ -178,6 +176,9 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         // Check if user account is locked.
         if (Utils.isAccountLocked(user)) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("User account is locked for the user : %s.", userId));
+            }
             return createAccountLockedResponse(userId, showFailureReason);
         }
 
@@ -186,10 +187,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("User account is disabled for the user : %s.", userId));
             }
-            FailureReasonDTO error = showFailureReason
-                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, userId)
-                    : null;
-            return new ValidationResponseDTO(userId, false, error);
+            return createAccountDisabledResponse(userId, showFailureReason);
         }
 
         SessionDTO sessionDTO;
@@ -518,6 +516,13 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         FailureReasonDTO error = showFailureReason ?
                 new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_LOCKED, userId) : null;
+        return new ValidationResponseDTO(userId, false, error);
+    }
+
+    private ValidationResponseDTO createAccountDisabledResponse(String userId, boolean showFailureReason) {
+
+        FailureReasonDTO error = showFailureReason ?
+                new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, userId) : null;
         return new ValidationResponseDTO(userId, false, error);
     }
 
