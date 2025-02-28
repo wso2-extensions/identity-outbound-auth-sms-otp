@@ -67,6 +67,7 @@ import static org.wso2.carbon.identity.handler.event.account.lock.constants.Acco
 public class SMSOTPServiceImpl implements SMSOTPService {
 
     private static final Log log = LogFactory.getLog(SMSOTPService.class);
+    private static final boolean SHOW_FAILURE_REASON = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
 
     /**
      * {@inheritDoc}
@@ -98,6 +99,24 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             }
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
                     String.format("Error while retrieving user for the Id : %s.", userId), e);
+        }
+
+        // Check if the user is locked.
+        if (Utils.isAccountLocked(user)) {
+            if (!SHOW_FAILURE_REASON) {
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_GENERATION_NOT_VALID,
+                        user.getUserID());
+            }
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_ACCOUNT_LOCKED, user.getUserID());
+        }
+
+        // Check if the user is disabled.
+        if (Utils.isUserDisabled(user)) {
+            if (!SHOW_FAILURE_REASON) {
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_GENERATION_NOT_VALID,
+                        user.getUserID());
+            }
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, user.getUserID());
         }
 
         // If throttling is enabled, check if the resend request has sent too early.
@@ -138,8 +157,6 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     Constants.ErrorMessage.CLIENT_MANDATORY_VALIDATION_PARAMETERS_EMPTY, missingParam);
         }
 
-        boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
-
         // Retrieve session from the database.
         String sessionId = Utils.getHash(userId);
         String jsonString = (String) SessionDataStore.getInstance()
@@ -148,11 +165,30 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             if (log.isDebugEnabled()) {
                 log.debug(String.format("No OTP session found for the user : %s.", userId));
             }
-            FailureReasonDTO error = showFailureReason
+            FailureReasonDTO error = SHOW_FAILURE_REASON
                     ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_NO_OTP_FOR_USER, userId)
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
+
+        User user = getUserById(userId);
+
+        // Check if user account is locked.
+        if (Utils.isAccountLocked(user)) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("User account is locked for the user : %s.", userId));
+            }
+            return createAccountLockedResponse(userId, SHOW_FAILURE_REASON);
+        }
+
+        // Check if user account is disabled.
+        if (Utils.isUserDisabled(user)) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("User account is disabled for the user : %s.", userId));
+            }
+            return createAccountDisabledResponse(userId, SHOW_FAILURE_REASON);
+        }
+
         SessionDTO sessionDTO;
         int validateAttempt;
         try {
@@ -161,7 +197,7 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             FailureReasonDTO error;
             if (validateAttempt >= SMSOTPServiceDataHolder.getConfigs().getMaxValidationAttemptsAllowed()) {
                 SessionDataStore.getInstance().clearSessionData(sessionId, Constants.SESSION_TYPE_OTP);
-                error = showFailureReason
+                error = SHOW_FAILURE_REASON
                         ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_OTP_VALIDATION_BLOCKED, userId)
                         : null;
                 return new ValidationResponseDTO(userId, false, error);
@@ -174,7 +210,8 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_JSON_SESSION_MAPPER_ERROR, null, e);
         }
 
-        ValidationResponseDTO responseDTO = isValid(sessionDTO, smsOTP, userId, transactionId, validateAttempt, showFailureReason);
+        ValidationResponseDTO responseDTO = isValid(sessionDTO, smsOTP, userId, transactionId, validateAttempt,
+                SHOW_FAILURE_REASON);
         if (!responseDTO.isValid()) {
             return responseDTO;
         }
@@ -479,6 +516,13 @@ public class SMSOTPServiceImpl implements SMSOTPService {
 
         FailureReasonDTO error = showFailureReason ?
                 new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_LOCKED, userId) : null;
+        return new ValidationResponseDTO(userId, false, error);
+    }
+
+    private ValidationResponseDTO createAccountDisabledResponse(String userId, boolean showFailureReason) {
+
+        FailureReasonDTO error = showFailureReason ?
+                new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, userId) : null;
         return new ValidationResponseDTO(userId, false, error);
     }
 
