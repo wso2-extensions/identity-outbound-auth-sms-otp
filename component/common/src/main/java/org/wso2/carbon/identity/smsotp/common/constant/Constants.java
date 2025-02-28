@@ -89,6 +89,9 @@ public class Constants {
         CLIENT_OTP_VALIDATION_BLOCKED("SMS-60011", "Maximum allowed failed validation attempts exceeded.",
                 "Maximum allowed failed validation attempts exceeded for user id : %s."),
         CLIENT_ACCOUNT_LOCKED("SMS-60012", "Account locked.", "Account is locked for the user ID: %s."),
+        CLIENT_ACCOUNT_DISABLED("SMS-60013", "Account disabled.",
+                "Account is disabled for the user ID: %s."),
+        CLIENT_FORBIDDEN("EMAIL-60014", "Forbidden.", "Forbidden : %s."),
 
         // Server error codes.
         SERVER_USER_STORE_MANAGER_ERROR("SMS-65001", "User store manager error.",

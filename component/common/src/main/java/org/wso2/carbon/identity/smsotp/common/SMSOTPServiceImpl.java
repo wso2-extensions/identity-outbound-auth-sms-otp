@@ -48,6 +48,7 @@ import org.wso2.carbon.identity.smsotp.common.util.Utils;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserCoreConstants;
 import org.wso2.carbon.user.core.common.AbstractUserStoreManager;
+import org.wso2.carbon.user.core.common.FailureReason;
 import org.wso2.carbon.user.core.common.User;
 import org.wso2.carbon.user.core.constants.UserCoreErrorConstants;
 
@@ -98,6 +99,23 @@ public class SMSOTPServiceImpl implements SMSOTPService {
             }
             throw Utils.handleServerException(Constants.ErrorMessage.SERVER_USER_STORE_MANAGER_ERROR,
                     String.format("Error while retrieving user for the Id : %s.", userId), e);
+        }
+
+        boolean showFailureReason = SMSOTPServiceDataHolder.getConfigs().isShowFailureReason();
+        // Check if the user is locked.
+        if (Utils.isAccountLocked(user)) {
+            if (!showFailureReason) {
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+            }
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+        }
+
+        // Check if the user is disabled.
+        if (Utils.isUserDisabled(user)) {
+            if (!showFailureReason) {
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+            }
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, user.getUserID());
         }
 
         // If throttling is enabled, check if the resend request has sent too early.
@@ -153,6 +171,25 @@ public class SMSOTPServiceImpl implements SMSOTPService {
                     : null;
             return new ValidationResponseDTO(userId, false, error);
         }
+
+        User user = getUserById(userId);
+
+        // Check if user account is locked.
+        if (Utils.isAccountLocked(user)) {
+            return createAccountLockedResponse(userId, showFailureReason);
+        }
+
+        // Check if user account is disabled.
+        if (Utils.isUserDisabled(user)) {
+            if (log.isDebugEnabled()) {
+                log.debug(String.format("User account is disabled for the user : %s.", userId));
+            }
+            FailureReasonDTO error = showFailureReason
+                    ? new FailureReasonDTO(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, userId)
+                    : null;
+            return new ValidationResponseDTO(userId, false, error);
+        }
+
         SessionDTO sessionDTO;
         int validateAttempt;
         try {
