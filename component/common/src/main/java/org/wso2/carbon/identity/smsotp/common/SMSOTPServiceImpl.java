@@ -105,15 +105,17 @@ public class SMSOTPServiceImpl implements SMSOTPService {
         // Check if the user is locked.
         if (Utils.isAccountLocked(user)) {
             if (!showFailureReason) {
-                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_GENERATION_NOT_VALID,
+                        user.getUserID());
             }
-            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+            throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_ACCOUNT_LOCKED, user.getUserID());
         }
 
         // Check if the user is disabled.
         if (Utils.isUserDisabled(user)) {
             if (!showFailureReason) {
-                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_FORBIDDEN, user.getUserID());
+                throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_OTP_GENERATION_NOT_VALID,
+                        user.getUserID());
             }
             throw Utils.handleClientException(Constants.ErrorMessage.CLIENT_ACCOUNT_DISABLED, user.getUserID());
         }
