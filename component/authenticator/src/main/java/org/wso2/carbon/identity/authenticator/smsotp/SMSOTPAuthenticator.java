@@ -218,6 +218,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 return AuthenticatorFlowStatus.INCOMPLETE;
             }
         } else if (Boolean.parseBoolean(request.getParameter(RESEND))) {
+            if (!SMSOTPUtils.isEnableResendCode(context)) {
+                throw new InvalidCredentialsException("Resend code is not enabled for this authenticator");
+            }
             AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
             publishPostSMSOTPGeneratedEvent(request, context);
             return authenticatorFlowStatus;
