@@ -106,11 +106,13 @@ import javax.servlet.http.HttpServletResponse;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CHAR_SET_UTF_8;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.CONTENT_TYPE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.ERROR_MESSAGE_DETAILS;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.ERROR_USER_RESEND_COUNT_EXCEEDED;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.JSON_CONTENT_TYPE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.LogConstants.ActionIDs.SEND_SMS_OTP;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.LogConstants.OUTBOUND_AUTH_SMSOTP_SERVICE;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MASKING_VALUE_SEPARATOR;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.MOBILE_NUMBER_REGEX;
+import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.OTP_RESEND_ATTEMPTS;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.POST_METHOD;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.RESEND;
 import static org.wso2.carbon.identity.authenticator.smsotp.SMSOTPConstants.XML_CONTENT_TYPE;
@@ -320,19 +322,18 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 }
                 processSMSOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             } else if (isUserExists && !SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context)) {
-                if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
-                        && !isMobileNumberUpdateFailed(context)) || (SMSOTPUtils.isLocalUser(context) &&
-                        SMSOTPUtils.isAccountLocked(authenticatedUser))) {
+                boolean isResendCode = Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND));
+                if ((context.isRetrying() && !isResendCode && !isMobileNumberUpdateFailed(context))
+                        || (SMSOTPUtils.isLocalUser(context) && SMSOTPUtils.isAccountLocked(authenticatedUser))) {
                     if (log.isDebugEnabled()) {
                         log.debug("Triggering SMS OTP retry flow");
                     }
                     checkStatusCode(response, context, queryParams, errorPage);
+                } else if (context.isRetrying() && isResendCode && !isMobileNumberUpdateFailed(context)) {
+                    handleResendOTP(request, response, context, queryParams, username, errorPage);
                 } else {
                     mobileNumber = getMobileNumber(request, response, context, username, queryParams);
-                    if (StringUtils.isNotEmpty(mobileNumber)) {
-                        proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
-                    }
-
+                    proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
                 }
             } else {
                 processFirstStepOnly(authenticatedUser, context);
@@ -586,15 +587,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         //the authentication flow happens with sms otp authentication.
         String tenantDomain = context.getTenantDomain();
         String errorPage = getErrorPage(context);
-        if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND))
-                && !isMobileNumberUpdateFailed(context)) {
+        boolean isResendCode = Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND));
+        if (context.isRetrying() && !isResendCode && !isMobileNumberUpdateFailed(context)) {
             if (log.isDebugEnabled()) {
                 log.debug("Trigger retry flow when it is not request for resending OTP or it is not mobile number update failure");
             }
             checkStatusCode(response, context, queryParams, errorPage);
+        } else if (context.isRetrying() && isResendCode && !isMobileNumberUpdateFailed(context)) {
+            handleResendOTP(request, response, context, queryParams, username, errorPage);
         } else {
-            processSMSOTPFlow(context, request, response, isUserExists, username, queryParams, tenantDomain,
-                    errorPage);
+            processSMSOTPFlow(context, request, response, isUserExists, username, queryParams, tenantDomain, errorPage);
         }
     }
 
@@ -657,6 +659,37 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                     (SMSOTPConstants.FEDERATED_MOBILE_ATTRIBUTE_KEY));
         }
         return federatedSMSAttributeKey;
+    }
+
+    /**
+     * Handle resend OTP flow considering maximum number of resend attempts of the user.
+     *
+     * @param request     HttpServletRequest.
+     * @param response    HttpServletResponse.
+     * @param context     AuthenticationContext.
+     * @param queryParams QueryParams.
+     * @param username    Username.
+     * @param errorPage   ErrorPage.
+     * @throws AuthenticationFailedException If an error occurred while handling resend OTP flow.
+     * @throws SMSOTPException If an error occurred while handling resend OTP flow.
+     */
+    private void handleResendOTP(HttpServletRequest request, HttpServletResponse response,
+                                 AuthenticationContext context, String queryParams, String username, String errorPage)
+            throws SMSOTPException, AuthenticationFailedException {
+
+        Optional<Integer> maxResendAttempts = SMSOTPUtils.getMaxResendAttempts(context);
+        if (maxResendAttempts.isPresent()) {
+            int currentUserResendAttempts = context.getProperty(OTP_RESEND_ATTEMPTS) != null
+                    ? Integer.parseInt(context.getProperty(OTP_RESEND_ATTEMPTS).toString()) : 0;
+            if (currentUserResendAttempts >= maxResendAttempts.get()) {
+                redirectToErrorPage(response, context, queryParams, ERROR_USER_RESEND_COUNT_EXCEEDED);
+                return;
+            }
+        }
+
+        updateUserResendAttempts(context);
+        String mobileNumber = getMobileNumber(request, response, context, username, queryParams);
+        proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
     }
 
     /**
@@ -745,9 +778,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             }
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
-        if (StringUtils.isNotEmpty(mobileNumber)) {
-            proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
-        }
+        proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
     }
 
     /**
@@ -765,6 +796,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     private void proceedWithOTP(HttpServletRequest request, HttpServletResponse response, AuthenticationContext context,
                                 String errorPage, String mobileNumber, String queryParams, String username)
             throws AuthenticationFailedException {
+
+        if (StringUtils.isEmpty(mobileNumber)) {
+            return;
+        }
 
         String screenValue;
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
@@ -2668,5 +2703,20 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         authenticatorData.setRequiredParams(requiredParams);
         authenticatorData.setAuthParams(authenticatorParamMetadataList);
         return Optional.of(authenticatorData);
+    }
+
+    /**
+     * Initialize or increment the number of times the OTP was resent to the user.
+     *
+     * @param context   Authentication Context.
+     */
+    private void updateUserResendAttempts(AuthenticationContext context) {
+
+        if (context.getProperty(OTP_RESEND_ATTEMPTS) == null ||
+                StringUtils.isBlank(context.getProperty(OTP_RESEND_ATTEMPTS).toString())) {
+            context.setProperty(OTP_RESEND_ATTEMPTS, 1);
+        } else {
+            context.setProperty(OTP_RESEND_ATTEMPTS, (int) context.getProperty(OTP_RESEND_ATTEMPTS) + 1);
+        }
     }
 }
