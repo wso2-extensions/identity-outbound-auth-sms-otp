@@ -175,7 +175,9 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @AfterMethod
-    public void tearDown() throws Exception {
+    public void tearDown() {
+        context.setRetrying(false);
+        context.getProperties().clear();
     }
 
 
@@ -458,32 +460,13 @@ public class SMSOTPAuthenticatorTest {
 
     @Test
     public void testInitiateAuthenticationRequestWithSMSOTPMandatory() throws Exception {
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(SMSOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
-        context.setTenantDomain("carbon.super");
-        Map<String, String> parameters = new HashMap<>();
-        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
-        parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
-        authenticatorConfig.setParameterMap(parameters);
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        when(stepConfig.getAuthenticatedAutenticator()).thenReturn(authenticatorConfig);
-        AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-        authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        authenticatedUser.setUserName("admin");
-        authenticatedUser.setTenantDomain("carbon.super");
-        when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
-        when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
+
+        setupInitiateAuthenticationRequestInitialMocks();
+        when(FederatedAuthenticatorUtil.isUserExistInUserStore(anyString())).thenReturn(false);
         when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
         when(SMSOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(SMSOTPConstants.ERROR_PAGE);
-        when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
-                context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
         when(SMSOTPUtils.getBackupCode(context)).thenReturn("false");
+
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
                 httpServletRequest, httpServletResponse, context);
@@ -492,14 +475,126 @@ public class SMSOTPAuthenticatorTest {
     }
 
     @Test
+    public void testInitiateAuthenticationRequestWithSMSOTPMandatoryAndResendCode() throws Exception {
+
+        setupInitiateAuthenticationRequestInitialMocks();
+        String initialOtp = "00000";
+        context.setProperty(SMSOTPConstants.OTP_TOKEN, initialOtp);
+        context.setRetrying(true);
+        when(SMSOTPUtils.getMaxResendAttempts(context)).thenReturn(Optional.of(2));
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
+        when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        Assert.assertNotEquals(context.getProperty(SMSOTPConstants.OTP_TOKEN), initialOtp);
+        Assert.assertEquals(context.getProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS), 1);
+    }
+
+    @Test
+    public void testInitiateAuthenticationRequestWithSMSOTPMandatoryAndExceededMaxResendCode() throws Exception {
+
+        setupInitiateAuthenticationRequestInitialMocks();
+        String prevOtp = "00000";
+        context.setProperty(SMSOTPConstants.OTP_TOKEN, prevOtp);
+        context.setProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS, 2);
+        context.setRetrying(true);
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(true);
+        when(SMSOTPUtils.getMaxResendAttempts(context)).thenReturn(Optional.of(2));
+        when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_USER_RESEND_COUNT_EXCEEDED));
+    }
+
+    @Test
     public void testInitiateAuthenticationRequestWithSMSOTPOptional() throws Exception {
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(SMSOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
-        context.setTenantDomain("carbon.super");
+
+        setupInitiateAuthenticationRequestInitialMocks();
         context.setProperty(SMSOTPConstants.TOKEN_EXPIRED, "token.expired");
-        when(context.isRetrying()).thenReturn(true);
+        context.setRetrying(true);
+        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
         when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.TOKEN_EXPIRED_VALUE));
+    }
+
+    @Test
+    public void testInitiateAuthenticationRequestWithSMSOTP() throws Exception {
+
+        setupInitiateAuthenticationRequestInitialMocks();
+
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        Assert.assertNotNull(context.getProperty(SMSOTPConstants.OTP_TOKEN));
+        Assert.assertNotNull(context.getProperty(SMSOTPConstants.SENT_OTP_TOKEN_TIME));
+        Assert.assertNotNull(context.getProperty(SMSOTPConstants.TOKEN_VALIDITY_TIME));
+        Assert.assertNull(context.getProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS));
+    }
+
+    @Test
+    public void testInitiateAuthenticationRequestWithSMSOTPResend() throws Exception {
+
+        setupInitiateAuthenticationRequestInitialMocks();
+        String prevOtp = "00000";
+        int prevResendAttempts = 1;
+        context.setProperty(SMSOTPConstants.OTP_TOKEN, prevOtp);
+        context.setProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS, prevResendAttempts);
+        context.setRetrying(true);
+        when(SMSOTPUtils.getMaxResendAttempts(context)).thenReturn(Optional.of(2));
+        when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        Assert.assertNotEquals(context.getProperty(SMSOTPConstants.OTP_TOKEN), prevOtp);
+        Assert.assertEquals(context.getProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS), prevResendAttempts + 1);
+    }
+
+    @Test
+    public void testInitiateAuthenticationRequestWithSMSOTPExceededMaxResend() throws Exception {
+
+        setupInitiateAuthenticationRequestInitialMocks();
+        String prevOtp = "00000";
+        int prevResendAttempts = 2;
+        context.setProperty(SMSOTPConstants.OTP_TOKEN, prevOtp);
+        context.setProperty(SMSOTPConstants.OTP_RESEND_ATTEMPTS, prevResendAttempts);
+        context.setRetrying(true);
+        when(SMSOTPUtils.getMaxResendAttempts(context)).thenReturn(Optional.of(2));
+        when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("true");
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
+                httpServletRequest, httpServletResponse, context);
+        verify(httpServletResponse).sendRedirect(captor.capture());
+        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.ERROR_USER_RESEND_COUNT_EXCEEDED));
+    }
+
+    private void setupInitiateAuthenticationRequestInitialMocks() throws AuthenticationFailedException,
+            UserStoreException, SMSOTPException {
+
+        mockStatic(FederatedAuthenticatorUtil.class);
+        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
+        when(FederatedAuthenticatorUtil.isUserExistInUserStore(anyString())).thenReturn(true);
+
+        mockStatic(SMSOTPUtils.class);
+        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(false);
+        when(SMSOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(SMSOTPConstants.ERROR_PAGE);
+        when(SMSOTPUtils.getLoginPageFromXMLFile(context)).thenReturn(SMSOTPConstants.LOGIN_PAGE);
+        when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0778965320");
+
+        mockStatic(FrameworkUtils.class);
+        when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
+                context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
+
+        context.setTenantDomain("carbon.super");
+
         Map<String, String> parameters = new HashMap<>();
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         authenticatorConfig.setParameterMap(parameters);
@@ -512,20 +607,8 @@ public class SMSOTPAuthenticatorTest {
         setStepConfigWithSmsOTPAuthenticator(authenticatorConfig, authenticatedUser, context);
         when(stepConfig.getAuthenticatedUser()).thenReturn(authenticatedUser);
         when((AuthenticatedUser) context.getProperty(SMSOTPConstants.AUTHENTICATED_USER)).thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        when(SMSOTPUtils.isSMSOTPMandatory(context)).thenReturn(false);
-        when(SMSOTPUtils.isRetryEnabled(context)).thenReturn(true);
-        when(FederatedAuthenticatorUtil.isUserExistInUserStore(anyString())).thenReturn(true);
-        when(SMSOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0778965320");
-        when(SMSOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(SMSOTPConstants.LOGIN_PAGE);
-        when(SMSOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(SMSOTPConstants.ERROR_PAGE);
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(smsotpAuthenticator, "initiateAuthenticationRequest",
-                httpServletRequest, httpServletResponse, context);
-        verify(httpServletResponse).sendRedirect(captor.capture());
-        Assert.assertTrue(captor.getValue().contains(SMSOTPConstants.TOKEN_EXPIRED_VALUE));
+
+        when(httpServletRequest.getParameter(SMSOTPConstants.RESEND)).thenReturn("false");
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
