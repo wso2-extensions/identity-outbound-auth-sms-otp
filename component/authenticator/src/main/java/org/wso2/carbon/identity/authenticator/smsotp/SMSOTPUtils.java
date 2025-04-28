@@ -42,6 +42,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 public class SMSOTPUtils {
 
@@ -272,6 +273,33 @@ public class SMSOTPUtils {
     public static boolean isEnableResendCode(AuthenticationContext context) {
 
         return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.IS_ENABLED_RESEND));
+    }
+
+    /**
+     * Retrieves the maximum resend attempts from the application-authentication.xml file.
+     * If the config is missing, returns an empty Optional indicating infinite retries are allowed.
+     *
+     * @param context AuthenticationContext.
+     * @return Optional containing the maximum resend attempts if configured; otherwise, empty.
+     * @throws SMSOTPException If the config is present but invalid (non-integer or negative).
+     */
+    public static Optional<Integer> getMaxResendAttempts(AuthenticationContext context) throws SMSOTPException {
+
+        String maximumResendAttemptsConfig = getConfiguration(context, SMSOTPConstants.MAXIMUM_RESEND_ATTEMPTS);
+        if (StringUtils.isBlank(maximumResendAttemptsConfig)) {
+            return Optional.empty();
+        }
+
+        try {
+            int maximumResendAttempts = Integer.parseInt(maximumResendAttemptsConfig);
+            if (maximumResendAttempts < 0) {
+                throw new NumberFormatException("Maximum resend attempts cannot be negative.");
+            }
+            return Optional.of(maximumResendAttempts);
+        } catch (NumberFormatException e) {
+            context.setRetrying(false);
+            throw new SMSOTPException("Invalid maximum resend attempts value: " + maximumResendAttemptsConfig, e);
+        }
     }
 
     /**

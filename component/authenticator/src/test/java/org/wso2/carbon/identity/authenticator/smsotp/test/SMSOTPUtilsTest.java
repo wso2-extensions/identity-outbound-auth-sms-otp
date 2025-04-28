@@ -27,6 +27,7 @@ import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
@@ -47,6 +48,7 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -240,6 +242,40 @@ public class SMSOTPUtilsTest {
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext), true);
+    }
+
+    @DataProvider
+    public Object[][] maximumResendAttemptsDataProvider() {
+
+        return new Object[][]{
+                {false, "2", Optional.of(2)},
+                {false, "0", Optional.of(0)},
+                {false, null, Optional.empty()},
+                {true, "-2", null},
+                {true, "test", null}
+        };
+    }
+
+    @Test(dataProvider = "maximumResendAttemptsDataProvider")
+    public void testMaximumResendAttemptsFromLocalFile(boolean expectException, String maxAttemptsFromFile,
+                                                       Optional<Integer> expectedResult) throws SMSOTPException {
+
+        AuthenticationContext authenticationContext = new AuthenticationContext();
+        authenticationContext.setProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY,
+                IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
+        authenticationContext.setTenantDomain("carbon.super");
+        AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
+
+        Map<String, String> parameters = new HashMap<String, String>();
+        parameters.put(SMSOTPConstants.MAXIMUM_RESEND_ATTEMPTS, maxAttemptsFromFile);
+        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        authenticatorConfig.setParameterMap(parameters);
+        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+        if (expectException) {
+            Assert.assertThrows(SMSOTPException.class, () -> SMSOTPUtils.getMaxResendAttempts(authenticationContext));
+        } else {
+            Assert.assertEquals(SMSOTPUtils.getMaxResendAttempts(authenticationContext), expectedResult);
+        }
     }
 
     @Test

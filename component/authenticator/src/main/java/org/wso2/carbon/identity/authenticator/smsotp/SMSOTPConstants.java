@@ -65,6 +65,7 @@ public class SMSOTPConstants {
     public static final String BACKUP_CODE = "BackupCode";
     public static final String IS_ENABLED_RETRY = "RetryEnable";
     public static final String IS_ENABLED_RESEND = "ResendEnable";
+    public static final String MAXIMUM_RESEND_ATTEMPTS = "MaximumResendAttempts";
     public static final String IS_SMSOTP_MANDATORY = "SMSOTPMandatory";
     public static final String IS_SEND_OTP_DIRECTLY_TO_MOBILE = "SendOTPDirectlyToMobile";
     public static final String IS_SMSOTP_ENABLE_BY_USER = "SMSOTPEnableByUserClaim";
@@ -128,6 +129,7 @@ public class SMSOTPConstants {
     public static final String SEND_OTP_DIRECTLY_DISABLE = "&authFailure=true&authFailureMsg=directly.send.otp.disable";
     public static final String ERROR_USER_NOT_FOUND = "&authFailure=true&authFailureMsg=error.user.not.found.smsotp";
     public static final String SEND_OTP_DIRECTLY_DISABLE_MSG = "directly.send.otp.disable";
+    public static final String ERROR_USER_RESEND_COUNT_EXCEEDED = "&authFailure=true&authFailureMsg=resent.count.exceeded";
     public static final String ERROR_CODE_MISMATCH = "code.mismatch";
     public static final String ERROR_CODE = "errorCode";
     public static final String SCREEN_USER_ATTRIBUTE = "screenUserAttribute";
@@ -152,6 +154,7 @@ public class SMSOTPConstants {
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
     public static final String MOBILE_NUMBER_PATTERN_POLICY_VIOLATED =
             "Mobile number pattern policy violated";
+    public static final String OTP_RESEND_ATTEMPTS = "otpResendAttempts";
 
     public static final String PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO = "account.lock.handler.login.fail.timeout.ratio";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
