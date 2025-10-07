@@ -840,9 +840,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 AuthenticatedUser authenticatedUser = (AuthenticatedUser)
                         context.getProperty(SMSOTPConstants.AUTHENTICATED_USER);
                 String serviceProviderName = context.getServiceProviderName();
-                triggerNotification(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
-                        authenticatedUser.getUserStoreDomain(), mobileNumber, otpToken, serviceProviderName,
-                        expiryTime);
+                connectionResult = triggerNotification(authenticatedUser.getUserName(),
+                        authenticatedUser.getTenantDomain(), authenticatedUser.getUserStoreDomain(),
+                        mobileNumber, otpToken, serviceProviderName, expiryTime, context);
             }
 
             if (!connectionResult) {
@@ -858,6 +858,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                     getMappedInternalErrorCode(errorResponseCode).getCode();
                             errorCode = URLEncoder.encode(internalErrorCode, CHAR_SET_UTF_8);
                         }
+                    } else {
+                        errorCode = URLEncoder.encode(errorCode, CHAR_SET_UTF_8);
                     }
                     retryParam = SMSOTPConstants.ERROR_MESSAGE + errorCode;
                     String errorInfo = context.getProperty(SMSOTPConstants.ERROR_INFO).toString();
@@ -1987,6 +1989,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     /**
      * We can reuse this method once the improvements done into the eventing and notification handler in IS.
      */
+    @Deprecated
     protected void triggerNotification(String userName, String tenantDomain, String userStoreDomainName,
                                        String mobileNumber, String otpCode, String serviceProviderName,
                                        long otpExpiryTime) {
@@ -2017,6 +2020,49 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 log.debug(errorMsg, e);
             }
         }
+    }
+
+    /**
+     * Trigger the SMS OTP notification event and return the status of the event.
+     */
+    private boolean triggerNotification(String userName, String tenantDomain, String userStoreDomainName,
+                                        String mobileNumber, String otpCode, String serviceProviderName,
+                                        long otpExpiryTime, AuthenticationContext context) {
+
+        Event identityMgtEvent = prepareEvent(userName, tenantDomain, userStoreDomainName, mobileNumber, otpCode,
+                serviceProviderName, otpExpiryTime);
+        try {
+            SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
+        } catch (Exception e) {
+            String errorMsg = "Error occurred while calling triggerNotification, detail : " + e.getMessage();
+            log.warn(errorMsg);
+            if (log.isDebugEnabled()) {
+                log.debug(errorMsg, e);
+            }
+            // Returning the status as 'false' since there is an error.
+            context.setProperty(SMSOTPConstants.ERROR_CODE, e.getMessage());
+            context.setProperty(SMSOTPConstants.ERROR_INFO, e.getLocalizedMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private static Event prepareEvent(String userName, String tenantDomain, String userStoreDomainName,
+                                      String mobileNumber, String otpCode, String serviceProviderName, long otpExpiryTime) {
+
+        HashMap<String, Object> properties = new HashMap<>();
+        properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
+        properties.put(IdentityEventConstants.EventProperty.USER_STORE_DOMAIN, userStoreDomainName);
+        properties.put(IdentityEventConstants.EventProperty.TENANT_DOMAIN, tenantDomain);
+        properties.put(IdentityEventConstants.EventProperty.NOTIFICATION_CHANNEL,
+                NotificationChannels.SMS_CHANNEL.getChannelType());
+        properties.put(SMSOTPConstants.ATTRIBUTE_SMS_SENT_TO, mobileNumber);
+        properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
+        properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
+        properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
+        properties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, serviceProviderName);
+        properties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, String.valueOf(otpExpiryTime / 60));
+        return new Event(TRIGGER_SMS_NOTIFICATION, properties);
     }
 
     /**
