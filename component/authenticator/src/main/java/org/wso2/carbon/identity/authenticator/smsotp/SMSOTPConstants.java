@@ -152,6 +152,7 @@ public class SMSOTPConstants {
     public static final String LOCAL_AUTHENTICATOR = "LOCAL";
     public static final String FEDERATED_MOBILE_ATTRIBUTE_KEY = "federatedMobileAttributeKey";
     public static final String IS_SEND_OTP_TO_FEDERATED_MOBILE = "SendOtpToFederatedMobile";
+    public static final String SMS_TEMPLATE_TYPE = "notificationTemplate";
     public static final String MOBILE_NUMBER_PATTERN_POLICY_VIOLATED =
             "Mobile number pattern policy violated";
     public static final String OTP_RESEND_ATTEMPTS = "otpResendAttempts";
