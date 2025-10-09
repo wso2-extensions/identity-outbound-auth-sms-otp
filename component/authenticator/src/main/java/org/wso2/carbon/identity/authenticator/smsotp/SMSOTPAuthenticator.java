@@ -831,6 +831,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String payload = authenticatorProperties.get(SMSOTPConstants.PAYLOAD);
             String httpResponse = authenticatorProperties.get(SMSOTPConstants.HTTP_RESPONSE);
             boolean connectionResult = true;
+            Map<String, String> smsOtpAuthenticatorParams = getRuntimeParams(context);
+            String smsTemplateType = smsOtpAuthenticatorParams.get(SMSOTPConstants.SMS_TEMPLATE_TYPE);
             //Check the SMS URL configure in UI and give the first priority for that.
             if (StringUtils.isNotEmpty(smsUrl)) {
                 connectionResult = sendRESTCall(context, smsUrl, httpMethod, headerString, payload,
@@ -842,7 +844,7 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 String serviceProviderName = context.getServiceProviderName();
                 connectionResult = triggerNotification(authenticatedUser.getUserName(),
                         authenticatedUser.getTenantDomain(), authenticatedUser.getUserStoreDomain(),
-                        mobileNumber, otpToken, serviceProviderName, expiryTime, context);
+                        mobileNumber, otpToken, serviceProviderName, expiryTime, context, smsTemplateType);
             }
 
             if (!connectionResult) {
@@ -1848,6 +1850,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         HttpURLConnection httpConnection;
         boolean connection;
         String smsMessage = SMSOTPConstants.SMS_MESSAGE;
+        Map<String, String> smsOtpAuthenticatorParams = getRuntimeParams(context);
+        String smsTemplate = smsOtpAuthenticatorParams.get(SMSOTPConstants.SMS_TEMPLATE_TYPE);
+        if (StringUtils.isNotEmpty(smsTemplate)) {
+            smsMessage = smsTemplate + " " + SMSOTPConstants.SMS_MESSAGE;
+        }
         String receivedMobileNumber = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
 
         String encodedSmsMessage = smsMessage.replaceAll("\\s", "+");
@@ -2027,10 +2034,10 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
      */
     private boolean triggerNotification(String userName, String tenantDomain, String userStoreDomainName,
                                         String mobileNumber, String otpCode, String serviceProviderName,
-                                        long otpExpiryTime, AuthenticationContext context) {
+                                        long otpExpiryTime, AuthenticationContext context, String smsTemplateType) {
 
         Event identityMgtEvent = prepareEvent(userName, tenantDomain, userStoreDomainName, mobileNumber, otpCode,
-                serviceProviderName, otpExpiryTime);
+                serviceProviderName, otpExpiryTime, smsTemplateType);
         try {
             SMSOTPServiceDataHolder.getInstance().getIdentityEventService().handleEvent(identityMgtEvent);
         } catch (Exception e) {
@@ -2048,7 +2055,8 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
     }
 
     private static Event prepareEvent(String userName, String tenantDomain, String userStoreDomainName,
-                                      String mobileNumber, String otpCode, String serviceProviderName, long otpExpiryTime) {
+                                      String mobileNumber, String otpCode, String serviceProviderName,
+                                      long otpExpiryTime, String smsTemplateType) {
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put(IdentityEventConstants.EventProperty.USER_NAME, userName);
@@ -2060,6 +2068,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
         properties.put(SMSOTPConstants.OTP_TOKEN, otpCode);
         properties.put(SMSOTPConstants.CORRELATION_ID, getCorrelationId());
         properties.put(SMSOTPConstants.TEMPLATE_TYPE, SMSOTPConstants.EVENT_NAME);
+        if (StringUtils.isNotEmpty(smsTemplateType)) {
+            properties.put(SMSOTPConstants.TEMPLATE_TYPE, smsTemplateType);
+        }
         properties.put(IdentityEventConstants.EventProperty.APPLICATION_NAME, serviceProviderName);
         properties.put(IdentityEventConstants.EventProperty.OTP_EXPIRY_TIME, String.valueOf(otpExpiryTime / 60));
         return new Event(TRIGGER_SMS_NOTIFICATION, properties);
