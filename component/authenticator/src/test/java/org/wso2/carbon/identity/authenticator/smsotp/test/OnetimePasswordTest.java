@@ -18,14 +18,9 @@
  */
 package org.wso2.carbon.identity.authenticator.smsotp.test;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.testng.PowerMockObjectFactory;
-import org.powermock.reflect.Whitebox;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.authenticator.smsotp.OneTimePassword;
 
@@ -42,11 +37,6 @@ public class OnetimePasswordTest {
     public void setUp() throws Exception {
         oneTimePassword = new OneTimePassword();
         initMocks(this);
-    }
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-        return new PowerMockObjectFactory();
     }
 
     @AfterMethod
@@ -74,15 +64,15 @@ public class OnetimePasswordTest {
 
     @Test
     public void testGenerateTokenWithNumericToken() throws Exception {
-        OneTimePassword otp = PowerMockito.spy(oneTimePassword);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, false),
+        // Directly call the public method instead of using reflection.
+        Assert.assertEquals(oneTimePassword.generateToken("Hello", "32", 10, false),
                 "0020315280");
     }
 
     @Test
     public void testGenerateTokenWithAlphaNumericToken() throws Exception {
-        OneTimePassword otp = PowerMockito.spy(oneTimePassword);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, true),
+        // Directly call the public method instead of using reflection.
+        Assert.assertEquals(oneTimePassword.generateToken("Hello", "32", 10, true),
                 "3FDC3J6089");
     }
 }
