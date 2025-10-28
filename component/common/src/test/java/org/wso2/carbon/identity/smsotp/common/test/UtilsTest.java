@@ -19,28 +19,16 @@
 package org.wso2.carbon.identity.smsotp.common.test;
 
 import org.mockito.MockitoAnnotations;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
-import org.wso2.carbon.identity.event.IdentityEventConfigBuilder;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPClientException;
 import org.wso2.carbon.identity.smsotp.common.exception.SMSOTPServerException;
 import org.wso2.carbon.identity.smsotp.common.util.Utils;
 
-@PrepareForTest({ IdentityEventConfigBuilder.class })
 public class UtilsTest {
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-
-        return new PowerMockObjectFactory();
-    }
 
     @BeforeMethod
     public void setUp() {

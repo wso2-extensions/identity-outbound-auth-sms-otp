@@ -19,14 +19,9 @@
 package org.wso2.carbon.identity.smsotp.common.test;
 
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.testng.PowerMockObjectFactory;
-import org.powermock.reflect.Whitebox;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.smsotp.common.constant.Constants;
 import org.wso2.carbon.identity.smsotp.common.util.OneTimePasswordUtils;
@@ -44,12 +39,6 @@ public class OneTimePasswordUtilsTest {
 
         oneTimePasswordUtils = new OneTimePasswordUtils();
         MockitoAnnotations.initMocks(this);
-    }
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-
-        return new PowerMockObjectFactory();
     }
 
     @AfterMethod
@@ -82,8 +71,7 @@ public class OneTimePasswordUtilsTest {
     @Test
     public void testGenerateOTPWithNumericToken() throws Exception {
 
-        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePasswordUtils);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateOTP",
+        Assert.assertEquals(OneTimePasswordUtils.generateOTP(
                 "6f7698e7-d76a-4dee-ad0a-794b04c33572",
                 String.valueOf(Constants.NUMBER_BASE),
                 Constants.DEFAULT_OTP_LENGTH,
@@ -94,8 +82,7 @@ public class OneTimePasswordUtilsTest {
     @Test
     public void testGenerateOTPWithAlphaNumericToken() throws Exception {
 
-        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePasswordUtils);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateOTP",
+        Assert.assertEquals(OneTimePasswordUtils.generateOTP(
                 "6f7698e7-d76a-4dee-ad0a-794b04c33572",
                 String.valueOf(Constants.NUMBER_BASE),
                 Constants.DEFAULT_OTP_LENGTH,

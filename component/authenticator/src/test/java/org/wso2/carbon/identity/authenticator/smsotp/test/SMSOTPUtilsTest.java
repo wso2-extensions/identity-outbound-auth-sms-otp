@@ -19,16 +19,14 @@
 package org.wso2.carbon.identity.authenticator.smsotp.test;
 
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockObjectFactory;
+import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.identity.application.authentication.framework.config.builder.FileBasedConfigurationBuilder;
@@ -43,20 +41,16 @@ import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.UserRealm;
 import org.wso2.carbon.user.core.UserStoreManager;
 import org.wso2.carbon.user.core.service.RealmService;
-import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-@PrepareForTest({FileBasedConfigurationBuilder.class, IdentityTenantUtil.class})
-@PowerMockIgnore({"org.mockito.*"})
 public class SMSOTPUtilsTest {
 
     @Mock
@@ -74,20 +68,18 @@ public class SMSOTPUtilsTest {
     @Spy
     private AuthenticationContext context;
 
+    private AutoCloseable mocks;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        mockStatic(FileBasedConfigurationBuilder.class);
-        initMocks(this);
-    }
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-        return new PowerMockObjectFactory();
+        mocks = MockitoAnnotations.openMocks(this);
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
+        if (mocks != null) {
+            mocks.close();
+        }
     }
 
     @Test
@@ -110,11 +102,13 @@ public class SMSOTPUtilsTest {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
         parameters.put(SMSOTPConstants.IS_ENABLED_RESEND, "true");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
-        authenticatorConfig.setParameterMap(parameters);
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext,
-                SMSOTPConstants.IS_SMSOTP_MANDATORY), "true");
+        try (MockedStatic<FileBasedConfigurationBuilder> fbcbMock = Mockito.mockStatic(FileBasedConfigurationBuilder.class)) {
+            fbcbMock.when(FileBasedConfigurationBuilder::getInstance).thenReturn(fileBasedConfigurationBuilder);
+            authenticatorConfig.setParameterMap(parameters);
+            when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+            Assert.assertEquals(SMSOTPUtils.getConfiguration(authenticationContext,
+                    SMSOTPConstants.IS_SMSOTP_MANDATORY), "true");
+        }
     }
 
     @Test
@@ -238,10 +232,12 @@ public class SMSOTPUtilsTest {
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
-        authenticatorConfig.setParameterMap(parameters);
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext), true);
+        try (MockedStatic<FileBasedConfigurationBuilder> fbcbMock = Mockito.mockStatic(FileBasedConfigurationBuilder.class)) {
+            fbcbMock.when(FileBasedConfigurationBuilder::getInstance).thenReturn(fileBasedConfigurationBuilder);
+            authenticatorConfig.setParameterMap(parameters);
+            when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+            Assert.assertEquals(SMSOTPUtils.isSMSOTPMandatory(authenticationContext), true);
+        }
     }
 
     @DataProvider
@@ -268,13 +264,15 @@ public class SMSOTPUtilsTest {
 
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(SMSOTPConstants.MAXIMUM_RESEND_ATTEMPTS, maxAttemptsFromFile);
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
-        authenticatorConfig.setParameterMap(parameters);
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        if (expectException) {
-            Assert.assertThrows(SMSOTPException.class, () -> SMSOTPUtils.getMaxResendAttempts(authenticationContext));
-        } else {
-            Assert.assertEquals(SMSOTPUtils.getMaxResendAttempts(authenticationContext), expectedResult);
+        try (MockedStatic<FileBasedConfigurationBuilder> fbcbMock = Mockito.mockStatic(FileBasedConfigurationBuilder.class)) {
+            fbcbMock.when(FileBasedConfigurationBuilder::getInstance).thenReturn(fileBasedConfigurationBuilder);
+            authenticatorConfig.setParameterMap(parameters);
+            when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+            if (expectException) {
+                Assert.assertThrows(SMSOTPException.class, () -> SMSOTPUtils.getMaxResendAttempts(authenticationContext));
+            } else {
+                Assert.assertEquals(SMSOTPUtils.getMaxResendAttempts(authenticationContext), expectedResult);
+            }
         }
     }
 
@@ -308,85 +306,105 @@ public class SMSOTPUtilsTest {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(SMSOTPConstants.IS_SMSOTP_MANDATORY, "true");
         parameters.put(SMSOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE, "false");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
 
-        //test with empty parameters map.
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(null);
-        Assert.assertEquals(SMSOTPUtils.getSMSParameters(), Collections.emptyMap());
+        try (MockedStatic<FileBasedConfigurationBuilder> fbcbMock = Mockito.mockStatic(FileBasedConfigurationBuilder.class)) {
+            fbcbMock.when(FileBasedConfigurationBuilder::getInstance).thenReturn(fileBasedConfigurationBuilder);
 
-        //test with non-empty parameters map.
-        authenticatorConfig.setParameterMap(parameters);
-        when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
-        Assert.assertEquals(SMSOTPUtils.getSMSParameters(), parameters);
+            // test with empty parameters map.
+            when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(null);
+            Assert.assertEquals(SMSOTPUtils.getSMSParameters(), Collections.emptyMap());
+
+            // test with non-empty parameters map.
+            authenticatorConfig.setParameterMap(parameters);
+            when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
+            Assert.assertEquals(SMSOTPUtils.getSMSParameters(), parameters);
+        }
     }
 
     @Test
     public void testIsSMSOTPDisableForLocalUser() throws UserStoreException, AuthenticationFailedException,
             SMSOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        String username = "admin";
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(SMSOTPUtils.isSMSOTPEnableOrDisableByUser(context)).thenReturn(true);
-        Map<String, String> claims = new HashMap<>();
-        claims.put(SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI, "false");
-        userStoreManager.setUserClaimValues(MultitenantUtils.getTenantAwareUsername(username), claims, null);
-        Assert.assertEquals(SMSOTPUtils.isSMSOTPDisableForLocalUser(anyString(), context), false);
+        String username = "admin@carbon.super";
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class);
+             MockedStatic<SMSOTPUtils> smsotpUtilsStatic = Mockito.mockStatic(SMSOTPUtils.class, Mockito.CALLS_REAL_METHODS)) {
+
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+            when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+
+            smsotpUtilsStatic.when(() -> SMSOTPUtils.isSMSOTPEnableOrDisableByUser(context)).thenReturn(true);
+
+            Map<String, String> claims = new HashMap<>();
+            claims.put(SMSOTPConstants.USER_SMSOTP_DISABLED_CLAIM_URI, "false");
+            when(userStoreManager.getUserClaimValues(anyString(), any(String[].class), any()))
+                    .thenReturn(claims);
+
+            Assert.assertFalse(SMSOTPUtils.isSMSOTPDisableForLocalUser(username, context));
+        }
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})
     public void testVerifyUserExists() throws UserStoreException, AuthenticationFailedException, SMSOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(SMSOTPUtils.getUserRealm("carbon.super")).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        SMSOTPUtils.verifyUserExists("admin", "carbon.super");
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class);
+             MockedStatic<SMSOTPUtils> smsotpUtilsStatic = Mockito.mockStatic(SMSOTPUtils.class, Mockito.CALLS_REAL_METHODS)) {
+
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+
+            smsotpUtilsStatic.when(() -> SMSOTPUtils.getUserRealm("carbon.super")).thenReturn(userRealm);
+            when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+
+            // Default for isExistingUser is false -> should throw SMSOTPException.
+            SMSOTPUtils.verifyUserExists("admin", "carbon.super");
+        }
     }
 
     @Test
     public void testGetMobileNumberForUsername() throws UserStoreException, SMSOTPException,
             AuthenticationFailedException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        Assert.assertEquals(SMSOTPUtils.getMobileNumberForUsername("admin"), null);
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class)) {
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+            when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+            Assert.assertEquals(SMSOTPUtils.getMobileNumberForUsername("admin@carbon.super"), null);
+        }
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})
     public void testGetMobileNumberForUsernameWithException() throws UserStoreException, SMSOTPException,
             AuthenticationFailedException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
-        SMSOTPUtils.getMobileNumberForUsername("admin");
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class)) {
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
+            SMSOTPUtils.getMobileNumberForUsername("admin@carbon.super");
+        }
     }
 
     @Test(expectedExceptions = {SMSOTPException.class})
     public void testUpdateUserAttributeWithException() throws UserStoreException, SMSOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
-        Map<String, String> claims = new HashMap<>();
-        SMSOTPUtils.updateUserAttribute(anyString(), claims, "carbon.super");
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class)) {
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
+            Map<String, String> claims = new HashMap<>();
+            SMSOTPUtils.updateUserAttribute("admin", claims, "carbon.super");
+        }
     }
 
     @Test
     public void testUpdateUserAttribute() throws UserStoreException, SMSOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        Map<String, String> claims = new HashMap<>();
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(userStoreManager.isExistingUser(anyString())).thenReturn(true);
-        SMSOTPUtils.updateUserAttribute("admin", claims, "carbon.super");
+        try (MockedStatic<IdentityTenantUtil> identityTenantUtilMock = Mockito.mockStatic(IdentityTenantUtil.class)) {
+            Map<String, String> claims = new HashMap<>();
+            identityTenantUtilMock.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+            identityTenantUtilMock.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+            when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+            when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+            when(userStoreManager.isExistingUser(anyString())).thenReturn(true);
+            SMSOTPUtils.updateUserAttribute("admin", claims, "carbon.super");
+        }
     }
 }
