@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015-2024, WSO2 LLC. (http://www.wso2.com).
+ *  Copyright (c) 2015-2025, WSO2 LLC. (http://www.wso2.com).
  *
  *  WSO2 LLC. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -283,18 +283,19 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                         username = authenticatedUser.toFullQualifiedUsername();
                         break;
                     }
-                    if (username == null && isSMSOTPAsFirstFactor(context)) {
-                        if (!(context.isRetrying()
-                                && Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND)))) {
-                            context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
-                        }
-                        redirectToSMSOTPLoginPage(response, request, context, queryParams);
-                        return;
-                    } else if (username == null) {
-                        log.debug("Cannot find the subject attributed step with authenticated user.");
-                        throw new AuthenticationFailedException
-                                ("Authentication failed. Cannot find the subject attributed step with authenticated user.");
+                }
+
+                if (username == null && isSMSOTPAsFirstFactor(context)) {
+                    if (!(context.isRetrying()
+                            && Boolean.parseBoolean(request.getParameter(SMSOTPConstants.RESEND)))) {
+                        context.setProperty(SMSOTPConstants.CODE_MISMATCH, true);
                     }
+                    redirectToSMSOTPLoginPage(response, request, context, queryParams);
+                    return;
+                } else if (username == null) {
+                    log.debug("Cannot find the subject attributed step with authenticated user.");
+                    throw new AuthenticationFailedException
+                            ("Authentication failed. Cannot find the subject attributed step with authenticated user.");
                 }
                 context.setProperty(SMSOTPConstants.USER_NAME, username);
                 context.setProperty(SMSOTPConstants.AUTHENTICATED_USER, authenticatedUser);
