@@ -419,6 +419,7 @@
                             <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                         </suiteXmlFiles>
                         <argLine>
+                            @{argLine}
                             --add-opens=java.base/java.lang=ALL-UNNAMED
                             --add-opens=java.base/java.util=ALL-UNNAMED
                         </argLine>
@@ -471,7 +472,7 @@
         <carbon.identity.package.export.project.version>${project.version}
         </carbon.identity.package.export.project.version>
         <testng.version>7.0.0</testng.version>
-        <jacoco.version>0.8.4</jacoco.version>
+        <jacoco.version>0.8.12</jacoco.version>
         <maven.surefire.plugin.version>2.22.0</maven.surefire.plugin.version>
         <mockito.version>5.3.1</mockito.version>
         <slf4j.version>1.7.12</slf4j.version>
