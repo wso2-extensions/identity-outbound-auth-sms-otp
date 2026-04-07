@@ -41,6 +41,7 @@ import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -299,6 +300,105 @@ public class SMSOTPUtils {
         } catch (NumberFormatException e) {
             context.setRetrying(false);
             throw new SMSOTPException("Invalid maximum resend attempts value: " + maximumResendAttemptsConfig, e);
+        }
+    }
+
+    /**
+     * Check if user-based OTP resend blocking is enabled.
+     * Read from the application-authentication.xml authenticator parameter map.
+     *
+     * @param context AuthenticationContext.
+     * @return true if user-based resend blocking is enabled.
+     */
+    public static boolean isUserBasedResendBlockingEnabled(AuthenticationContext context) {
+
+        return Boolean.parseBoolean(getConfiguration(context, SMSOTPConstants.ENABLE_USER_BASED_RESEND_BLOCKING));
+    }
+
+    /**
+     * Get the OTP resend block duration in minutes from the application-authentication.xml file.
+     * Returns DEFAULT_OTP_RESEND_BLOCK_DURATION if the config is missing or invalid.
+     *
+     * @param context AuthenticationContext.
+     * @return Block duration in minutes.
+     */
+    public static int getResendBlockDuration(AuthenticationContext context) {
+
+        String blockDurationStr = getConfiguration(context, SMSOTPConstants.RESEND_BLOCK_DURATION);
+        if (StringUtils.isNotBlank(blockDurationStr)) {
+            try {
+                int blockDuration = Integer.parseInt(blockDurationStr);
+                if (blockDuration >= 0) {
+                    return blockDuration;
+                }
+            } catch (NumberFormatException e) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Invalid ResendBlockDuration config value: " + blockDurationStr +
+                            ". Using default: " + SMSOTPConstants.DEFAULT_OTP_RESEND_BLOCK_DURATION);
+                }
+            }
+        }
+        return SMSOTPConstants.DEFAULT_OTP_RESEND_BLOCK_DURATION;
+    }
+
+    /**
+     * Get the OTP resend attempt count and the last resend timestamp for the user.
+     *
+     * @param username     Tenant-aware username.
+     * @param tenantDomain Tenant domain.
+     * @return A two-element {@code long[]} where index 0 is the resend attempt count and index 1 is
+     *         the last resend timestamp in milliseconds. Both default to 0 if the claim is not set.
+     * @throws SMSOTPException If an error occurred while reading the claims.
+     */
+    public static long[] getUserResendClaims(String username, String tenantDomain) throws SMSOTPException {
+
+        try {
+            UserRealm userRealm = getUserRealm(tenantDomain);
+            if (userRealm == null) {
+                return new long[]{0, 0};
+            }
+            Map<String, String> claimValues = userRealm.getUserStoreManager().getUserClaimValues(
+                    username, new String[]{
+                            SMSOTPConstants.SMS_OTP_RESEND_ATTEMPTS_CLAIM,
+                            SMSOTPConstants.SMS_OTP_LAST_SENT_TIME_CLAIM
+                    }, null);
+            String countStr = claimValues.get(SMSOTPConstants.SMS_OTP_RESEND_ATTEMPTS_CLAIM);
+            long count = StringUtils.isBlank(countStr) ? 0 : Integer.parseInt(countStr);
+
+            String timestampStr = claimValues.get(SMSOTPConstants.SMS_OTP_LAST_SENT_TIME_CLAIM);
+            long lastResendTime = StringUtils.isBlank(timestampStr) ? 0 : Long.parseLong(timestampStr);
+
+            return new long[]{count, lastResendTime};
+        } catch (UserStoreException | AuthenticationFailedException e) {
+            throw new SMSOTPException("Error occurred while getting OTP resend claims for user: " + username, e);
+        }
+    }
+
+    /**
+     * Persist the updated OTP resend count and the current timestamp as user store claims.
+     * Both the resend attempt count and the last-resend timestamp are written atomically.
+     *
+     * @param username       Tenant-aware username.
+     * @param tenantDomain   Tenant domain.
+     * @param newResendCount The updated resend attempt count to persist.
+     * @throws SMSOTPException If an error occurred while updating the claims.
+     */
+    public static void updateUserResendClaims(String username, String tenantDomain, int newResendCount)
+            throws SMSOTPException {
+
+        try {
+            UserRealm userRealm = getUserRealm(tenantDomain);
+            if (userRealm == null) {
+                throw new SMSOTPException("User realm not found for tenant domain: " + tenantDomain);
+            }
+            Map<String, String> claimMap = new HashMap<>();
+            claimMap.put(SMSOTPConstants.SMS_OTP_RESEND_ATTEMPTS_CLAIM, String.valueOf(newResendCount));
+            claimMap.put(SMSOTPConstants.SMS_OTP_LAST_SENT_TIME_CLAIM,
+                    String.valueOf(System.currentTimeMillis()));
+            userRealm.getUserStoreManager().setUserClaimValues(username, claimMap, null);
+        } catch (UserStoreException | AuthenticationFailedException e) {
+            throw new SMSOTPException(
+                    "Error occurred while updating OTP resend claims for user: " + username, e);
         }
     }
 

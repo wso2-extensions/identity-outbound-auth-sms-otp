@@ -156,6 +156,13 @@ public class SMSOTPConstants {
     public static final String MOBILE_NUMBER_PATTERN_POLICY_VIOLATED =
             "Mobile number pattern policy violated";
     public static final String OTP_RESEND_ATTEMPTS = "otpResendAttempts";
+    public static final String SMS_OTP_RESEND_ATTEMPTS_CLAIM =
+            "http://wso2.org/claims/identity/smsOtpResendAttempts";
+    public static final String SMS_OTP_LAST_SENT_TIME_CLAIM =
+            "http://wso2.org/claims/identity/smsOtpLastSentTime";
+    public static final String ENABLE_USER_BASED_RESEND_BLOCKING = "EnableUserBasedResendBlocking";
+    public static final String RESEND_BLOCK_DURATION = "ResendBlockDuration";
+    public static final int DEFAULT_OTP_RESEND_BLOCK_DURATION = 5;
 
     public static final String PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO = "account.lock.handler.login.fail.timeout.ratio";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
