@@ -333,8 +333,11 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 } else if (context.isRetrying() && isResendCode && !isMobileNumberUpdateFailed(context)) {
                     handleResendOTP(request, response, context, queryParams, username, errorPage);
                 } else {
-                    mobileNumber = getMobileNumber(request, response, context, username, queryParams);
-                    proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
+                    if (!enforceResendBlock(response, context, queryParams, username, tenantDomain)) {
+                        mobileNumber = getMobileNumber(request, response, context, username, queryParams);
+                        proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
+                        incrementResendCount(context, username, tenantDomain);
+                    }
                 }
             } else {
                 processFirstStepOnly(authenticatedUser, context);
@@ -678,29 +681,16 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                                  AuthenticationContext context, String queryParams, String username, String errorPage)
             throws SMSOTPException, AuthenticationFailedException {
 
-        Integer maxResendAttempts = SMSOTPUtils.getMaxResendAttempts(context).orElse(null);
+        String tenantDomain = context.getTenantDomain();
         if (SMSOTPUtils.isUserBasedResendBlockingEnabled(context)) {
-            String tenantDomain = context.getTenantDomain();
-            String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
-            long[] resendClaims = SMSOTPUtils.getUserResendClaims(tenantAwareUsername, tenantDomain);
-            int userResendCount = (int) resendClaims[0];
-            long lastResendTime = resendClaims[1];
-            int updatedResendCount = userResendCount;
-
-            if (maxResendAttempts != null && userResendCount >= maxResendAttempts) {
-                long blockTimeMillis = SMSOTPUtils.getResendBlockDuration(context) * 60_000L;
-                if (lastResendTime > 0 && (System.currentTimeMillis() - lastResendTime) < blockTimeMillis) {
-                    redirectToErrorPage(response, context, queryParams, ERROR_USER_RESEND_COUNT_EXCEEDED);
-                    return;
-                }
-                // Block window has expired: reset the count so the user may resend again.
-                updatedResendCount = 0;
+            if (enforceResendBlock(response, context, queryParams, username, tenantDomain)) {
+                return;
             }
-
             String mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
-            SMSOTPUtils.updateUserResendClaims(tenantAwareUsername, tenantDomain, updatedResendCount + 1);
+            incrementResendCount(context, username, tenantDomain);
         } else {
+            Integer maxResendAttempts = SMSOTPUtils.getMaxResendAttempts(context).orElse(null);
             if (maxResendAttempts != null) {
                 int currentUserResendAttempts = context.getProperty(OTP_RESEND_ATTEMPTS) != null
                         ? Integer.parseInt(context.getProperty(OTP_RESEND_ATTEMPTS).toString()) : 0;
@@ -713,6 +703,66 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             String mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
         }
+    }
+
+    /**
+     * Check whether the user has exceeded the OTP resend limit and is still within the block window.
+     *
+     * @param response    the HttpServletResponse
+     * @param context     the AuthenticationContext
+     * @param queryParams the queryParams
+     * @param username    the Username
+     * @param tenantDomain the TenantDomain
+     * @return true if the user is blocked, false if the send may proceed
+     * @throws SMSOTPException If an error occurred while retrieving user resend claims.
+     * @throws AuthenticationFailedException If an error occurred while redirecting to error page.
+     */
+    private boolean enforceResendBlock(HttpServletResponse response, AuthenticationContext context,
+                                       String queryParams, String username, String tenantDomain)
+            throws SMSOTPException, AuthenticationFailedException {
+
+        if (!SMSOTPUtils.isUserBasedResendBlockingEnabled(context)) {
+            return false;
+        }
+        Integer maxResendAttempts = SMSOTPUtils.getMaxResendAttempts(context).orElse(null);
+        if (maxResendAttempts == null) {
+            return false;
+        }
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        long[] resendClaims = SMSOTPUtils.getUserResendClaims(tenantAwareUsername, tenantDomain);
+        int userResendCount = (int) resendClaims[0];
+        long lastResendTime = resendClaims[1];
+        if (userResendCount >= maxResendAttempts) {
+            long blockTimeMillis = SMSOTPUtils.getResendBlockDuration(context) * 60_000L;
+            if (lastResendTime > 0 && (System.currentTimeMillis() - lastResendTime) < blockTimeMillis) {
+                redirectToErrorPage(response, context, queryParams, ERROR_USER_RESEND_COUNT_EXCEEDED);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Increment the persisted OTP resend count for the user.
+     *
+     * @param context      the AuthenticationContext
+     * @param username     the Username
+     * @param tenantDomain the TenantDomain
+     * @throws SMSOTPException If an error occurred while updating user resend claims.
+     */
+    private void incrementResendCount(AuthenticationContext context, String username, String tenantDomain)
+            throws SMSOTPException {
+
+        if (!SMSOTPUtils.isUserBasedResendBlockingEnabled(context)) {
+            return;
+        }
+        String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
+        long[] resendClaims = SMSOTPUtils.getUserResendClaims(tenantAwareUsername, tenantDomain);
+        int userResendCount = (int) resendClaims[0];
+        Integer maxResendAttempts = SMSOTPUtils.getMaxResendAttempts(context).orElse(null);
+        int updatedResendCount = (maxResendAttempts != null && userResendCount >= maxResendAttempts)
+                ? 0 : userResendCount;
+        SMSOTPUtils.updateUserResendClaims(tenantAwareUsername, tenantDomain, updatedResendCount + 1);
     }
 
     /**
@@ -744,6 +794,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
                 // that Enable the SMS OTP in user's Profile. Cannot proceed further without SMS OTP authentication.
                 redirectToErrorPage(response, context, queryParams, SMSOTPConstants.ERROR_SMSOTP_DISABLE);
             } else {
+                if (enforceResendBlock(response, context, queryParams, username, tenantDomain)) {
+                    return;
+                }
                 mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             }
         } else if (SMSOTPUtils.isSendOTPDirectlyToMobile(context)) {
@@ -802,6 +855,9 @@ public class SMSOTPAuthenticator extends AbstractApplicationAuthenticator implem
             redirectToErrorPage(response, context, queryParams, SMSOTPConstants.SEND_OTP_DIRECTLY_DISABLE);
         }
         proceedWithOTP(request, response, context, errorPage, mobileNumber, queryParams, username);
+        if (isUserExists) {
+            incrementResendCount(context, username, tenantDomain);
+        }
     }
 
     /**
